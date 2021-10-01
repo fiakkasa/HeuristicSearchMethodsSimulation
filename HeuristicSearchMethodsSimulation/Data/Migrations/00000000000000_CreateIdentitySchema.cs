@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 
+#pragma warning disable RCS1021 // Convert lambda expression body to expression-body.
 namespace HeuristicSearchMethodsSimulation.Data.Migrations
 {
     public partial class CreateIdentitySchema : Migration
@@ -218,3 +219,4 @@ namespace HeuristicSearchMethodsSimulation.Data.Migrations
         }
     }
 }
+#pragma warning restore RCS1021 // Convert lambda expression body to expression-body.

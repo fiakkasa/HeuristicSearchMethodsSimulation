@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>aspnet-HeuristicSearchMethodsSimulation-96C4A188-56FF-4E2D-893A-9718E082367B</UserSecretsId>
+    <Nullable>enable</Nullable>
+    <LangVersion>9.0</LangVersion>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 

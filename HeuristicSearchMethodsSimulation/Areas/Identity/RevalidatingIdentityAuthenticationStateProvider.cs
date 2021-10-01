@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
@@ -30,21 +29,20 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity
 
         protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
 
-        protected override async Task<bool> ValidateAuthenticationStateAsync(
-            AuthenticationState authenticationState, CancellationToken cancellationToken)
+        protected override async Task<bool> ValidateAuthenticationStateAsync(AuthenticationState authenticationState, CancellationToken cancellationToken)
         {
             // Get the user manager from a new scope to ensure it fetches fresh data
             var scope = _scopeFactory.CreateScope();
             try
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
-                return await ValidateSecurityStampAsync(userManager, authenticationState.User);
+                return await ValidateSecurityStampAsync(userManager, authenticationState.User).ConfigureAwait(true);
             }
             finally
             {
                 if (scope is IAsyncDisposable asyncDisposable)
                 {
-                    await asyncDisposable.DisposeAsync();
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(true);
                 }
                 else
                 {
@@ -55,7 +53,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity
 
         private async Task<bool> ValidateSecurityStampAsync(UserManager<TUser> userManager, ClaimsPrincipal principal)
         {
-            var user = await userManager.GetUserAsync(principal);
+            var user = await userManager.GetUserAsync(principal).ConfigureAwait(true);
             if (user == null)
             {
                 return false;
@@ -67,7 +65,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity
             else
             {
                 var principalStamp = principal.FindFirstValue(_options.ClaimsIdentity.SecurityStampClaimType);
-                var userStamp = await userManager.GetSecurityStampAsync(user);
+                var userStamp = await userManager.GetSecurityStampAsync(user).ConfigureAwait(true);
                 return principalStamp == userStamp;
             }
         }
