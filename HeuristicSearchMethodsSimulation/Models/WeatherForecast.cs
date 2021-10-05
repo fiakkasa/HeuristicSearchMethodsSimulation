@@ -1,6 +1,6 @@
 using System;
 
-namespace HeuristicSearchMethodsSimulation.Data
+namespace HeuristicSearchMethodsSimulation.Models
 {
     public record WeatherForecast
     {

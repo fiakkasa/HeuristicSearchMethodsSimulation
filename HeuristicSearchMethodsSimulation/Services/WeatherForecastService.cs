@@ -1,8 +1,9 @@
+using HeuristicSearchMethodsSimulation.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HeuristicSearchMethodsSimulation.Data
+namespace HeuristicSearchMethodsSimulation.Services
 {
     public class WeatherForecastService
     {
