@@ -1,5 +1,8 @@
 ﻿@page "/"
 @namespace HeuristicSearchMethodsSimulation.Pages
+@using Microsoft.Extensions.Options
+@using HeuristicSearchMethodsSimulation.Models
+@inject IOptions<AppOptions> appOptionsAccessor
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = null;
@@ -10,9 +13,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HeuristicSearchMethodsSimulation</title>
+    <title>@appOptionsAccessor.Value.Title</title>
     <base href="~/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="HeuristicSearchMethodsSimulation.styles.css" rel="stylesheet" />
 </head>
@@ -24,7 +27,7 @@
             An error has occurred. This application may no longer respond until reloaded.
         </environment>
         <environment include="Development">
-            An unhandled exception has occurred. See browser dev tools for details.
+            An unhandled exception has occurred.
         </environment>
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>

@@ -39,6 +39,7 @@ namespace HeuristicSearchMethodsSimulation
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
+            services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
 
             services.AddSingleton<WeatherForecastService>();
         }

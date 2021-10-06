@@ -1,5 +1,8 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">HeuristSearchMethodsSimulation</a>
+﻿@using Microsoft.Extensions.Options
+@using HeuristicSearchMethodsSimulation.Models
+@inject IOptions<AppOptions> appOptionsAccessor
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">@appOptionsAccessor.Value.Title</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
