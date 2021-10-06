@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# S101: Types should be named in PascalCase
+dotnet_diagnostic.S101.severity = none
+
+# RCS1047: Non-asynchronous method name should not end with 'Async'.
+dotnet_diagnostic.RCS1047.severity = none
