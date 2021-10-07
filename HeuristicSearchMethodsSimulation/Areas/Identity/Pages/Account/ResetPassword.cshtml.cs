@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading.Tasks;
+using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
 namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account
 {

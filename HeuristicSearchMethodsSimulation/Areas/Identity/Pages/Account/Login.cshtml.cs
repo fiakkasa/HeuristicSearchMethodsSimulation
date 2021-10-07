@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
 namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account
 {

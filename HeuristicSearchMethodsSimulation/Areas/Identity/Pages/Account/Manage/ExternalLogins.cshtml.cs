@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
 namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
 {
@@ -87,7 +88,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
                 return NotFound("Unable to load user.");
             }
 
-            var info = await _signInManager.GetExternalLoginInfoAsync(user.Id).ConfigureAwait(true);
+            var info = await _signInManager.GetExternalLoginInfoAsync(user.Id.ToString()).ConfigureAwait(true);
             if (info == null)
             {
                 throw new InvalidOperationException($"Unexpected error occurred loading external login info for user with ID '{user.Id}'.");

@@ -1,4 +1,6 @@
-﻿@inject SignInManager<IdentityUser> SignInManager
+﻿@using IdentityRole = HeuristicSearchMethodsSimulation.Models.IdentityRole;
+@using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
+@inject SignInManager<IdentityUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

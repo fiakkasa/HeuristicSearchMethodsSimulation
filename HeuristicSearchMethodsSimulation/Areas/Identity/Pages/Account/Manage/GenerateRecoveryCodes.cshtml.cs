@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
 namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
 {

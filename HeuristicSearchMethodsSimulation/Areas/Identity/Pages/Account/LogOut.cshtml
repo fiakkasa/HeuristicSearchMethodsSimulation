@@ -1,6 +1,8 @@
 ﻿@page
 @using Microsoft.AspNetCore.Identity
 @attribute [IgnoreAntiforgeryToken]
+@using IdentityRole = HeuristicSearchMethodsSimulation.Models.IdentityRole;
+@using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 @inject SignInManager<IdentityUser> SignInManager
 @functions {
     public async Task<IActionResult> OnPost()
