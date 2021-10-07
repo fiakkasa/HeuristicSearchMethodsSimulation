@@ -1,10 +1,10 @@
-using AspNetCore.MongoDbIdentity;
 using HeuristicSearchMethodsSimulation.Areas.Identity;
 using HeuristicSearchMethodsSimulation.Models;
 using HeuristicSearchMethodsSimulation.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +32,8 @@ namespace HeuristicSearchMethodsSimulation
             var mongoConnectionUri = Configuration.GetConnectionString(Consts.MongoConnectionKey);
             services
                 .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddMongoDbStores<IdentityUser, IdentityRole>(mongoConnectionUri);
+                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, Consts.MongoIdentityDatabase)
+                .AddDefaultTokenProviders();
             services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
             services.AddRazorPages();
             services.AddServerSideBlazor();

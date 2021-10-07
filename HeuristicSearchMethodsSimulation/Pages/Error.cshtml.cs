@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-#pragma warning disable IDE0052 // Remove unread private members
-#pragma warning disable S4487 // Unread "private" fields should be removed
 namespace HeuristicSearchMethodsSimulation.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -28,5 +26,3 @@ namespace HeuristicSearchMethodsSimulation.Pages
         }
     }
 }
-#pragma warning restore S4487 // Unread "private" fields should be removed
-#pragma warning restore IDE0052 // Remove unread private members

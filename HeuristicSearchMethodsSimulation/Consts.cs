@@ -3,5 +3,6 @@
     public static class Consts
     {
         public const string MongoConnectionKey = "MongoConnection";
+        public const string MongoIdentityDatabase = "Identity";
     }
 }

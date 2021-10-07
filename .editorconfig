@@ -5,3 +5,15 @@ dotnet_diagnostic.S101.severity = none
 
 # RCS1047: Non-asynchronous method name should not end with 'Async'.
 dotnet_diagnostic.RCS1047.severity = none
+
+# IDE0052: Remove unread private members
+dotnet_diagnostic.IDE0052.severity = none
+
+# S4487: Unread "private" fields should be removed
+dotnet_diagnostic.S4487.severity = none
+
+# RCS1163: Unused parameter.
+dotnet_diagnostic.RCS1163.severity = none
+
+# IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0060.severity = none

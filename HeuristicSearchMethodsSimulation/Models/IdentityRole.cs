@@ -1,6 +1,9 @@
-﻿using AspNetCore.MongoDbIdentity;
+﻿using AspNetCore.Identity.MongoDbCore.Models;
+using MongoDbGenericRepository.Attributes;
+using System;
 
 namespace HeuristicSearchMethodsSimulation.Models
 {
-    public class IdentityRole : MongoIdentityRole { }
+    [CollectionName("Roles")]
+    public class IdentityRole : MongoIdentityRole<Guid> { }
 }
