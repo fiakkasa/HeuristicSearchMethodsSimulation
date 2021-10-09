@@ -21,4 +21,8 @@
     <PackageReference Include="SendGrid" Version="9.24.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>
