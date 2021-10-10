@@ -8,6 +8,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BBED9E13-2C11-48D9-A45B-60F3421D2D90}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Dockerfile = Dockerfile
+		PUBLISH_TO_HEROKU.md = PUBLISH_TO_HEROKU.md
 	EndProjectSection
 EndProject
 Global
