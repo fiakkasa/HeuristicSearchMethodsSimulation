@@ -13,40 +13,35 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - @appOptionsAccessor.Value.Title</title>
-    <link rel="stylesheet" href="~/css/identity/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/identity/site.css" />
+    <link rel="stylesheet" href="~/themes/@appOptionsAccessor.Value.Theme/identity/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/themes/@appOptionsAccessor.Value.Theme/identity/site.css" />
 </head>
 <body>
-    <div class="layout d-flex flex-column vh-100">
-        <header class="flex-shrink-0">
-            <nav class="navbar navbar-expand-sm navbar-light navbar-toggleable-sm bg-white border-bottom box-shadow mb-3">
-                <div class="container">
-                    <a class="navbar-brand" href="~/">@appOptionsAccessor.Value.Title</a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                        @{
-                            var result = Engine.FindView(ViewContext, "_LoginPartial", isMainPage: false);
-                        }
-                        @if (result.Success)
-                        {
-                            await Html.RenderPartialAsync("_LoginPartial");
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("Whoops, something went wrong...");
-                        }
-                    </div>
+    <div class="page vh-100 d-flex flex-column">
+        <nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
+            <div class="container-fluid justify-content-center">
+                <a class="navbar-brand text-truncate" href="~/">@appOptionsAccessor.Value.Title</a>
+                <div class="flex-fill d-none d-md-block"></div>
+                <div class="d-flex flex-grow-0 flex-wrap">
+                    @{
+                        var result = Engine.FindView(ViewContext, "_LoginPartial", isMainPage: false);
+                    }
+                    @if (result.Success)
+                    {
+                        await Html.RenderPartialAsync("_LoginPartial");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Whoops, something went wrong...");
+                    }
                 </div>
-            </nav>
-        </header>
+            </div>
+        </nav>
 
-        <div class="container flex-fill overflow-auto">
-            <main role="main" class="pb-3">
+        <div class="flex-fill overflow-auto p-1">
+            <div class="container-fluid">
                 @RenderBody()
-            </main>
+            </div>
         </div>
         <footer class="flex-shrink-0 p-2 small border-top text-muted">
             <div class="container">
@@ -54,6 +49,7 @@
             </div>
         </footer>
     </div>
+
     <script src="~/Identity/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/Identity/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/Identity/js/site.js" asp-append-version="true"></script>
