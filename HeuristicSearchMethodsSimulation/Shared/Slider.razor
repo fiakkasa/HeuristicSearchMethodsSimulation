@@ -8,28 +8,51 @@
 </div>
 
 @code {
-    [Parameter] public double Min { get; set; } = 0d;
-    [Parameter] public double Max { get; set; } = 100d;
-    [Parameter] public double Step { get; set; } = 1d;
-    [Parameter] public double Value { get; set; }
-    [Parameter] public EventCallback<double> ValueChanged { get; set; }
+    [Parameter] public int Min { get; set; } = 0;
+    [Parameter] public int Max { get; set; } = 100;
+    [Parameter] public int Step { get; set; } = 1;
+    [Parameter] public int Value { get; set; }
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
 
-    private string BubblePosition
+    private Dictionary<int, string> BubbleOffsets { get; } = new();
+
+    private string BubblePosition => BubbleOffsets.TryGetValue(Value, out var value) && value is { } ? value : "0";
+
+    private void EnsureInputs()
     {
-        get
-        {
-            var value = Math.Min(Math.Max(Math.Abs(Value / Max) * 100d, 0d), 100d);
-            var offset = (value / 100d);
+        if (Min < 0) Min = 0;
 
-            return $"calc({value}% - calc(var(--base-width, 25px) * {offset}))";
+        if (Step < 0) Step = 1;
+
+        if (Max < Min || Max < Step) Max = Math.Max(Min, Step);
+    }
+
+    private void GenerateBubbleOffsets()
+    {
+        BubbleOffsets.Clear();
+
+        var percChunk = (double)Step / (Max - Step);
+        var perc = percChunk;
+
+        BubbleOffsets.Add(Min, $"0");
+        for (int i = Min + Step; i < Max; i += Step)
+        {
+            BubbleOffsets.Add(i, $"calc({perc * 100d}% - calc(var(--base-width, 25px) * {perc}))");
+            perc += percChunk;
         }
+        BubbleOffsets.Add(Max, $"calc(100% - calc(var(--base-width, 25px)))");
+    }
+
+    protected override void OnInitialized()
+    {
+        EnsureInputs();
+        GenerateBubbleOffsets();
     }
 
     protected override void OnParametersSet()
     {
-        if (Max < Min) Max = Min;
-
-        if (Step < 0) Step = Max * .1d;
+        EnsureInputs();
+        GenerateBubbleOffsets();
     }
 
     private async Task OnValue(ChangeEventArgs e)

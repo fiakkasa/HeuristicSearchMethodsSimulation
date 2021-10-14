@@ -3,3 +3,67 @@
 <h3>Traveling Sales Man</h3>
 
 <h4>⚠ Under Construction!</h4>
+
+<Slider Min="1" Max="10" Step="1" @bind-Value="SliderValue" />
+
+<br />
+
+<div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
+    <PlotlyChart Config="config" Layout="layout" Data="data" @ref="chart" style="min-height: none; height: auto;" />
+</div>
+
+@code {
+    private int _sliderValue = 1;
+    private int SliderValue
+    {
+        get => _sliderValue;
+        set
+        {
+            _sliderValue = value;
+            data[0] =
+                new Pie
+                {
+                    Values = Enumerable.Range(1, value).Select(v => v * 10).Cast<object>().ToList(),
+                    Labels = Enumerable.Range(1, value).Select(v => $"Label {v}").Cast<object>().ToList()
+                }
+            ;
+            chart?.React();
+            StateHasChanged();
+        }
+    }
+
+    private PlotlyChart? chart;
+
+    private Config config = new()
+    {
+        Responsive = false,
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = false,
+        ShowTips = false,
+    };
+
+    private Layout layout = new()
+    {
+        Width = 400,
+        Height = 200,
+        AutoSize = false,
+        ShowLegend = false,
+        Margin = new()
+        {
+            AutoExpand = false,
+            B = 0,
+            L = 0,
+            R = 0,
+            T = 0,
+            Pad = 0
+        }
+    };
+
+    private List<ITrace> data = new List<ITrace> { new Pie() };
+
+    protected override void OnInitialized()
+    {
+        this.SliderValue = 1;
+    }
+}
