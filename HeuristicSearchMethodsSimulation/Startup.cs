@@ -36,7 +36,7 @@ namespace HeuristicSearchMethodsSimulation
                 .AddDefaultTokenProviders();
             services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
             services.AddRazorPages();
-            services.AddServerSideBlazor();
+            services.AddServerSideBlazor(options => options.MaxBufferedUnacknowledgedRenderBatches = 20);
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
