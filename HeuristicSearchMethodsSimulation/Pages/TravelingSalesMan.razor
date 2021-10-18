@@ -1,10 +1,11 @@
 ﻿@page "/TravelingSalesMan"
+@implements IDisposable
 
 <h3>Traveling Sales Man</h3>
 
 <h4>⚠ Under Construction!</h4>
 
-<Slider Min="1" Max="10" Step="1" @bind-Value="SliderValue" />
+<Slider Min="1" Max="10" Step="1" Value="SliderValue" ValueChanged="UpdateElements" />
 
 <br />
 
@@ -12,25 +13,107 @@
     <PlotlyChart Config="config" Layout="layout" Data="data" @ref="chart" style="min-height: none; height: auto;" />
 </div>
 
+<br />
+
+<HxGrid TItem="Location" DataProvider="ClientSideProcessingDataProvider" SelectionEnabled="false" @ref="grid">
+    <Columns>
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.Id)" ItemTextSelector="@(item => item.Id.ToString())" />
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.Label)" ItemTextSelector="@(item => item.Label)" />
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.ShortCode)" ItemTextSelector="@(item => item.ShortCode)" />
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.Latitude)" ItemTextSelector="@(item => item.Latitude.ToString())" />
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.Longitude)" ItemTextSelector="@(item => item.Longitude.ToString())" />
+        <HxGridColumn TItem="Location" HeaderText="@nameof(Location.Ordinal)" ItemTextSelector="@(item => item.Ordinal.ToString())" />
+    </Columns>
+</HxGrid>
+
 @code {
-    private int _sliderValue = 1;
-    private int SliderValue
-    {
-        get => _sliderValue;
-        set
+    private int SliderValue { get; set; } = 1;
+
+    private HxGrid<Location>? grid;
+
+    private List<Location> Locations { get; } = new List<Location> {
+        new()
         {
-            _sliderValue = value;
-            data[0] =
-                new Pie
-                {
-                    Values = Enumerable.Range(1, value).Select(v => v * 10).Cast<object>().ToList(),
-                    Labels = Enumerable.Range(1, value).Select(v => $"Label {v}").Cast<object>().ToList()
-                }
-            ;
-            chart?.React();
-            StateHasChanged();
-        }
-    }
+            Id = Guid.NewGuid(),
+            Label = "New York",
+            ShortCode = "NYC",
+            Latitude = 40.730610,
+            Longitude = -73.935242,
+            Ordinal = 1
+        },
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Label = "Atlanta",
+            ShortCode = "ATL",
+            Latitude = 33.753746,
+            Longitude = -84.386330,
+            Ordinal = 2
+        },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Chicago",
+             ShortCode = "CHI",
+             Latitude = 41.881832,
+             Longitude = -87.623177,
+             Ordinal = 3
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Dallas",
+             ShortCode = "DAL",
+             Latitude = 32.779167,
+             Longitude = -96.808891,
+             Ordinal = 4
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Las Vegas",
+             ShortCode = "LVG",
+             Latitude = 36.114647,
+             Longitude = -115.172813,
+             Ordinal = 5
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Miami",
+             ShortCode = "MIA",
+             Latitude = 36.881817,
+             Longitude = -94.871750,
+             Ordinal = 6
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Richmond",
+             ShortCode = "RMD",
+             Latitude = 37.935757,
+             Longitude = -122.347748,
+             Ordinal = 7
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Salt Lake City",
+             ShortCode = "SLC",
+             Latitude = 40.758701,
+             Longitude = -111.876183,
+             Ordinal = 8
+         },
+         new()
+         {
+             Id = Guid.NewGuid(),
+             Label = "Tulsa",
+             ShortCode = "TUL",
+             Latitude = 36.153980,
+             Longitude = -95.992775,
+             Ordinal = 9
+         }
+    };
 
     private PlotlyChart? chart;
 
@@ -62,8 +145,34 @@
 
     private List<ITrace> data = new List<ITrace> { new Pie() };
 
+    private async Task<GridDataProviderResult<Location>> ClientSideProcessingDataProvider(GridDataProviderRequest<Location> request) =>
+       request.ApplyTo(await Task.FromResult(Locations.Take(SliderValue)));
+
     protected override void OnInitialized()
     {
         this.SliderValue = 1;
+    }
+
+    private async Task UpdateElements(int sliderValue)
+    {
+        SliderValue = sliderValue;
+        data[0] =
+            new Pie
+            {
+                Values = Enumerable.Range(1, SliderValue).Select(v => v * 10).Cast<object>().ToList(),
+                Labels = Enumerable.Range(1, SliderValue).Select(v => $"Label {v}").Cast<object>().ToList()
+            };
+
+        if (chart is { } c)
+            await Task.Run(() => c?.React());
+
+        if (grid is { } g)
+            await g.RefreshDataAsync();
+    }
+
+    public void Dispose()
+    {
+        chart?.Dispose();
+        grid?.Dispose();
     }
 }
