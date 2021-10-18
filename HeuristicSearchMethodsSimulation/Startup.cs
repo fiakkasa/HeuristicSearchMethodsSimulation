@@ -1,4 +1,3 @@
-using Havit.Blazor.Components.Web;
 using HeuristicSearchMethodsSimulation.Areas.Identity;
 using HeuristicSearchMethodsSimulation.Models;
 using HeuristicSearchMethodsSimulation.Services;
@@ -42,10 +41,6 @@ namespace HeuristicSearchMethodsSimulation
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
-            services
-                .AddHxServices()
-                .AddHxMessageBoxHost()
-                .AddHxMessenger();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,11 +1,18 @@
-﻿.slider-container {
+﻿.range-selector-container {
     --base-width: 25px;
     --base-half-width: calc(var(--base-width, 25px) * .5);
     --base-quarter-width: calc(var(--base-half-width, 12.5px) * .5);
     --base-eigth-width: calc(var(--base-quarter-width, 6.25px) * .5);
+    --disabled-opacity: .75;
 }
 
-.slider-container > .slider {
+    .range-selector-container.disabled {
+        opacity: var(--disabled-opacity, .75);
+        pointer-events: none;
+        cursor: default;
+    }
+
+.range-selector-container > .range-selector {
     -webkit-appearance: none;
     width: 100%;
     height: 15px;
@@ -16,7 +23,7 @@
     transition: opacity .2s;
 }
 
-    .slider-container > .slider::-webkit-slider-thumb {
+    .range-selector-container > .range-selector::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
         width: var(--base-width, 25px);
@@ -26,7 +33,7 @@
         cursor: pointer;
     }
 
-    .slider-container > .slider::-moz-range-thumb {
+    .range-selector-container > .range-selector::-moz-range-thumb {
         width: var(--base-width, 25px);
         height: var(--base-width, 25px);
         border-radius: 50%;
@@ -34,12 +41,12 @@
         cursor: pointer;
     }
 
-    .slider-container > .bubble-container {
+    .range-selector-container > .bubble-container {
         position: relative;
         height: calc(var(--base-width, 25px) * 2);
     }
 
-    .slider-container > .bubble-container > .bubble {
+    .range-selector-container > .bubble-container > .bubble {
         position: absolute;
         left: 0;
         bottom: 0;
@@ -50,7 +57,7 @@
         align-items: flex-end;
     }
 
-        .slider-container > .bubble-container > .bubble > .bubble-text {
+        .range-selector-container > .bubble-container > .bubble > .bubble-text {
             position: relative;
             box-sizing: content-box;
             background-color: var(--bs-success, #04AA6D);
@@ -63,7 +70,7 @@
             margin-bottom: var(--base-half-width, 12.5px);
         }
 
-            .slider-container > .bubble-container > .bubble > .bubble-text:after {
+            .range-selector-container > .bubble-container > .bubble > .bubble-text:after {
                 content: '';
                 position: absolute;
                 top: calc(100% - var(--base-quarter-width, 6.25px));

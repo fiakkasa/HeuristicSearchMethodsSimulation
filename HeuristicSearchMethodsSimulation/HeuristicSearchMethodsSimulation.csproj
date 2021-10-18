@@ -14,19 +14,14 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="3.1.2" />
-    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="1.4.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.11" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="MongoDB.Driver" Version="2.13.2" />
     <PackageReference Include="Plotly.Blazor" Version="2.3.1" />
     <PackageReference Include="PrettyBlazor" Version="1.2.0" />
-    <PackageReference Include="SendGrid" Version="9.24.3" />
+    <PackageReference Include="SendGrid" Version="9.24.4" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
 </Project>
