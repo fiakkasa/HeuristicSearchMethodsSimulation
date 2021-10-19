@@ -1,4 +1,8 @@
 ﻿@page "/TravelingSalesMan"
+@using Plotly.Blazor
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.ConfigLib
+@using GeoCoordinatePortable
 @implements IDisposable
 
 <h3>Traveling Sales Man</h3>
@@ -22,8 +26,10 @@
 
         <br />
 
+        <h4>Locations</h4>
+
         <div class="table-responsive">
-            <table class="table table-striped table-borderless">
+            <table class="table table-striped table-borderless m-0">
                 <thead>
                     <tr>
                         <th>@nameof(Location.Label)</th>
@@ -33,7 +39,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <Iterations T="Location" Items="LocationsBySelection">
+                    <Iterations T="Location" Items="_locationsBySelection">
                         <tr>
                             <td>@context.Label</td>
                             <td>@context.ShortCode</td>
@@ -41,6 +47,40 @@
                             <td>@context.Longitude</td>
                         </tr>
                     </Iterations>
+                </tbody>
+            </table>
+        </div>
+
+        <br />
+
+        <h4>Matrix</h4>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-borderless m-0">
+                <tbody>
+                    <Condition Evaluation="_matrix.Count > 1">
+                        <NotMatch>
+                            <tr>
+                                <td>Nothing to show!</td>
+                            </tr>
+                        </NotMatch>
+                        <Match>
+                            <tr>
+                                <td></td>
+                                <Iterations T="LocationToLocationDistance" Items="_matrix[0]">
+                                    <td>@context.B.Label</td>
+                                </Iterations>
+                            </tr>
+                            <Iterations T="List<LocationToLocationDistance>" Items="_matrix">
+                                <tr>
+                                    <td>@context.First().A.Label</td>
+                                    <Iterations T="LocationToLocationDistance" Items="context" Context="childContext">
+                                        <td>@childContext.Distance.ToString("0, Km")</td>
+                                    </Iterations>
+                                </tr>
+                            </Iterations>
+                        </Match>
+                    </Condition>
                 </tbody>
             </table>
         </div>
@@ -84,8 +124,9 @@
         }
     };
     private readonly List<ITrace> _chartData = new List<ITrace> { new Pie() };
+    private List<Location> _locationsBySelection = new();
+    private List<List<LocationToLocationDistance>> _matrix = new();
 
-    private IEnumerable<Location> LocationsBySelection => _locations.Take(_sliderValue);
 
     protected override async Task OnInitializedAsync()
     {
@@ -188,12 +229,25 @@
     private async Task UpdateElements(int sliderValue)
     {
         _sliderValue = sliderValue;
+        _locationsBySelection = _locations.Take(_sliderValue).ToList();
         _chartData[0] =
             new Pie
             {
-                Values = await LocationsBySelection.Select((_, index) => (index + 1) * 10).Cast<object>().ToAsyncEnumerable().ToListAsync(),
-                Labels = await LocationsBySelection.Select(x => x.Label).Cast<object>().ToAsyncEnumerable().ToListAsync()
+                Values = _locationsBySelection.Select((_, index) => (object)((index + 1) * 10)).ToList(),
+                Labels = _locationsBySelection.Select(x => (object)x.Label).ToList()
             };
+        _matrix =
+            _locationsBySelection.Select(
+                 location =>
+                     _locationsBySelection.Select(
+                         otherLocation =>
+                            new LocationToLocationDistance(
+                                A: location,
+                                B: otherLocation,
+                                Distance: new GeoCoordinate(location.Latitude, location.Longitude).GetDistanceTo(new(otherLocation.Latitude, otherLocation.Longitude))
+                            )
+                    ).ToList()
+             ).ToList();
 
         if (_chartRef is { } c)
             await Task.Run(() => c?.React());
