@@ -1,4 +1,4 @@
 ﻿namespace HeuristicSearchMethodsSimulation.Models
 {
-    public record LocationToLocationDistance(Location A, Location B, double Distance);
+    public record LocationToLocationDistance(LocationGeo A, LocationGeo B, double Distance);
 }

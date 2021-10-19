@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using System;
+using System.Reflection;
 using IdentityRole = HeuristicSearchMethodsSimulation.Models.IdentityRole;
 using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
@@ -41,6 +42,7 @@ namespace HeuristicSearchMethodsSimulation
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

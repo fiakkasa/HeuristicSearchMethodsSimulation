@@ -4,6 +4,7 @@
 @using Plotly.Blazor.ConfigLib
 @using GeoCoordinatePortable
 @implements IDisposable
+@inject AutoMapper.IMapper mapper
 
 <h3>Traveling Sales Man</h3>
 
@@ -92,7 +93,7 @@
 @code {
     private bool _loading { get; set; } = true;
 
-    private List<Location> _locations { get; set; } = new();
+    private List<LocationGeo> _locations { get; set; } = new();
 
     private int _minSliderValue = 0;
     private int _maxSliderValue = 0;
@@ -124,7 +125,7 @@
         }
     };
     private readonly List<ITrace> _chartData = new List<ITrace> { new Pie() };
-    private List<Location> _locationsBySelection = new();
+    private List<LocationGeo> _locationsBySelection = new();
     private List<List<LocationToLocationDistance>> _matrix = new();
 
 
@@ -134,6 +135,7 @@
 
         //await Task.Delay(2000);
 
+        // todo: get from service
         _locations = new List<Location> {
             new()
             {
@@ -216,7 +218,9 @@
                  Longitude = -95.992775,
                  Ordinal = 9
              }
-        };
+        }
+        .Select(x => mapper.Map<LocationGeo>(x) with { Geo = new GeoCoordinate(x.Latitude, x.Longitude) })
+        .ToList();
 
         _minSliderValue = _locations.Count > 0 ? 1 : 0;
         _maxSliderValue = _locations.Count;
@@ -244,7 +248,11 @@
                             new LocationToLocationDistance(
                                 A: location,
                                 B: otherLocation,
-                                Distance: new GeoCoordinate(location.Latitude, location.Longitude).GetDistanceTo(new(otherLocation.Latitude, otherLocation.Longitude))
+                                Distance: (location, otherLocation) switch
+                                {
+                                    { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } } => lcGeo.GetDistanceTo(olcGeo),
+                                    _ => 0
+                                }
                             )
                     ).ToList()
              ).ToList();
