@@ -2,7 +2,7 @@
 
 App URL @ https://heuristic-search-methods-sim.herokuapp.com/
 
-## To get started you will need:
+## To get started you will need
 
 - A heroku account
 - The heroku cli https://devcenter.heroku.com/articles/heroku-cli
