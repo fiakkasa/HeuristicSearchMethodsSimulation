@@ -2,6 +2,10 @@
 @using Plotly.Blazor
 @using Plotly.Blazor.Traces
 @using Plotly.Blazor.ConfigLib
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.LayoutLib.GeoLib
+@using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
+@using Plotly.Blazor.Traces.ScatterGeoLib
 @using GeoCoordinatePortable
 @implements IDisposable
 @inject AutoMapper.IMapper mapper
@@ -80,11 +84,19 @@
     </NotMatch>
 </Condition>
 
+<div class="@(_loading ? "d-none" : string.Empty)">
+    <br />
+
+    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
+        <PlotlyChart Config="_mapChartConfig" Layout="_mapChartLayout" Data="_mapChartData" @ref="_mapChartRef" style="min-height: 0; height: auto; transform: scale(1.25);" />
+    </div>
+</div>
+
 <div class="@(_loading || _matrix.Count <= 2 ? "d-none" : string.Empty)">
     <br />
 
     <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
-        <PlotlyChart Config="_chartConfig" Layout="_chartLayout" Data="_chartData" @ref="_chartRef" style="min-height: none; height: auto;" />
+        <PlotlyChart Config="_pieChartConfig" Layout="_pieChartLayout" Data="_pieChartData" @ref="_pieChartRef" style="min-height: 0; height: auto;" />
     </div>
 </div>
 
@@ -92,13 +104,15 @@
     private bool _loading = true;
 
     private List<LocationGeo> _locations = new();
+    private List<LocationGeo> _locationsBySelection = new();
+    private List<LocationRow> _matrix = new();
 
-    private int _minSliderValue = 0;
-    private int _maxSliderValue = 0;
-    private int _sliderValue = 0;
+    private int _minSliderValue = 1;
+    private int _maxSliderValue = 10;
+    private int _sliderValue = 1;
 
-    private PlotlyChart? _chartRef;
-    private readonly Config _chartConfig = new()
+    private PlotlyChart? _mapChartRef;
+    private readonly Config _mapChartConfig = new()
     {
         Responsive = false,
         DisplayLogo = false,
@@ -106,9 +120,50 @@
         AutoSizable = false,
         ShowTips = false,
     };
-    private readonly Layout _chartLayout = new()
+    private readonly Layout _mapChartLayout = new()
     {
-        Width = 400,
+        Width = 640,
+        Height = 450,
+        AutoSize = false,
+        ShowLegend = false,
+        Margin = new()
+        {
+            AutoExpand = false,
+            B = 0,
+            L = 0,
+            R = 0,
+            T = 0,
+            Pad = 0
+        },
+        DragMode = DragModeEnum.False,
+        Geo = new List<Geo> {
+            new Geo
+            {
+                Scope = ScopeEnum.NorthAmerica,
+                Projection = new Projection
+                {
+                    Type = TypeEnum.AzimuthalEqualArea
+                },
+                ShowLand = true,
+                LandColor = "rgb(243,243,243)",
+                CountryColor = "rgb(204,204,204)"
+            }
+        },
+    };
+    private List<ITrace> _mapChartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+
+    private PlotlyChart? _pieChartRef;
+    private readonly Config _pieChartConfig = new()
+    {
+        Responsive = false,
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = false,
+        ShowTips = false,
+    };
+    private readonly Layout _pieChartLayout = new()
+    {
+        Width = 200,
         Height = 200,
         AutoSize = false,
         ShowLegend = false,
@@ -122,9 +177,7 @@
             Pad = 0
         }
     };
-    private readonly List<ITrace> _chartData = new List<ITrace> { new Pie() };
-    private List<LocationGeo> _locationsBySelection = new();
-    private List<LocationRow> _matrix = new();
+    private readonly List<ITrace> _pieChartData = new List<ITrace> { new Pie() };
 
     protected override async Task OnInitializedAsync()
     {
@@ -139,8 +192,8 @@
                 Id = Guid.NewGuid(),
                 Label = "New York",
                 ShortCode = "NYC",
-                Latitude = 40.730610,
-                Longitude = -73.935242,
+                Latitude = 40.71427,
+                Longitude = -74.00597,
                 Ordinal = 1
             },
             new()
@@ -148,8 +201,8 @@
                 Id = Guid.NewGuid(),
                 Label = "Atlanta",
                 ShortCode = "ATL",
-                Latitude = 33.753746,
-                Longitude = -84.386330,
+                Latitude = 33.749,
+                Longitude = -84.38798,
                 Ordinal = 2
             },
              new()
@@ -157,8 +210,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Chicago",
                  ShortCode = "CHI",
-                 Latitude = 41.881832,
-                 Longitude = -87.623177,
+                 Latitude = 41.85003,
+                 Longitude = -87.65005,
                  Ordinal = 3
              },
              new()
@@ -166,8 +219,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Dallas",
                  ShortCode = "DAL",
-                 Latitude = 32.779167,
-                 Longitude = -96.808891,
+                 Latitude = 32.78306,
+                 Longitude = -96.80667,
                  Ordinal = 4
              },
              new()
@@ -175,8 +228,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Las Vegas",
                  ShortCode = "LVG",
-                 Latitude = 36.114647,
-                 Longitude = -115.172813,
+                 Latitude = 36.17497,
+                 Longitude = -115.13722,
                  Ordinal = 5
              },
              new()
@@ -184,8 +237,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Miami",
                  ShortCode = "MIA",
-                 Latitude = 36.881817,
-                 Longitude = -94.871750,
+                 Latitude = 25.77427,
+                 Longitude = -80.19366,
                  Ordinal = 6
              },
              new()
@@ -193,8 +246,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Richmond",
                  ShortCode = "RMD",
-                 Latitude = 37.935757,
-                 Longitude = -122.347748,
+                 Latitude = 37.55376,
+                 Longitude = -77.46026,
                  Ordinal = 7
              },
              new()
@@ -202,8 +255,8 @@
                  Id = Guid.NewGuid(),
                  Label = "Salt Lake City",
                  ShortCode = "SLC",
-                 Latitude = 40.758701,
-                 Longitude = -111.876183,
+                 Latitude = 40.76078,
+                 Longitude = -111.89105,
                  Ordinal = 8
              },
              new()
@@ -211,16 +264,15 @@
                  Id = Guid.NewGuid(),
                  Label = "Tulsa",
                  ShortCode = "TUL",
-                 Latitude = 36.153980,
-                 Longitude = -95.992775,
+                 Latitude = 36.15398,
+                 Longitude = -95.99277,
                  Ordinal = 9
              }
         }
+        .Take(_maxSliderValue)
         .Select(x => mapper.Map<LocationGeo>(x) with { Geo = new GeoCoordinate(x.Latitude, x.Longitude) })
         .ToList();
 
-        _minSliderValue = _locations.Count > 0 ? 1 : 0;
-        _maxSliderValue = _locations.Count;
         await UpdateElements(_minSliderValue);
 
         _loading = false;
@@ -236,8 +288,6 @@
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();
-
-
 
     private async Task UpdateElements(int sliderValue)
     {
@@ -284,29 +334,54 @@
                 }
              ).ToList();
 
-        var chartData = _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
-                new Dictionary<string, LocationToLocation>(),
-                (result, row) =>
+        _mapChartData.Clear();
+        _mapChartData.AddRange(
+            _locationsBySelection.Count == 0
+            ? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+            : _locationsBySelection.Select(x =>
+                new ScatterGeo
                 {
-                    if (row.Min is { } min)
-                        result[min.Key] = min;
-
-                    return result;
+                    LocationMode = LocationModeEnum.ISO3,
+                    Lon = new List<object> { x.Longitude },
+                    Lat = new List<object> { x.Latitude },
+                    Mode = ModeFlag.Markers,
+                    Text = x.Label,
+                    Name = x.ShortCode,
+                    HoverInfo = HoverInfoFlag.Lat | HoverInfoFlag.Lon | HoverInfoFlag.Text | HoverInfoFlag.Name
                 }
-            );
-        _chartData[0] =
+            )
+            .ToList<ITrace>()
+        );
+
+        if (_mapChartRef is { } m)
+            m?.React();
+
+        var pieChartData = _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
+            new Dictionary<string, LocationToLocation>(),
+            (result, row) =>
+            {
+                if (row.Min is { } min)
+                    result[min.Key] = min;
+
+                return result;
+            }
+        );
+        _pieChartData.Clear();
+        _pieChartData.Add(
             new Pie
             {
-                Labels = chartData.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
-                Values = chartData.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
-            };
+                Labels = pieChartData.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
+                Values = pieChartData.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
+            }
+        );
 
-        if (_chartRef is { } c)
+        if (_pieChartRef is { } c)
             await Task.Run(() => c?.React());
+
     }
 
     public void Dispose()
     {
-        _chartRef?.Dispose();
+        _pieChartRef?.Dispose();
     }
 }
