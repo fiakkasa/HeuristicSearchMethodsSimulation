@@ -6,101 +6,120 @@
 @using Plotly.Blazor.LayoutLib.GeoLib
 @using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
 @using Plotly.Blazor.Traces.ScatterGeoLib
-@using GeoCoordinatePortable
 @implements IDisposable
-@inject AutoMapper.IMapper mapper
+@inject ITravelingSalesMan travelingSalesManService
+@inject ILogger<TravelingSalesMan> logger
 
 <h3>Traveling Sales Man</h3>
 
-<Condition Evaluation="_loading">
-    <Match>
+<Condition Evaluation="!_loading">
+    <NotMatch>
         <h4 class="d-flex align-items-center">
             <strong class="text-muted">Loading...</strong>
             <span class="flex-fill"></span>
             <i class="spinner-border border-2 text-secondary" role="status" aria-hidden="true"></i>
         </h4>
-    </Match>
-    <NotMatch>
-        <RangeSelector Min="_minSliderValue" Max="_maxSliderValue" Step="1" Value="_sliderValue" ValueChanged="UpdateElements" />
-
-        <br />
-
-        <h4>Locations</h4>
-
-        <div class="table-responsive">
-            <table class="table table-striped table-borderless m-0">
-                <thead>
-                    <tr>
-                        <th>@nameof(Location.Label)</th>
-                        <th>@nameof(Location.ShortCode)</th>
-                        <th>@nameof(Location.Latitude)</th>
-                        <th>@nameof(Location.Longitude)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <Iterations T="Location" Items="_locationsBySelection">
-                        <tr>
-                            <td>@context.Label</td>
-                            <td>@context.ShortCode</td>
-                            <td>@context.Latitude</td>
-                            <td>@context.Longitude</td>
-                        </tr>
-                    </Iterations>
-                </tbody>
-            </table>
-        </div>
-
-        <Condition Evaluation="_matrix.Count > 1">
+    </NotMatch>
+    <Match>
+        <Condition Evaluation="_locations.Count > 0">
+            <NotMatch>
+                <h4>No data available at the moment..</h4>
+            </NotMatch>
             <Match>
+                <RangeSelector Min="_minSliderValue"
+                               Max="_maxSliderValue"
+                               Step="1"
+                               Value="_sliderValue"
+                               ValueChanged="UpdateState"
+                               Disabled="_locations.Count == 0" />
+
                 <br />
 
-                <h4>Matrix</h4>
+                <h4>Locations</h4>
 
                 <div class="table-responsive">
-                    <table class="table table-borderless m-0">
-                        <tbody>
+                    <table class="table table-striped table-borderless m-0">
+                        <thead>
                             <tr>
-                                <th></th>
-                                <Iterations T="string" Items="_matrix[0].Xlabels">
-                                    <th>@context</th>
-                                </Iterations>
+                                <th>@nameof(Location.Label)</th>
+                                <th>@nameof(Location.ShortCode)</th>
+                                <th>@nameof(Location.Latitude)</th>
+                                <th>@nameof(Location.Longitude)</th>
                             </tr>
-                            <Iterations T="LocationRow" Items="_matrix">
+                        </thead>
+                        <tbody>
+                            <Iterations T="Location" Items="_locationsBySelection">
                                 <tr>
-                                    <th>@context.Ylabel</th>
-                                    <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
-                                        <td class="@CellCssClass(context, childContext)">
-                                            @childContext.DistanceInMeters.ToString("0, Km")
-                                        </td>
-                                    </Iterations>
+                                    <td>@context.Label</td>
+                                    <td>@context.ShortCode</td>
+                                    <td>@context.Latitude</td>
+                                    <td>@context.Longitude</td>
                                 </tr>
                             </Iterations>
                         </tbody>
                     </table>
                 </div>
 
+                <Condition Evaluation="_matrix.Count > 1">
+                    <Match>
+                        <br />
+
+                        <h4>Matrix</h4>
+
+                        <div class="table-responsive">
+                            <table class="table table-borderless m-0">
+                                <tbody>
+                                    <tr>
+                                        <th></th>
+                                        <Iterations T="string" Items="_matrix[0].Xlabels">
+                                            <th>@context</th>
+                                        </Iterations>
+                                    </tr>
+                                    <Iterations T="LocationRow" Items="_matrix">
+                                        <tr>
+                                            <th>@context.Ylabel</th>
+                                            <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
+                                                <td class="@CellCssClass(context, childContext)">
+                                                    @childContext.DistanceInMeters.ToString("0, Km")
+                                                </td>
+                                            </Iterations>
+                                        </tr>
+                                    </Iterations>
+                                </tbody>
+                            </table>
+                        </div>
+                    </Match>
+                </Condition>
+
+                <div>
+                    <br />
+
+                    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
+                        <PlotlyChart Config="_mapChartConfig"
+                                     Layout="_mapChartLayout"
+                                     Data="_mapChartData"
+                                     @ref="_mapChartRef"
+                                     style="min-height: 0; height: auto; transform: scale(1.25);" />
+                    </div>
+                </div>
+
+                <div class="@(_matrix.Count <= 2 ? "d-none" : string.Empty)">
+                    <br />
+
+                    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
+                        <PlotlyChart Config="_pieChartConfig"
+                                     Layout="_pieChartLayout"
+                                     Data="_pieChartData"
+                                     @ref="_pieChartRef" style="min-height: 0; height: auto;" />
+                    </div>
+                </div>
             </Match>
         </Condition>
-    </NotMatch>
+    </Match>
 </Condition>
 
-<div class="@(_loading ? "d-none" : string.Empty)">
-    <br />
-
-    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
-        <PlotlyChart Config="_mapChartConfig" Layout="_mapChartLayout" Data="_mapChartData" @ref="_mapChartRef" style="min-height: 0; height: auto; transform: scale(1.25);" />
-    </div>
-</div>
-
-<div class="@(_loading || _matrix.Count <= 2 ? "d-none" : string.Empty)">
-    <br />
-
-    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
-        <PlotlyChart Config="_pieChartConfig" Layout="_pieChartLayout" Data="_pieChartData" @ref="_pieChartRef" style="min-height: 0; height: auto;" />
-    </div>
-</div>
-
 @code {
+    private CancellationTokenSource _cts = new();
     private bool _loading = true;
 
     private List<LocationGeo> _locations = new();
@@ -183,100 +202,25 @@
     {
         _loading = true;
 
-        //await Task.Delay(2000);
+        _locations = await travelingSalesManService.Fetch(_maxSliderValue, _cts.Token);
 
-        // todo: get from service
-        _locations = new List<Location> {
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Label = "New York",
-                ShortCode = "NYC",
-                Latitude = 40.71427,
-                Longitude = -74.00597,
-                Ordinal = 1
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Label = "Atlanta",
-                ShortCode = "ATL",
-                Latitude = 33.749,
-                Longitude = -84.38798,
-                Ordinal = 2
-            },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Chicago",
-                 ShortCode = "CHI",
-                 Latitude = 41.85003,
-                 Longitude = -87.65005,
-                 Ordinal = 3
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Dallas",
-                 ShortCode = "DAL",
-                 Latitude = 32.78306,
-                 Longitude = -96.80667,
-                 Ordinal = 4
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Las Vegas",
-                 ShortCode = "LVG",
-                 Latitude = 36.17497,
-                 Longitude = -115.13722,
-                 Ordinal = 5
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Miami",
-                 ShortCode = "MIA",
-                 Latitude = 25.77427,
-                 Longitude = -80.19366,
-                 Ordinal = 6
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Richmond",
-                 ShortCode = "RMD",
-                 Latitude = 37.55376,
-                 Longitude = -77.46026,
-                 Ordinal = 7
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Salt Lake City",
-                 ShortCode = "SLC",
-                 Latitude = 40.76078,
-                 Longitude = -111.89105,
-                 Ordinal = 8
-             },
-             new()
-             {
-                 Id = Guid.NewGuid(),
-                 Label = "Tulsa",
-                 ShortCode = "TUL",
-                 Latitude = 36.15398,
-                 Longitude = -95.99277,
-                 Ordinal = 9
-             }
+        await UpdateState(_sliderValue).ContinueWith(_ => _loading = false);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) return;
+
+        try
+        {
+            if (_mapChartRef is { } m) await m!.React();
+
+            if (_pieChartRef is { } c) await c!.React();
         }
-        .Take(_maxSliderValue)
-        .Select(x => mapper.Map<LocationGeo>(x) with { Geo = new GeoCoordinate(x.Latitude, x.Longitude) })
-        .ToList();
-
-        await UpdateElements(_minSliderValue);
-
-        _loading = false;
-        StateHasChanged();
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
     }
 
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
@@ -289,99 +233,68 @@
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();
 
-    private async Task UpdateElements(int sliderValue)
+    private async Task UpdateState(int sliderValue)
     {
-        _sliderValue = sliderValue;
-        _locationsBySelection = _locations.Take(_sliderValue).ToList();
-        _matrix =
-            _locationsBySelection.Select(
-                location =>
-                {
-                    var rowCollection =
-                        _locationsBySelection.Select(
-                            (otherLocation, index) =>
-                                new LocationToLocation(
-                                    A: location,
-                                    B: otherLocation,
-                                    DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
-                                    ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                    Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
-                                        ? $"{location.ShortCode}-{otherLocation.ShortCode}"
-                                        : $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                    DistanceInMeters: (location, otherLocation) switch
-                                    {
-                                        { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } } => lcGeo.GetDistanceTo(olcGeo),
-                                        _ => 0
-                                    },
-                                    Index: index,
-                                    OrdinalFromOrigin: 0
-                                )
-                            )
-                            .OrderBy(x => x.DistanceInMeters)
-                            .Select((x, ordinalFromOrigin) => x with { OrdinalFromOrigin = ordinalFromOrigin })
-                            .OrderBy(x => x.Index)
-                            .ToList();
+        try
+        {
+            _sliderValue = sliderValue;
+            _locationsBySelection = _locations.Take(_sliderValue).ToList();
+            _matrix = await travelingSalesManService.CalculateMatrix(_locationsBySelection, _cts.Token);
 
-                    var selfKey = $"{location.ShortCode}-{location.ShortCode}";
+            _mapChartData.Clear();
+            _mapChartData.AddRange(
+                await travelingSalesManService.CalculateMapMarkers(_locationsBySelection, _cts.Token) is { Count: > 0 } mc ?
+                    mc
+                    : new[] { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+                );
 
-                    return new LocationRow(
-                        Collection: rowCollection,
-                        Ylabel: location.Label,
-                        Xlabels: _locationsBySelection.Select(x => x.Label).ToList(),
-                        Min: rowCollection.Where(x => x.Key != selfKey).Min(),
-                        Max: rowCollection.Where(x => x.Key != selfKey).Max()
-                    );
-                }
-             ).ToList();
+            // note: sample
+            // todo: remove and calculate actual pie data
+            var pieChartData = await Task.Run(() =>
+                _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
+                    new Dictionary<string, LocationToLocation>(),
+                    (result, row) =>
+                    {
+                        if (row.Min is { } min)
+                            result[min.Key] = min;
 
-        _mapChartData.Clear();
-        _mapChartData.AddRange(
-            _locationsBySelection.Count == 0
-            ? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
-            : _locationsBySelection.Select(x =>
-                new ScatterGeo
-                {
-                    LocationMode = LocationModeEnum.ISO3,
-                    Lon = new List<object> { x.Longitude },
-                    Lat = new List<object> { x.Latitude },
-                    Mode = ModeFlag.Markers,
-                    Text = x.Label,
-                    Name = x.ShortCode,
-                    HoverInfo = HoverInfoFlag.Lat | HoverInfoFlag.Lon | HoverInfoFlag.Text | HoverInfoFlag.Name
-                }
-            )
-            .ToList<ITrace>()
-        );
+                        return result;
+                    }
+                ),
+                _cts.Token
+            );
+            _pieChartData.Clear();
+            _pieChartData.Add(
+                await Task.Run(() =>
+                    new Pie
+                    {
+                        Labels = pieChartData.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
+                        Values = pieChartData.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
+                    },
+                    _cts.Token
+                )
+            );
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
 
-        if (_mapChartRef is { } m)
-            m?.React();
-
-        var pieChartData = _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
-            new Dictionary<string, LocationToLocation>(),
-            (result, row) =>
-            {
-                if (row.Min is { } min)
-                    result[min.Key] = min;
-
-                return result;
-            }
-        );
-        _pieChartData.Clear();
-        _pieChartData.Add(
-            new Pie
-            {
-                Labels = pieChartData.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
-                Values = pieChartData.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
-            }
-        );
-
-        if (_pieChartRef is { } c)
-            await Task.Run(() => c?.React());
-
+            logger.LogError(ex, ex.Message);
+        }
     }
 
     public void Dispose()
     {
-        _pieChartRef?.Dispose();
+        try
+        {
+            _pieChartRef?.Dispose();
+            _mapChartRef?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+
+        _cts.Cancel();
     }
 }

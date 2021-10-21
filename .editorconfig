@@ -17,3 +17,8 @@ dotnet_diagnostic.RCS1163.severity = none
 
 # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0060.severity = none
+
+# S3459: Unassigned members should be removed
+dotnet_diagnostic.S3459.severity = none
+
+dotnet_diagnostic.CS0649.severity = none

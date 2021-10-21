@@ -1,4 +1,5 @@
 using HeuristicSearchMethodsSimulation.Areas.Identity;
+using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Models;
 using HeuristicSearchMethodsSimulation.Services;
 using Microsoft.AspNetCore.Builder;
@@ -43,6 +44,7 @@ namespace HeuristicSearchMethodsSimulation
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddScoped<ITravelingSalesMan, TravelingSalesMan>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

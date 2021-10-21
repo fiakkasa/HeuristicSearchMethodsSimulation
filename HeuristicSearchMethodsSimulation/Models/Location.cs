@@ -1,8 +1,10 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDbGenericRepository.Attributes;
 
 namespace HeuristicSearchMethodsSimulation.Models
 {
     [BsonIgnoreExtraElements]
+    [CollectionName("Locations")]
     public record Location : Entity
     {
         public string Label { get; set; } = string.Empty;
