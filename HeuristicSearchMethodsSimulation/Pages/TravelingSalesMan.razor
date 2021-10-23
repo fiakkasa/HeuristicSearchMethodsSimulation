@@ -12,7 +12,7 @@
 
 <h3>Traveling Sales Man</h3>
 
-<Condition Evaluation="!_init">
+<Condition Evaluation="_init">
     <NotMatch>
         <h4 class="d-flex align-items-center">
             <strong class="text-muted">Loading...</strong>
@@ -21,7 +21,7 @@
         </h4>
     </NotMatch>
     <Match>
-        <Condition Evaluation="_locations.Count > 0">
+        <Condition Evaluation="_locationsBySelection.Count > 0">
             <NotMatch>
                 <h4>No data available at the moment..</h4>
             </NotMatch>
@@ -120,7 +120,7 @@
 
 @code {
     private CancellationTokenSource _cts = new();
-    private bool _init = true;
+    private bool _init = false;
 
     private List<LocationGeo> _locations = new();
     private List<LocationGeo> _locationsBySelection = new();
@@ -200,26 +200,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _init = true;
+        _init = false;
 
         _locations = await travelingSalesManService.Fetch(_maxSliderValue, _cts.Token);
 
-        await UpdateState(_sliderValue, true);
-
-        await Task.Delay(500);
-        _init = false;
+        await Task.WhenAll(new[]
+        {
+            UpdateState(_sliderValue, true),
+            new Func<Task>(() => { try { return Task.Delay(250, _cts.Token); }catch{ return Task.CompletedTask; } })()
+        }).ContinueWith(_ => _init = true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender || _init) return;
+        if (firstRender || !_init) return;
 
         try
         {
-            await Task.WhenAll(new[] {
-                _mapChartRef?.React() ?? Task.CompletedTask,
-                _pieChartRef?.React() ?? Task.CompletedTask
-            });
+            if (_mapChartRef is { } m) await m!.React();
+
+            if (_pieChartRef is { } c) await c!.React();
         }
         catch (Exception ex)
         {
@@ -247,39 +247,40 @@
             _locationsBySelection = _locations.Take(_sliderValue).ToList();
             _matrix = await travelingSalesManService.CalculateMatrix(_locationsBySelection, _cts.Token);
 
-            _mapChartData.Clear();
-            _mapChartData.AddRange(
-                await travelingSalesManService.CalculateMapMarkers(_locationsBySelection, _cts.Token) is { Count: > 0 } mc ?
-                    mc
-                    : new[] { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
-                );
-
-            // note: sample
-            // todo: remove and calculate actual pie data
-            var pieChartData = await Task.Run(() =>
-                _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
-                    new Dictionary<string, LocationToLocation>(),
-                    (result, row) =>
+            var mapMarkerData =
+                await travelingSalesManService.CalculateMapMarkers(_locationsBySelection, _cts.Token) is { Count: > 0 } mc
+                    ? mc
+                    : new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+            var samplePieData =
+                await Task.Run(
+                    () =>
                     {
-                        if (row.Min is { } min)
-                            result[min.Key] = min;
+                        var pieChartDataDict =
+                            _matrix.Aggregate<LocationRow, Dictionary<string, LocationToLocation>>(
+                                new Dictionary<string, LocationToLocation>(),
+                                (result, row) =>
+                                {
+                                    if (row.Min is { } min)
+                                        result[min.Key] = min;
 
-                        return result;
-                    }
-                ),
-                _cts.Token
-            );
-            _pieChartData.Clear();
-            _pieChartData.Add(
-                await Task.Run(() =>
-                    new Pie
-                    {
-                        Labels = pieChartData.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
-                        Values = pieChartData.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
+                                    return result;
+                                }
+                            );
+
+                        return new Pie
+                        {
+                            Labels = pieChartDataDict.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
+                            Values = pieChartDataDict.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
+                        };
                     },
                     _cts.Token
-                )
-            );
+                );
+
+            _mapChartData.Clear();
+            _mapChartData.AddRange(mapMarkerData);
+
+            _pieChartData.Clear();
+            _pieChartData.Add(samplePieData);
 
             if (!deferNotifyingStateChanged) StateHasChanged();
         }

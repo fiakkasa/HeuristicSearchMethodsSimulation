@@ -3,9 +3,8 @@
 @code{
     protected override async Task OnInitializedAsync()
     {
-        var returnUrl = await Task.FromResult($"~/{NavigationManager.ToBaseRelativePath(NavigationManager.Uri)}");
         NavigationManager.NavigateTo(
-            $"{NavigationManager.BaseUri}Identity/Account/Login?returnUrl={returnUrl}",
+            await Task.FromResult($"{NavigationManager.BaseUri}Identity/Account/Login"),
             forceLoad: true
         );
     }
