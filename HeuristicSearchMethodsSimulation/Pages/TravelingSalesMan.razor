@@ -12,7 +12,7 @@
 
 <h3>Traveling Sales Man</h3>
 
-<Condition Evaluation="!_loading">
+<Condition Evaluation="!_init">
     <NotMatch>
         <h4 class="d-flex align-items-center">
             <strong class="text-muted">Loading...</strong>
@@ -120,7 +120,7 @@
 
 @code {
     private CancellationTokenSource _cts = new();
-    private bool _loading = true;
+    private bool _init = true;
 
     private List<LocationGeo> _locations = new();
     private List<LocationGeo> _locationsBySelection = new();
@@ -200,22 +200,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _loading = true;
+        _init = true;
 
         _locations = await travelingSalesManService.Fetch(_maxSliderValue, _cts.Token);
 
-        await UpdateState(_sliderValue).ContinueWith(_ => _loading = false);
+        await UpdateState(_sliderValue, true);
+
+        await Task.Delay(500);
+        _init = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) return;
+        if (firstRender || _init) return;
 
         try
         {
-            if (_mapChartRef is { } m) await m!.React();
-
-            if (_pieChartRef is { } c) await c!.React();
+            await Task.WhenAll(new[] {
+                _mapChartRef?.React() ?? Task.CompletedTask,
+                _pieChartRef?.React() ?? Task.CompletedTask
+            });
         }
         catch (Exception ex)
         {
@@ -233,7 +237,9 @@
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();
 
-    private async Task UpdateState(int sliderValue)
+    private Task UpdateState(int sliderValue) => UpdateState(sliderValue, false);
+
+    private async Task UpdateState(int sliderValue, bool deferNotifyingStateChanged)
     {
         try
         {
@@ -274,7 +280,8 @@
                     _cts.Token
                 )
             );
-            StateHasChanged();
+
+            if (!deferNotifyingStateChanged) StateHasChanged();
         }
         catch (Exception ex)
         {
