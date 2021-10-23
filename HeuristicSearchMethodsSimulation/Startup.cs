@@ -32,9 +32,10 @@ namespace HeuristicSearchMethodsSimulation
         public void ConfigureServices(IServiceCollection services)
         {
             var mongoConnectionUri = Configuration.GetConnectionString(Consts.MongoConnectionKey);
+            var mongoOptions = Configuration.GetSection(nameof(MongoOptions)).Get<MongoOptions>();
             services
                 .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, Consts.MongoIdentityDatabase)
+                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptions.Databases.Identity)
                 .AddDefaultTokenProviders();
             services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
             services.AddRazorPages();
@@ -43,6 +44,7 @@ namespace HeuristicSearchMethodsSimulation
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
+            services.Configure<MongoOptions>(Configuration.GetSection(nameof(MongoOptions)));
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             services.AddScoped<ITravelingSalesMan, TravelingSalesMan>();
         }

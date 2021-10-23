@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using GeoCoordinatePortable;
+using HeuristicSearchMethodsSimulation.Extensions;
 using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using MongoDbGenericRepository.Attributes;
 using Plotly.Blazor;
 using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
@@ -18,27 +19,23 @@ namespace HeuristicSearchMethodsSimulation.Services
 {
     public class TravelingSalesMan : ITravelingSalesMan
     {
+        private readonly IOptions<MongoOptions> _options;
         private readonly Func<IMongoClient> _mongoClientFactory;
         private readonly IMapper _mapper;
         private readonly ILogger<TravelingSalesMan> _logger;
         private readonly IMongoClient? _client;
+
         private IMongoClient Client => _client ?? _mongoClientFactory();
 
-        public TravelingSalesMan(Func<IMongoClient> mongoClientFactory, IMapper mapper, ILogger<TravelingSalesMan> logger)
+        public TravelingSalesMan(IOptions<MongoOptions> options, Func<IMongoClient> mongoClientFactory, IMapper mapper, ILogger<TravelingSalesMan> logger)
         {
+            _options = options;
             _mongoClientFactory = mongoClientFactory;
             _mapper = mapper;
             _logger = logger;
         }
 
-        private IMongoCollection<Location> Locations() =>
-           Client.GetDatabase(Consts.MongoDatabase).GetCollection<Location>(
-               Attribute.GetCustomAttributes(typeof(Location))
-                   .OfType<CollectionNameAttribute>()
-                   .Take(1)
-                   .Select(x => x.Name)
-                   .FirstOrDefault()
-           );
+        private IMongoCollection<Location> Locations() => Client.GetCollection<Location>(_options.Value.Databases.Data);
 
         public async Task<List<LocationGeo>> Fetch(int limit = 1000, CancellationToken cancellationToken = default)
         {
@@ -70,11 +67,11 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        public Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, CancellationToken cancellationToken = default)
+        public async Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, CancellationToken cancellationToken = default)
         {
             try
             {
-                return Task.Run(() =>
+                return await Task.Run(() =>
                     locations.Count == 0
                         ? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
                         : locations.ConvertAll<ITrace>(x =>
@@ -90,21 +87,21 @@ namespace HeuristicSearchMethodsSimulation.Services
                             }
                         ),
                     cancellationToken
-                );
+                ).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
 
-                return Task.FromResult(new List<ITrace>());
+                return new List<ITrace>();
             }
         }
 
-        public Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default)
+        public async Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default)
         {
             try
             {
-                return Task.Run(() =>
+                return await Task.Run(() =>
                     locations.ConvertAll(
                         location =>
                         {
@@ -145,13 +142,14 @@ namespace HeuristicSearchMethodsSimulation.Services
                         }
                     ),
                     cancellationToken
-                );
+                )
+                .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
 
-                return Task.FromResult(new List<LocationRow>());
+                return new List<LocationRow>();
             }
         }
     }
