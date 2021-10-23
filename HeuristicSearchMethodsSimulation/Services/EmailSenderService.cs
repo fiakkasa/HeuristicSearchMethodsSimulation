@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Services
 {
-    public class EmailSender : IEmailSender
+    public class EmailSenderService : IEmailSender
     {
         public AuthMessageSenderOptions Options { get; } //set only via Secret Manager
 
-        public EmailSender(IOptions<AuthMessageSenderOptions> optionsAccessor)
+        public EmailSenderService(IOptions<AuthMessageSenderOptions> optionsAccessor)
         {
             Options = optionsAccessor.Value;
         }

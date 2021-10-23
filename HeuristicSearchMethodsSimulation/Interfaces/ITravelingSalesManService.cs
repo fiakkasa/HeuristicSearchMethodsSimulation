@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces
 {
-    public interface ITravelingSalesMan
+    public interface ITravelingSalesManService
     {
         Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, CancellationToken cancellationToken = default);
         Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default);

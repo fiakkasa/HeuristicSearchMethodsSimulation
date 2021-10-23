@@ -17,17 +17,17 @@ using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Services
 {
-    public class TravelingSalesMan : ITravelingSalesMan
+    public class TravelingSalesManService : ITravelingSalesManService
     {
         private readonly IOptions<MongoOptions> _options;
         private readonly Func<IMongoClient> _mongoClientFactory;
         private readonly IMapper _mapper;
-        private readonly ILogger<TravelingSalesMan> _logger;
+        private readonly ILogger<TravelingSalesManService> _logger;
         private readonly IMongoClient? _client;
 
         private IMongoClient Client => _client ?? _mongoClientFactory();
 
-        public TravelingSalesMan(IOptions<MongoOptions> options, Func<IMongoClient> mongoClientFactory, IMapper mapper, ILogger<TravelingSalesMan> logger)
+        public TravelingSalesManService(IOptions<MongoOptions> options, Func<IMongoClient> mongoClientFactory, IMapper mapper, ILogger<TravelingSalesManService> logger)
         {
             _options = options;
             _mongoClientFactory = mongoClientFactory;

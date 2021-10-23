@@ -32,21 +32,43 @@ namespace HeuristicSearchMethodsSimulation
         public void ConfigureServices(IServiceCollection services)
         {
             var mongoConnectionUri = Configuration.GetConnectionString(Consts.MongoConnectionKey);
-            var mongoOptions = Configuration.GetSection(nameof(MongoOptions)).Get<MongoOptions>();
-            services
-                .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptions.Databases.Identity)
-                .AddDefaultTokenProviders();
-            services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
-            services.AddRazorPages();
-            services.AddServerSideBlazor(options => options.MaxBufferedUnacknowledgedRenderBatches = 20);
-            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-            services.AddTransient<IEmailSender, EmailSender>();
+            var mongoOptionsSection = Configuration.GetSection(nameof(MongoOptions));
+
+            #region Health
+            services.AddHealthChecks();
+            #endregion
+
+            #region AutoMapper
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            #endregion
+
+            #region Options
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
-            services.Configure<MongoOptions>(Configuration.GetSection(nameof(MongoOptions)));
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
-            services.AddScoped<ITravelingSalesMan, TravelingSalesMan>();
+            services.Configure<MongoOptions>(mongoOptionsSection);
+            #endregion
+
+            #region Identity
+            services
+                .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>().Databases.Identity)
+                .AddDefaultTokenProviders();
+            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+            services.AddScoped<IEmailSender, EmailSenderService>();
+            #endregion
+
+            #region Database
+            services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
+            #endregion
+
+            #region Blazor
+            services.AddRazorPages();
+            services.AddServerSideBlazor(options => options.MaxBufferedUnacknowledgedRenderBatches = 20);
+            #endregion
+
+            #region Services
+            services.AddScoped<ITravelingSalesManService, TravelingSalesManService>();
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,6 +96,7 @@ namespace HeuristicSearchMethodsSimulation
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks(Consts.HealthEndPoint);
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
