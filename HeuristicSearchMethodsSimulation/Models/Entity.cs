@@ -7,6 +7,10 @@ namespace HeuristicSearchMethodsSimulation.Models
     public abstract record Entity
     {
         [BsonId(IdGenerator = typeof(GuidGenerator))]
-        public Guid Id { get; set; }
+        public virtual Guid Id { get; set; }
+
+        public virtual DateTimeOffset CreatedAt { get; set; }
+
+        public virtual DateTimeOffset UpdatedAt { get; set; }
     }
 }
