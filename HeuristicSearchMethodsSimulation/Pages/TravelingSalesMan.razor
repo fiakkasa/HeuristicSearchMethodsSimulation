@@ -266,8 +266,8 @@
 
         _sliderValue = _minSliderValue;
 
-        _locationsBySelection = new();
-        _matrix = new();
+        _locationsBySelection.Clear();
+        _matrix.Clear();
     }
 
     private async Task SetAlgo(TravelingSalesManAlgorithms algo)
@@ -282,6 +282,9 @@
         }
 
         _loading = true;
+
+        if (_locationsBySelection.Count == 0)
+            await UpdateState(_minSliderValue);
 
         await Task.Delay(250);
 
