@@ -10,6 +10,8 @@
 @inject ITravelingSalesManService travelingSalesManService
 @inject ILogger<TravelingSalesMan> logger
 
+<ProgressBar Show="_init && _loading" />
+
 <h3>Traveling Sales Man</h3>
 
 <Condition Evaluation="_init">
@@ -21,98 +23,113 @@
         </h4>
     </NotMatch>
     <Match>
-        <Condition Evaluation="_locationsBySelection.Count > 0">
+        <Condition Evaluation="_locations.Count > 0">
             <NotMatch>
                 <h4>No data available at the moment..</h4>
             </NotMatch>
             <Match>
-                <RangeSelector Min="_minSliderValue"
-                               Max="_maxSliderValue"
-                               Step="1"
-                               Value="_sliderValue"
-                               ValueChanged="UpdateState"
-                               Disabled="_locations.Count == 0" />
+                <h4>Algorithms</h4>
 
-                <br />
+                <TravelingSalesManAlgorithmsDropDown Value="_algorithm" ValueChanged="SetAlgo" Disabled="_loading" />
 
-                <h4>Locations</h4>
-
-                <div class="table-responsive">
-                    <table class="table table-striped table-borderless m-0">
-                        <thead>
-                            <tr>
-                                <th>@nameof(Location.Label)</th>
-                                <th>@nameof(Location.ShortCode)</th>
-                                <th>@nameof(Location.Latitude)</th>
-                                <th>@nameof(Location.Longitude)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <Iterations T="Location" Items="_locationsBySelection">
-                                <tr>
-                                    <td>@context.Label</td>
-                                    <td>@context.ShortCode</td>
-                                    <td>@context.Latitude</td>
-                                    <td>@context.Longitude</td>
-                                </tr>
-                            </Iterations>
-                        </tbody>
-                    </table>
-                </div>
-
-                <Condition Evaluation="_matrix.Count > 1">
+                <Condition Evaluation="_algorithm != TravelingSalesManAlgorithms.None">
+                    <NotMatch>
+                        <small class="text-muted">Select an algorithm to get started!</small>
+                    </NotMatch>
                     <Match>
                         <br />
 
-                        <h4>Matrix</h4>
+                        <h4>Number of Locations</h4>
+
+                        <RangeSelector Min="_minSliderValue"
+                                       Max="_maxSliderValue"
+                                       Step="1"
+                                       Value="_sliderValue"
+                                       ValueChanged="UpdateState"
+                                       Disabled="_loading" />
+
+                        <br />
+
+                        <h4>Locations</h4>
 
                         <div class="table-responsive">
-                            <table class="table table-borderless m-0">
-                                <tbody>
+                            <table class="table table-striped table-borderless m-0">
+                                <thead>
                                     <tr>
-                                        <th></th>
-                                        <Iterations T="string" Items="_matrix[0].Xlabels">
-                                            <th>@context</th>
-                                        </Iterations>
+                                        <th>@nameof(Location.Label)</th>
+                                        <th>@nameof(Location.ShortCode)</th>
+                                        <th>@nameof(Location.Latitude)</th>
+                                        <th>@nameof(Location.Longitude)</th>
                                     </tr>
-                                    <Iterations T="LocationRow" Items="_matrix">
+                                </thead>
+                                <tbody>
+                                    <Iterations T="Location" Items="_locationsBySelection">
                                         <tr>
-                                            <th>@context.Ylabel</th>
-                                            <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
-                                                <td class="@CellCssClass(context, childContext)">
-                                                    @childContext.DistanceInMeters.ToString("0, Km")
-                                                </td>
-                                            </Iterations>
+                                            <td>@context.Label</td>
+                                            <td>@context.ShortCode</td>
+                                            <td>@context.Latitude</td>
+                                            <td>@context.Longitude</td>
                                         </tr>
                                     </Iterations>
                                 </tbody>
                             </table>
                         </div>
+
+                        <Condition Evaluation="_matrix.Count > 1">
+                            <Match>
+                                <br />
+
+                                <h4>Matrix</h4>
+
+                                <div class="table-responsive">
+                                    <table class="table table-borderless m-0">
+                                        <tbody>
+                                            <tr>
+                                                <th></th>
+                                                <Iterations T="string" Items="_matrix[0].Xlabels">
+                                                    <th>@context</th>
+                                                </Iterations>
+                                            </tr>
+                                            <Iterations T="LocationRow" Items="_matrix">
+                                                <tr>
+                                                    <th>@context.Ylabel</th>
+                                                    <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
+                                                        <td class="@CellCssClass(context, childContext)">
+                                                            @childContext.DistanceInMeters.ToString("0, Km")
+                                                        </td>
+                                                    </Iterations>
+                                                </tr>
+                                            </Iterations>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Match>
+                        </Condition>
+
+                        <div>
+                            <br />
+
+                            <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
+                                <PlotlyChart Config="_mapChartConfig"
+                                             Layout="_mapChartLayout"
+                                             Data="_mapChartData"
+                                             @ref="_mapChartRef"
+                                             style="min-height: 0; height: auto; transform: scale(1.25);" />
+                            </div>
+                        </div>
+
+                        <div class="@(_matrix.Count <= 2 ? "d-none" : string.Empty)">
+                            <br />
+
+                            <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
+                                <PlotlyChart Config="_pieChartConfig"
+                                             Layout="_pieChartLayout"
+                                             Data="_pieChartData"
+                                             @ref="_pieChartRef" style="min-height: 0; height: auto;" />
+                            </div>
+                        </div>
                     </Match>
                 </Condition>
-
-                <div>
-                    <br />
-
-                    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
-                        <PlotlyChart Config="_mapChartConfig"
-                                     Layout="_mapChartLayout"
-                                     Data="_mapChartData"
-                                     @ref="_mapChartRef"
-                                     style="min-height: 0; height: auto; transform: scale(1.25);" />
-                    </div>
-                </div>
-
-                <div class="@(_matrix.Count <= 2 ? "d-none" : string.Empty)">
-                    <br />
-
-                    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
-                        <PlotlyChart Config="_pieChartConfig"
-                                     Layout="_pieChartLayout"
-                                     Data="_pieChartData"
-                                     @ref="_pieChartRef" style="min-height: 0; height: auto;" />
-                    </div>
-                </div>
             </Match>
         </Condition>
     </Match>
@@ -121,10 +138,13 @@
 @code {
     private CancellationTokenSource _cts = new();
     private bool _init = false;
+    private bool _loading = false;
 
     private List<LocationGeo> _locations = new();
     private List<LocationGeo> _locationsBySelection = new();
     private List<LocationRow> _matrix = new();
+
+    private TravelingSalesManAlgorithms _algorithm;
 
     private int _minSliderValue = 1;
     private int _maxSliderValue = 10;
@@ -204,11 +224,7 @@
 
         _locations = await travelingSalesManService.Fetch(_maxSliderValue, _cts.Token);
 
-        await Task.WhenAll(new[]
-        {
-            UpdateState(_sliderValue, true),
-            new Func<Task>(() => { try { return Task.Delay(250, _cts.Token); }catch{ return Task.CompletedTask; } })()
-        }).ContinueWith(_ => _init = true);
+        await Task.Delay(250, _cts.Token).ContinueWith(_ => _init = true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -236,6 +252,42 @@
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();
+
+    private void Reset()
+    {
+        _pieChartData.Clear();
+        _pieChartData.Add(new Pie());
+        _mapChartData.Clear();
+        _mapChartData.Add(new ScatterGeo { LocationMode = LocationModeEnum.ISO3 });
+        _pieChartRef?.Dispose();
+        _pieChartRef = null;
+        _mapChartRef?.Dispose();
+        _mapChartRef = null;
+
+        _sliderValue = _minSliderValue;
+
+        _locationsBySelection = new();
+        _matrix = new();
+    }
+
+    private async Task SetAlgo(TravelingSalesManAlgorithms algo)
+    {
+        _algorithm = algo;
+
+        if (_algorithm == TravelingSalesManAlgorithms.None)
+        {
+            Reset();
+
+            return;
+        }
+
+        _loading = true;
+
+        await Task.Delay(250);
+
+        _loading = false;
+        StateHasChanged();
+    }
 
     private Task UpdateState(int sliderValue) => UpdateState(sliderValue, false);
 
@@ -293,16 +345,8 @@
 
     public void Dispose()
     {
-        try
-        {
-            _pieChartRef?.Dispose();
-            _mapChartRef?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, ex.Message);
-        }
-
+        _pieChartRef?.Dispose();
+        _mapChartRef?.Dispose();
         _cts.Cancel();
     }
 }

@@ -1,0 +1,12 @@
+﻿<Condition Evaluation="Show">
+    <Match>
+        <div class="progress-bar progress-bar-striped progress-bar-animated position-absolute w-100 @CssClass" role="progressbar">
+            <div class="progress-bar-animated w-100 rounded-0" role="progressbar"></div>
+        </div>
+    </Match>
+</Condition>
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+}
