@@ -1,0 +1,45 @@
+﻿<Condition Evaluation="Matrix?.Count > 1">
+    <Match>
+        <div class="traveling-salesman-matrix-container @CssClass">
+            <h4>Matrix</h4>
+
+            <div class="table-responsive">
+                <table class="table table-borderless m-0">
+                    <tbody>
+                        <tr>
+                            <th></th>
+                            <Iterations T="string" Items="Matrix![0].Xlabels">
+                                <th>@context</th>
+                            </Iterations>
+                        </tr>
+                        <Iterations T="LocationRow" Items="Matrix">
+                            <tr>
+                                <th>@context.Ylabel</th>
+                                <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
+                                    <td class="@CellCssClass(context, childContext)">
+                                        @childContext.DistanceInMeters.ToString("0, Km")
+                                    </td>
+                                </Iterations>
+                            </tr>
+                        </Iterations>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </Match>
+</Condition>
+
+@code {
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public List<LocationRow>? Matrix { get; set; }
+
+    private string CellCssClass(LocationRow row, LocationToLocation cell) => (
+        (row, cell) switch
+        {
+            { row: { Min: { } }, cell: _ } when row.Min.Key == cell.Key => "min-distance text-success",
+            { row: { Max: { } }, cell: _ } when row.Max.Key == cell.Key => "max-distance text-danger",
+            { row: _, cell: { DistanceInMeters: 0 } } => "text-muted",
+            _ => string.Empty
+        } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
+    ).Trim();
+}

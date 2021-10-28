@@ -1,0 +1,118 @@
+﻿@using Plotly.Blazor
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.ConfigLib
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.LayoutLib.GeoLib
+@using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
+@using Plotly.Blazor.Traces.ScatterGeoLib
+@implements IDisposable
+@inject ILogger<TravelingSalesManMap> logger
+
+<div class="traveling-salesman-map-container @CssClass">
+    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
+        <PlotlyChart Config="_mapChartConfig"
+                     Layout="_mapChartLayout"
+                     Data="MapChartData"
+                     @ref="_mapChartRef"
+                     style="min-height: 0; height: auto; transform: scale(1.25);" />
+    </div>
+</div>
+
+@code {
+    private PlotlyChart? _mapChartRef;
+    private readonly Config _mapChartConfig = new()
+    {
+        Responsive = false,
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = false,
+        ShowTips = false,
+    };
+    private readonly Layout _mapChartLayout = new()
+    {
+        Width = 640,
+        Height = 450,
+        AutoSize = false,
+        ShowLegend = false,
+        Margin = new()
+        {
+            AutoExpand = false,
+            B = 0,
+            L = 0,
+            R = 0,
+            T = 0,
+            Pad = 0
+        },
+        DragMode = DragModeEnum.False,
+        Geo = new List<Geo> {
+            new Geo {
+                Scope = ScopeEnum.NorthAmerica,
+                Projection = new Projection
+                {
+                    Type = TypeEnum.AzimuthalEqualArea
+                },
+                ShowLand = true,
+                LandColor = "#f8f4f4",
+                CountryColor = "#d3d3d3"
+            }
+        },
+    };
+    private List<ITrace> _mapChartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter]
+    public List<ITrace> MapChartData
+    {
+        get => _mapChartData;
+        set
+        {
+            _mapChartData.Clear();
+            _mapChartData.AddRange(
+                value?.Count < 1
+                    ? new[] { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+                    : value!
+                );
+        }
+    }
+    [Parameter]
+    public string LandColor
+    {
+        get => _mapChartLayout.Geo[0].LandColor.ToString()!;
+        set
+        {
+            _mapChartLayout.Geo[0].LandColor = value?.Trim() is { Length: > 0 } color
+                ? color
+                : "#f8f4f4";
+        }
+    }
+    [Parameter]
+    public string CountryColor
+    {
+        get => _mapChartLayout.Geo[0].CountryColor.ToString()!;
+        set
+        {
+            _mapChartLayout.Geo[0].CountryColor = value?.Trim() is { Length: > 0 } color
+                ? color
+                : "#d3d3d3";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) return;
+
+        try
+        {
+            if (_mapChartRef is { } m) await m!.React();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _mapChartRef?.Dispose();
+    }
+}

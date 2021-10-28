@@ -1,0 +1,14 @@
+﻿<Condition Evaluation="Loading">
+    <NotMatch>
+        <PageLoader />
+    </NotMatch>
+    <Match>
+        @ChildContent
+    </Match>
+</Condition>
+
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool Loading { get; set; }
+}

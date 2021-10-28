@@ -1,0 +1,88 @@
+﻿@using Plotly.Blazor
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.ConfigLib
+@implements IDisposable
+@inject ILogger<TravelingSalesManPie> logger
+
+<div class="traveling-salesman-map-container @CssClass @VisibilityClass">
+    <br />
+
+    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
+        <PlotlyChart Config="_pieChartConfig"
+                     Layout="_pieChartLayout"
+                     Data="PieChartData"
+                     @ref="_pieChartRef" style="min-height: 0; height: auto;" />
+    </div>
+</div>
+
+@code {
+    private PlotlyChart? _pieChartRef;
+    private readonly Config _pieChartConfig = new()
+    {
+        Responsive = false,
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = false,
+        ShowTips = false,
+    };
+    private readonly Layout _pieChartLayout = new()
+    {
+        Width = 200,
+        Height = 200,
+        AutoSize = false,
+        ShowLegend = false,
+        Margin = new()
+        {
+            AutoExpand = false,
+            B = 0,
+            L = 0,
+            R = 0,
+            T = 0,
+            Pad = 0
+        }
+    };
+    private readonly List<ITrace> _pieChartData = new List<ITrace> { new Pie() };
+
+    private string VisibilityClass => _pieChartData.FirstOrDefault() switch
+    {
+        Pie pie when pie.Values?.Count > 0 && pie.Values?.Count == pie.Labels?.Count => string.Empty,
+        _ => "d-none"
+    };
+
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter]
+    public List<ITrace> PieChartData
+    {
+        get => _pieChartData;
+        set
+        {
+            _pieChartData.Clear();
+            _pieChartData.Add(
+                value?.FirstOrDefault() switch
+                {
+                    Pie pie when pie.Values?.Count > 0 && pie.Values?.Count == pie.Labels?.Count => pie,
+                    _ => new Pie()
+                }
+            );
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) return;
+
+        try
+        {
+            if (_pieChartRef is { } c) await c!.React();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _pieChartRef?.Dispose();
+    }
+}

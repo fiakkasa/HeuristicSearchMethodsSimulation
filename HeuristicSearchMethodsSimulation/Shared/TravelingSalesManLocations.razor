@@ -1,0 +1,36 @@
+﻿<Condition Evaluation="Locations?.Count > 0">
+    <Match>
+        <div class="traveling-salesman-locations-container @CssClass">
+            <h4>Locations</h4>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-borderless m-0">
+                    <thead>
+                        <tr>
+                            <th>@nameof(Location.Label)</th>
+                            <th>@nameof(Location.ShortCode)</th>
+                            <th>@nameof(Location.Latitude)</th>
+                            <th>@nameof(Location.Longitude)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <Iterations T="Location" Items="Locations">
+                            <tr>
+                                <td>@context.Label</td>
+                                <td>@context.ShortCode</td>
+                                <td>@context.Latitude</td>
+                                <td>@context.Longitude</td>
+                            </tr>
+                        </Iterations>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </Match>
+</Condition>
+
+@code {
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public List<LocationGeo>? Locations { get; set; }
+
+}
