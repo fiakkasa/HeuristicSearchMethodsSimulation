@@ -37,16 +37,22 @@
                                        Disabled="_loading" />
                     </div>
 
-                    <LocationsTable Locations="_locationsBySelection" CssClass="mt-3" />
+                    <LocationsTable Data="_locationsBySelection" CssClass="mt-3" />
 
-                    <LocationsMatrix Matrix="_matrix" NumberOfUniqueRoutes="_numberOfUniqueLocations.LastOrDefault()" CssClass="mt-3" />
+                    <LocationsMatrix Data="_matrix" NumberOfUniqueRoutes="_numberOfUniqueLocations.LastOrDefault()" CssClass="mt-3" />
 
-                    <LocationsMap MapChartData="_mapChartData"
+                    <Condition Evaluation="_numberOfUniqueLocations.Count > 1">
+                        <Match>
+                            <NumberOfUniqueLocationsChart Data="_numberOfUniqueLocations" CssClass="mt-3" />
+                        </Match>
+                    </Condition>
+
+                    <LocationsMap Data="_mapChartData"
                                   CssClass="mt-3"
                                   LandColor="rgb(243,243,243)"
                                   CountryColor="rgb(204,204,204)" />
 
-                    <LocationsPie PieChartData="_pieChartData" CssClass="mt-3" />
+                    <LocationsPie Value="_pieChartData" CssClass="mt-3" />
                 </Match>
             </Condition>
         </Match>
@@ -70,7 +76,7 @@
     private int _sliderValue = 1;
 
     private List<ITrace> _mapChartData = new();
-    private List<ITrace> _pieChartData = new();
+    private Pie? _pieChartData = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,7 +90,7 @@
     private void Reset()
     {
         _mapChartData.Clear();
-        _pieChartData.Clear();
+        _pieChartData = default;
 
         _sliderValue = _minSliderValue;
 
@@ -157,8 +163,7 @@
 
             _mapChartData.Clear();
             _mapChartData.AddRange(mapMarkerData);
-            _pieChartData.Clear();
-            _pieChartData.Add(samplePieData);
+            _pieChartData = samplePieData;
 
             if (!deferNotifyingStateChanged) StateHasChanged();
         }

@@ -1,0 +1,118 @@
+﻿@using Plotly.Blazor
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.ConfigLib
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Traces.ScatterLib
+@implements IDisposable
+@inject ILogger<NumberOfUniqueLocationsChart> logger
+
+<div class="traveling-salesman-unique-locations-chart-container @CssClass @VisibilityClass">
+    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden">
+        <PlotlyChart Config="_chartConfig"
+                     Layout="_chartLayout"
+                     Data="_chartData"
+                     @ref="_chartRef"
+                     style="min-height: 0; height: auto;" />
+    </div>
+</div>
+
+@code {
+    private PlotlyChart? _chartRef;
+    private readonly Config _chartConfig = new()
+    {
+        Responsive = false,
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = false,
+        ShowTips = false
+    };
+    private readonly Layout _chartLayout = new()
+    {
+        Width = 640,
+        Height = 320,
+        AutoSize = false,
+        ShowLegend = false,
+        Margin = new()
+        {
+            AutoExpand = false,
+            B = 50,
+            L = 50,
+            R = 20,
+            T = 20,
+            Pad = 0
+        },
+        XAxis = new List<XAxis> {
+            new()
+            {
+                Title = new ()
+                {
+                    Text = "Locations"
+                },
+                TickVals = Array.Empty<object>(),
+                TickMode = Plotly.Blazor.LayoutLib.XAxisLib.TickModeEnum.Linear
+            }
+        },
+        YAxis = new List<YAxis> {
+            new()
+            {
+                Title = new()
+                {
+                    Text = "Routes"
+                }
+            }
+        }
+    };
+    private List<ITrace> _chartData = new();
+
+    private string VisibilityClass =>
+        _chartData.FirstOrDefault() is Scatter scatter && scatter.X?.Count > 0 && scatter.X?.Count == scatter.Y?.Count
+            ? string.Empty
+            : "d-none";
+
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter]
+    public List<long> Data
+    {
+        set
+        {
+            if (value?.Count > 0)
+            {
+                var data = new Scatter
+                {
+                    Mode = ModeFlag.Lines | ModeFlag.Markers,
+                    X = value.Select((x, i) => i + 1).Cast<object>().ToList(),
+                    Y = value.Cast<object>().ToList(),
+                    Text = string.Empty,
+                    Name = string.Empty,
+                    HoverInfo = HoverInfoFlag.X | HoverInfoFlag.Y,
+                    HoverTemplate = $"{_chartLayout.YAxis[0].Title.Text}: %{{y}}<br />{_chartLayout.XAxis[0].Title.Text}: %{{x}}"
+                };
+                _chartData.Clear();
+                _chartData.Add(data);
+            }
+            else
+            {
+                _chartData.Clear();
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) return;
+
+        try
+        {
+            if (_chartRef is { } c) await c!.React();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _chartRef?.Dispose();
+    }
+}

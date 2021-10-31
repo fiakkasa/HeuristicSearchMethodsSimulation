@@ -1,6 +1,10 @@
-﻿<h5 class="m-0 @CssClass">
-    Number of unique routes: <span class="text-info">@Value</span>
-</h5>
+﻿<Condition Evaluation="Value >= 0">
+    <Match>
+        <h5 class="m-0 @CssClass">
+            Number of unique routes: <span class="text-info">@Value</span>
+        </h5>
+    </Match>
+</Condition>
 
 @code {
     [Parameter] public string? CssClass { get; set; }

@@ -10,17 +10,17 @@
 
 <div class="traveling-salesman-map-container @CssClass">
     <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
-        <PlotlyChart Config="_mapChartConfig"
-                     Layout="_mapChartLayout"
-                     Data="MapChartData"
-                     @ref="_mapChartRef"
+        <PlotlyChart Config="_chartConfig"
+                     Layout="_chartLayout"
+                     Data="_chartData"
+                     @ref="_chartRef"
                      style="min-height: 0; height: auto; transform: scale(1.25);" />
     </div>
 </div>
 
 @code {
-    private PlotlyChart? _mapChartRef;
-    private readonly Config _mapChartConfig = new()
+    private PlotlyChart? _chartRef;
+    private readonly Config _chartConfig = new()
     {
         Responsive = false,
         DisplayLogo = false,
@@ -28,7 +28,7 @@
         AutoSizable = false,
         ShowTips = false,
     };
-    private readonly Layout _mapChartLayout = new()
+    private readonly Layout _chartLayout = new()
     {
         Width = 640,
         Height = 450,
@@ -57,17 +57,16 @@
             }
         },
     };
-    private List<ITrace> _mapChartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+    private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
 
     [Parameter] public string? CssClass { get; set; }
     [Parameter]
-    public List<ITrace> MapChartData
+    public List<ITrace> Data
     {
-        get => _mapChartData;
         set
         {
-            _mapChartData.Clear();
-            _mapChartData.AddRange(
+            _chartData.Clear();
+            _chartData.AddRange(
                 value?.Count < 1
                     ? new[] { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
                     : value!
@@ -77,10 +76,9 @@
     [Parameter]
     public string LandColor
     {
-        get => _mapChartLayout.Geo[0].LandColor.ToString()!;
         set
         {
-            _mapChartLayout.Geo[0].LandColor = value?.Trim() is { Length: > 0 } color
+            _chartLayout.Geo[0].LandColor = value?.Trim() is { Length: > 0 } color
                 ? color
                 : "#f8f4f4";
         }
@@ -88,10 +86,9 @@
     [Parameter]
     public string CountryColor
     {
-        get => _mapChartLayout.Geo[0].CountryColor.ToString()!;
         set
         {
-            _mapChartLayout.Geo[0].CountryColor = value?.Trim() is { Length: > 0 } color
+            _chartLayout.Geo[0].CountryColor = value?.Trim() is { Length: > 0 } color
                 ? color
                 : "#d3d3d3";
         }
@@ -103,7 +100,7 @@
 
         try
         {
-            if (_mapChartRef is { } m) await m!.React();
+            if (_chartRef is { } m) await m!.React();
         }
         catch (Exception ex)
         {
@@ -113,6 +110,6 @@
 
     public void Dispose()
     {
-        _mapChartRef?.Dispose();
+        _chartRef?.Dispose();
     }
 }

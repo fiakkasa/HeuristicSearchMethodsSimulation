@@ -81,9 +81,10 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 Lon = new List<object> { x.Longitude },
                                 Lat = new List<object> { x.Latitude },
                                 Mode = ModeFlag.Markers,
-                                Text = x.Label,
-                                Name = x.ShortCode,
-                                HoverInfo = HoverInfoFlag.Lat | HoverInfoFlag.Lon | HoverInfoFlag.Text | HoverInfoFlag.Name
+                                Text = $"{x.Label} ({x.ShortCode})",
+                                Name = string.Empty,
+                                HoverInfo = HoverInfoFlag.Lat | HoverInfoFlag.Lon,
+                                HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
                             }
                         ),
                     cancellationToken

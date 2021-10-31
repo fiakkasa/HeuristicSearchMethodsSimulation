@@ -1,4 +1,4 @@
-﻿<Condition Evaluation="Locations?.Count > 0">
+﻿<Condition Evaluation="Data?.Count > 0">
     <Match>
         <div class="traveling-salesman-locations-container @CssClass">
             <h4>Locations</h4>
@@ -14,7 +14,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <Iterations T="Location" Items="Locations">
+                        <Iterations T="Location" Items="Data">
                             <tr>
                                 <td>@context.Label</td>
                                 <td>@context.ShortCode</td>
@@ -31,6 +31,5 @@
 
 @code {
     [Parameter] public string? CssClass { get; set; }
-    [Parameter] public List<LocationGeo>? Locations { get; set; }
-
+    [Parameter] public List<LocationGeo>? Data { get; set; }
 }

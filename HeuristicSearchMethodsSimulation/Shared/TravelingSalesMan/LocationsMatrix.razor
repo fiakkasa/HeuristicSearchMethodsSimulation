@@ -1,4 +1,4 @@
-﻿<Condition Evaluation="Matrix?.Count > 1">
+﻿<Condition Evaluation="Data?.Count > 1">
     <Match>
         <div class="traveling-salesman-matrix-container @CssClass">
             <h4>Matrix</h4>
@@ -8,13 +8,13 @@
                     <thead>
                         <tr>
                             <th>Distance (Km)</th>
-                            <Iterations T="string" Items="Matrix![0].Xlabels">
+                            <Iterations T="string" Items="Data![0].Xlabels">
                                 <th>@context</th>
                             </Iterations>
                         </tr>
                     </thead>
                     <tbody>
-                        <Iterations T="LocationRow" Items="Matrix">
+                        <Iterations T="LocationRow" Items="Data">
                             <tr>
                                 <th>@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
@@ -34,7 +34,7 @@
 
 @code {
     [Parameter] public string? CssClass { get; set; }
-    [Parameter] public List<LocationRow>? Matrix { get; set; }
+    [Parameter] public List<LocationRow>? Data { get; set; }
     [Parameter] public long NumberOfUniqueRoutes { get; set; } = 0L;
 
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
