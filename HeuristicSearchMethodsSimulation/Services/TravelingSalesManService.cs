@@ -97,6 +97,27 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
+        public async Task<List<long>> CalculateNumberOfUniqueRoutes(int numberOfLocations, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (numberOfLocations < 1) return new List<long>();
+
+                return await Task.Run(() =>
+                    Enumerable.Range(1, numberOfLocations)
+                        .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x))
+                        .ToList(),
+                    cancellationToken
+                ).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return new List<long>();
+            }
+        }
+
         public async Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default)
         {
             try
@@ -116,17 +137,15 @@ namespace HeuristicSearchMethodsSimulation.Services
                                             Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
                                                 ? $"{location.ShortCode}-{otherLocation.ShortCode}"
                                                 : $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                            DistanceInMeters: (location, otherLocation) switch
-                                            {
-                                                { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } } => lcGeo.GetDistanceTo(olcGeo),
-                                                _ => 0
-                                            },
+                                            DistanceInKilometers: (location, otherLocation) is { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } }
+                                                ? lcGeo.GetDistanceTo(olcGeo)
+                                                : 0D,
                                             Index: index,
                                             OrdinalFromOrigin: 0
                                         )
                                     )
-                                    .OrderBy(x => x.DistanceInMeters)
-                                    .Select((x, ordinalFromOrigin) => x with { OrdinalFromOrigin = ordinalFromOrigin })
+                                    .OrderBy(x => x.DistanceInKilometers)
+                                    .Select((x, ordinalFromOrigin) => (x with { OrdinalFromOrigin = ordinalFromOrigin }))
                                     .OrderBy(x => x.Index)
                                     .ToList();
 
@@ -134,8 +153,8 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                             return new LocationRow(
                                 Collection: rowCollection,
-                                Ylabel: location.Label,
-                                Xlabels: locations.ConvertAll(x => x.Label),
+                                Ylabel: $"{location.Label} ({location.ShortCode})",
+                                Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})"),
                                 Min: rowCollection.Where(x => x.Key != selfKey).Min(),
                                 Max: rowCollection.Where(x => x.Key != selfKey).Max()
                             );

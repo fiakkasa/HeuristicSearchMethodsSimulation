@@ -11,5 +11,6 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
         Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, CancellationToken cancellationToken = default);
         Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default);
         Task<List<LocationGeo>> Fetch(int limit = 1000, CancellationToken cancellationToken = default);
+        Task<List<long>> CalculateNumberOfUniqueRoutes(int numberOfLocations, CancellationToken cancellationToken = default);
     }
 }

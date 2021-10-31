@@ -4,20 +4,22 @@
             <h4>Matrix</h4>
 
             <div class="table-responsive">
-                <table class="table table-borderless m-0">
-                    <tbody>
+                <table class="table table-striped m-0">
+                    <thead>
                         <tr>
-                            <th></th>
+                            <th>Distance (Km)</th>
                             <Iterations T="string" Items="Matrix![0].Xlabels">
                                 <th>@context</th>
                             </Iterations>
                         </tr>
+                    </thead>
+                    <tbody>
                         <Iterations T="LocationRow" Items="Matrix">
                             <tr>
                                 <th>@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
                                     <td class="@CellCssClass(context, childContext)">
-                                        @childContext.DistanceInMeters.ToString("0, Km")
+                                        @childContext.DistanceInKilometers.ToString("0,")
                                     </td>
                                 </Iterations>
                             </tr>
@@ -25,6 +27,7 @@
                     </tbody>
                 </table>
             </div>
+            <NumberOfUniqueLocations Value="NumberOfUniqueRoutes" CssClass="mt-2" />
         </div>
     </Match>
 </Condition>
@@ -32,13 +35,14 @@
 @code {
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public List<LocationRow>? Matrix { get; set; }
+    [Parameter] public long NumberOfUniqueRoutes { get; set; } = 0L;
 
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
         (row, cell) switch
         {
             { row: { Min: { } }, cell: _ } when row.Min.Key == cell.Key => "min-distance text-success",
             { row: { Max: { } }, cell: _ } when row.Max.Key == cell.Key => "max-distance text-danger",
-            { row: _, cell: { DistanceInMeters: 0 } } => "text-muted",
+            { row: _, cell: { DistanceInKilometers: 0 } } => "text-muted",
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();

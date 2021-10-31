@@ -2,6 +2,7 @@
 @using Plotly.Blazor
 @using Plotly.Blazor.Traces
 @using Plotly.Blazor.Traces.ScatterGeoLib
+@using HeuristicSearchMethodsSimulation.Shared.TravelingSalesMan
 @implements IDisposable
 @inject ITravelingSalesManService travelingSalesManService
 @inject ILogger<TravelingSalesMan> logger
@@ -18,7 +19,7 @@
         <Match>
             <h4>Algorithms</h4>
 
-            <TravelingSalesManAlgorithmsDropDown Value="_algorithm" ValueChanged="SetAlgo" Disabled="_loading" />
+            <AlgorithmsDropDown Value="_algorithm" ValueChanged="SetAlgo" Disabled="_loading" />
 
             <Condition Evaluation="_algorithm != TravelingSalesManAlgorithms.None">
                 <NotMatch>
@@ -36,16 +37,16 @@
                                        Disabled="_loading" />
                     </div>
 
-                    <TravelingSalesManLocations Locations="_locationsBySelection" CssClass="mt-3" />
+                    <LocationsTable Locations="_locationsBySelection" CssClass="mt-3" />
 
-                    <TravelingSalesManMatrix Matrix="_matrix" CssClass="mt-3" />
+                    <LocationsMatrix Matrix="_matrix" NumberOfUniqueRoutes="_numberOfUniqueLocations.LastOrDefault()" CssClass="mt-3" />
 
-                    <TravelingSalesManMap MapChartData="_mapChartData"
-                                          CssClass="mt-3"
-                                          LandColor="rgb(243,243,243)"
-                                          CountryColor="rgb(204,204,204)" />
+                    <LocationsMap MapChartData="_mapChartData"
+                                  CssClass="mt-3"
+                                  LandColor="rgb(243,243,243)"
+                                  CountryColor="rgb(204,204,204)" />
 
-                    <TravelingSalesManPie PieChartData="_pieChartData" CssClass="mt-3" />
+                    <LocationsPie PieChartData="_pieChartData" CssClass="mt-3" />
                 </Match>
             </Condition>
         </Match>
@@ -60,6 +61,7 @@
     private List<LocationGeo> _locations = new();
     private List<LocationGeo> _locationsBySelection = new();
     private List<LocationRow> _matrix = new();
+    private List<long> _numberOfUniqueLocations = new();
 
     private TravelingSalesManAlgorithms _algorithm;
 
@@ -88,6 +90,7 @@
 
         _locationsBySelection.Clear();
         _matrix.Clear();
+        _numberOfUniqueLocations.Clear();
     }
 
     private async Task SetAlgo(TravelingSalesManAlgorithms algo)
@@ -121,6 +124,7 @@
             _sliderValue = sliderValue;
             _locationsBySelection = _locations.Take(_sliderValue).ToList();
             _matrix = await travelingSalesManService.CalculateMatrix(_locationsBySelection, _cts.Token);
+            _numberOfUniqueLocations = await travelingSalesManService.CalculateNumberOfUniqueRoutes(_sliderValue, _cts.Token);
 
             var mapMarkerData =
                 await travelingSalesManService.CalculateMapMarkers(_locationsBySelection, _cts.Token) is { Count: > 0 } mc
@@ -145,7 +149,7 @@
                         return new Pie
                         {
                             Labels = pieChartDataDict.Values.Select(x => $"{x.DirectionalKey} | {x.ReverseDirectionalKey}").ToList<object>(),
-                            Values = pieChartDataDict.Values.Select(x => (object)(long)(x.DistanceInMeters / 1000)).ToList()
+                            Values = pieChartDataDict.Values.Select(x => (object)(long)(x.DistanceInKilometers / 1000)).ToList()
                         };
                     },
                     _cts.Token
