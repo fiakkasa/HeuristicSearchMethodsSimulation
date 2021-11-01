@@ -1,0 +1,28 @@
+﻿<div class="traveling-salesman-route-symmetry d-inline-flex flex-wrap align-items-center p-0 m-0 form-check form-switch @DisabledClass">
+    <label class="me-2">Route Symmetry:</label>
+    <div data-state="@Value">
+        <input class="form-check-input float-none bg-light border-0 bg-black bg-opacity-25 m-0 mt-1"
+               type="checkbox"
+               role="switch"
+               value="@Value"
+               disabled="@Disabled"
+               @oninput="OnValue" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    private string DisabledClass => Disabled ? "disabled" : string.Empty;
+
+    private async Task OnValue(ChangeEventArgs e)
+    {
+        if (Disabled) return;
+
+        bool.TryParse(e.Value?.ToString() ?? string.Empty, out var value);
+        Value = value;
+        await ValueChanged.InvokeAsync(Value).ConfigureAwait(true);
+    }
+}
+

@@ -1,4 +1,4 @@
-﻿.range-selector-container {
+﻿.traveling-salesman-range-selector-container {
     --base-width: 25px;
     --base-half-width: calc(var(--base-width, 25px) * .5);
     --base-quarter-width: calc(var(--base-half-width, 12.5px) * .5);
@@ -6,13 +6,13 @@
     --disabled-opacity: .75;
 }
 
-    .range-selector-container.disabled {
+    .traveling-salesman-range-selector-container.disabled {
         opacity: var(--disabled-opacity, .75);
         pointer-events: none;
         cursor: default;
     }
 
-.range-selector-container > .range-selector {
+.traveling-salesman-range-selector-container > .range-selector {
     -webkit-appearance: none;
     width: 100%;
     height: 15px;
@@ -23,7 +23,7 @@
     transition: opacity .2s;
 }
 
-    .range-selector-container > .range-selector::-webkit-slider-thumb {
+    .traveling-salesman-range-selector-container > .range-selector::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
         width: var(--base-width, 25px);
@@ -33,7 +33,7 @@
         cursor: pointer;
     }
 
-    .range-selector-container > .range-selector::-moz-range-thumb {
+    .traveling-salesman-range-selector-container > .range-selector::-moz-range-thumb {
         width: var(--base-width, 25px);
         height: var(--base-width, 25px);
         border-radius: 50%;
@@ -41,12 +41,12 @@
         cursor: pointer;
     }
 
-    .range-selector-container > .bubble-container {
+    .traveling-salesman-range-selector-container > .bubble-container {
         position: relative;
         height: calc(var(--base-width, 25px) * 2);
     }
 
-    .range-selector-container > .bubble-container > .bubble {
+    .traveling-salesman-range-selector-container > .bubble-container > .bubble {
         position: absolute;
         left: 0;
         bottom: 0;
@@ -57,7 +57,7 @@
         align-items: flex-end;
     }
 
-        .range-selector-container > .bubble-container > .bubble > .bubble-text {
+        .traveling-salesman-range-selector-container > .bubble-container > .bubble > .bubble-text {
             position: relative;
             box-sizing: content-box;
             background-color: var(--bs-success, #04AA6D);
@@ -70,7 +70,7 @@
             margin-bottom: var(--base-half-width, 12.5px);
         }
 
-            .range-selector-container > .bubble-container > .bubble > .bubble-text:after {
+            .traveling-salesman-range-selector-container > .bubble-container > .bubble > .bubble-text:after {
                 content: '';
                 position: absolute;
                 top: calc(100% - var(--base-quarter-width, 6.25px));

@@ -37,6 +37,11 @@
                                        Disabled="_loading" />
                     </div>
 
+                    @_routeSymmetry
+                    <div>
+                        <RouteSymmetry @bind-Value="_routeSymmetry" Disabled="_loading" />
+                    </div>
+
                     <LocationsTable Data="_locationsBySelection" CssClass="mt-3" />
 
                     <LocationsMatrix Data="_matrix" NumberOfUniqueRoutes="_numberOfUniqueLocations.LastOrDefault()" CssClass="mt-3" />
@@ -68,6 +73,8 @@
     private List<LocationGeo> _locationsBySelection = new();
     private List<LocationRow> _matrix = new();
     private List<long> _numberOfUniqueLocations = new();
+
+    private bool _routeSymmetry;
 
     private TravelingSalesManAlgorithms _algorithm;
 

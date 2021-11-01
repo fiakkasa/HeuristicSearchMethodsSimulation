@@ -1,4 +1,7 @@
-﻿<select class="form-select" @bind="Value" @oninput="OnValue" disabled="@Disabled">
+﻿<select class="traveling-salesman-algo-dropdown form-select"
+        value="@Value"
+        disabled="@Disabled"
+        @oninput="OnValue">
     <Iterations T="KeyValuePair<string, TravelingSalesManAlgorithms>" Items="List">
         <option value="@context.Value">@context.Key</option>
     </Iterations>
@@ -29,6 +32,7 @@
         if (Disabled) return;
 
         Enum.TryParse<TravelingSalesManAlgorithms>(e.Value?.ToString() ?? "0", out var value);
+        Value = value;
         await ValueChanged.InvokeAsync(value).ConfigureAwait(true);
     }
 }

@@ -1,0 +1,9 @@
+﻿.traveling-salesman-route-symmetry {
+    --disabled-opacity: .75;
+}
+
+    .traveling-salesman-route-symmetry.disabled {
+        opacity: var(--disabled-opacity, .75);
+        pointer-events: none;
+        cursor: default;
+    }
