@@ -1,13 +1,11 @@
 ﻿<div class="traveling-salesman-route-symmetry d-inline-flex flex-wrap align-items-center p-0 m-0 form-check form-switch @DisabledClass">
-    <label class="me-2">Route Symmetry:</label>
-    <div data-state="@Value">
-        <input class="form-check-input float-none bg-light border-0 bg-black bg-opacity-25 m-0 mt-1"
-               type="checkbox"
-               role="switch"
-               value="@Value"
-               disabled="@Disabled"
-               @oninput="OnValue" />
-    </div>
+    <div class="me-2">Route Symmetry:</div>
+    <input class="form-check-input float-none bg-light border-0 bg-black bg-opacity-25 m-0"
+           type="checkbox"
+           role="switch"
+           value="@Value"
+           disabled="@Disabled"
+           @oninput="OnValue" />
 </div>
 
 @code {

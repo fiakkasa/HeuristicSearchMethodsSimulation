@@ -1,17 +1,16 @@
-﻿<div class="traveling-salesman-range-selector-container @DisabledClass">
-    <div class="bubble-container">
-        <div class="bubble" style="left: @BubblePosition">
-            <div class="bubble-text">@Value</div>
-        </div>
+﻿<div class="traveling-salesman-range-selector-container d-inline-flex flex-wrap align-items-center @DisabledClass">
+    <div class="me-2">Number of cities:</div>
+    <div class="range-selector-container flex-fill d-flex align-items-center me-2">
+        <input type="range"
+               class="range-selector @DisabledClass"
+               min="@Min"
+               max="@Max"
+               step="@Step"
+               value="@Value"
+               disabled="@Disabled"
+               @oninput="OnValue" />
     </div>
-    <input type="range"
-           class="range-selector @DisabledClass"
-           min="@Min"
-           max="@Max"
-           step="@Step"
-           value="@Value"
-           disabled="@Disabled"
-           @oninput="OnValue" />
+    <div>@Value</div>
 </div>
 
 @code {
@@ -23,11 +22,7 @@
     [Parameter] public bool Disabled { get; set; }
     private string DisabledClass => Disabled ? "disabled" : string.Empty;
 
-    private Dictionary<int, string> BubbleOffsets { get; } = new();
-
-    private string BubblePosition => BubbleOffsets.TryGetValue(Value, out var value) && value is { } ? value : "0";
-
-    private void EnsureInputs()
+    protected override void OnParametersSet()
     {
         if (Min < 0) Min = 0;
 
@@ -36,39 +31,12 @@
         if (Max < Min || Max < Step) Max = Math.Max(Min, Step);
     }
 
-    private void GenerateBubbleOffsets()
-    {
-        BubbleOffsets.Clear();
-
-        var percChunk = (double)Step / (Max - Step);
-        var perc = percChunk;
-
-        BubbleOffsets.Add(Min, $"0");
-        for (int i = Min + Step; i < Max; i += Step)
-        {
-            BubbleOffsets.Add(i, $"calc({perc * 100d}% - calc(var(--base-width, 25px) * {perc}))");
-            perc += percChunk;
-        }
-        BubbleOffsets.Add(Max, $"calc(100% - calc(var(--base-width, 25px)))");
-    }
-
-    protected override void OnInitialized()
-    {
-        EnsureInputs();
-        GenerateBubbleOffsets();
-    }
-
-    protected override void OnParametersSet()
-    {
-        EnsureInputs();
-        GenerateBubbleOffsets();
-    }
-
     private async Task OnValue(ChangeEventArgs e)
     {
         if (Disabled) return;
 
         int.TryParse(e.Value?.ToString() ?? "0", out var value);
+        Value = value;
         await ValueChanged.InvokeAsync(value).ConfigureAwait(true);
     }
 }

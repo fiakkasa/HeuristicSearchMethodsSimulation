@@ -2,6 +2,7 @@
 @using Plotly.Blazor.Traces
 @using Plotly.Blazor.ConfigLib
 @using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.LayoutLib.XAxisLib
 @using Plotly.Blazor.Traces.ScatterLib
 @implements IDisposable
 @inject ILogger<NumberOfUniqueLocationsChart> logger
@@ -49,7 +50,7 @@
                     Text = "Locations"
                 },
                 TickVals = Array.Empty<object>(),
-                TickMode = Plotly.Blazor.LayoutLib.XAxisLib.TickModeEnum.Linear
+                TickMode = TickModeEnum.Linear
             }
         },
         YAxis = new List<YAxis> {
@@ -63,11 +64,13 @@
         }
     };
     private List<ITrace> _chartData = new();
+    private string? _markerColor;
+    private string? _lineColor;
 
     private string VisibilityClass =>
-        _chartData.FirstOrDefault() is Scatter scatter && scatter.X?.Count > 0 && scatter.X?.Count == scatter.Y?.Count
-            ? string.Empty
-            : "d-none";
+    _chartData.FirstOrDefault() is Scatter scatter && scatter.X?.Count > 0 && scatter.X?.Count == scatter.Y?.Count
+        ? string.Empty
+        : "d-none";
 
     [Parameter] public string? CssClass { get; set; }
     [Parameter]
@@ -84,9 +87,12 @@
                     Y = value.Cast<object>().ToList(),
                     Text = string.Empty,
                     Name = string.Empty,
+                    Marker = new() { Color = _markerColor },
+                    Line = new() { Color = _lineColor },
                     HoverInfo = HoverInfoFlag.X | HoverInfoFlag.Y,
                     HoverTemplate = $"{_chartLayout.YAxis[0].Title.Text}: %{{y}}<br />{_chartLayout.XAxis[0].Title.Text}: %{{x}}"
                 };
+
                 _chartData.Clear();
                 _chartData.Add(data);
             }
@@ -95,6 +101,49 @@
                 _chartData.Clear();
             }
         }
+    }
+
+    [Parameter]
+    public string? MarkerColor
+    {
+        set
+        {
+            _markerColor = value;
+
+            _chartData.ForEach(x => _ = ApplyMarkerColor(x));
+        }
+    }
+    [Parameter]
+    public string? LineColor
+    {
+        set
+        {
+            _lineColor = value;
+
+            _chartData.ForEach(x => _ = ApplyLineColor(x));
+        }
+    }
+
+    private ITrace ApplyMarkerColor(ITrace obj)
+    {
+        if (obj is not Scatter { Mode: ModeFlag.Markers } item) return obj;
+
+        if (item.Marker is not { }) item.Marker = new();
+
+        item.Marker.Color = _markerColor;
+
+        return item;
+    }
+
+    private ITrace ApplyLineColor(ITrace obj)
+    {
+        if (obj is not Scatter { Mode: ModeFlag.Lines } item) return obj;
+
+        if (item.Line is not { }) item.Line = new();
+
+        item.Line.Color = _lineColor;
+
+        return item;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

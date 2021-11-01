@@ -26,7 +26,7 @@
         DisplayLogo = false,
         DisplayModeBar = DisplayModeBarEnum.False,
         AutoSizable = false,
-        ShowTips = false,
+        ShowTips = false
     };
     private readonly Layout _chartLayout = new()
     {
@@ -58,6 +58,8 @@
         },
     };
     private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+    private string? _markerColor;
+    private string? _lineColor;
 
     [Parameter] public string? CssClass { get; set; }
     [Parameter]
@@ -65,12 +67,15 @@
     {
         set
         {
-            _chartData.Clear();
-            _chartData.AddRange(
+            var collection = (
                 value?.Count < 1
-                    ? new[] { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+                    ? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
                     : value!
-                );
+            )
+            .ConvertAll(x => ApplyLineColor(ApplyMarkerColor(x)));
+
+            _chartData.Clear();
+            _chartData.AddRange(collection!);
         }
     }
     [Parameter]
@@ -92,6 +97,48 @@
                 ? color
                 : "#d3d3d3";
         }
+    }
+    [Parameter]
+    public string? MarkerColor
+    {
+        set
+        {
+            _markerColor = value;
+
+            _chartData.ForEach(x => _ = ApplyMarkerColor(x));
+        }
+    }
+    [Parameter]
+    public string? LineColor
+    {
+        set
+        {
+            _lineColor = value;
+
+            _chartData.ForEach(x => _ = ApplyLineColor(x));
+        }
+    }
+
+    private ITrace ApplyMarkerColor(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Markers } item) return obj;
+
+        if (item.Marker is not { }) item.Marker = new();
+
+        item.Marker.Color = _markerColor;
+
+        return item;
+    }
+
+    private ITrace ApplyLineColor(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
+
+        if (item.Line is not { }) item.Line = new();
+
+        item.Line.Color = _lineColor;
+
+        return item;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

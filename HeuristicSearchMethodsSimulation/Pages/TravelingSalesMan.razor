@@ -17,9 +17,9 @@
             <h4>No data available at the moment..</h4>
         </NotMatch>
         <Match>
-            <h4>Algorithms</h4>
-
-            <AlgorithmsDropDown Value="_algorithm" ValueChanged="SetAlgo" Disabled="_loading" />
+            <div class="me-2 d-inline-block">
+                <AlgorithmsDropDown Value="_algorithm" ValueChanged="SetAlgo" Disabled="_loading" />
+            </div>
 
             <Condition Evaluation="_algorithm != TravelingSalesManAlgorithms.None">
                 <NotMatch>
@@ -27,8 +27,6 @@
                 </NotMatch>
                 <Match>
                     <div class="traveling-salesman-locations-container mt-3">
-                        <h4>Number of Locations</h4>
-
                         <RangeSelector Min="_minSliderValue"
                                        Max="_maxSliderValue"
                                        Step="1"
@@ -37,8 +35,7 @@
                                        Disabled="_loading" />
                     </div>
 
-                    @_routeSymmetry
-                    <div>
+                    <div class="mt-3">
                         <RouteSymmetry @bind-Value="_routeSymmetry" Disabled="_loading" />
                     </div>
 
@@ -48,12 +45,17 @@
 
                     <Condition Evaluation="_numberOfUniqueLocations.Count > 1">
                         <Match>
-                            <NumberOfUniqueLocationsChart Data="_numberOfUniqueLocations" CssClass="mt-3" />
+                            <NumberOfUniqueLocationsChart Data="_numberOfUniqueLocations"
+                                                          CssClass="mt-3"
+                                                          MarkerColor="#5bc0de"
+                                                          LineColor="#5bc0de" />
                         </Match>
                     </Condition>
 
                     <LocationsMap Data="_mapChartData"
                                   CssClass="mt-3"
+                                  MarkerColor="#5bc0de"
+                                  LineColor="#5bc0de"
                                   LandColor="rgb(243,243,243)"
                                   CountryColor="rgb(204,204,204)" />
 

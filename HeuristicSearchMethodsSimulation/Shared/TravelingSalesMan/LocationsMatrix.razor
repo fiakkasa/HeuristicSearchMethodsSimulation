@@ -1,10 +1,8 @@
 ﻿<Condition Evaluation="Data?.Count > 1">
     <Match>
         <div class="traveling-salesman-matrix-container @CssClass">
-            <h4>Matrix</h4>
-
             <div class="table-responsive">
-                <table class="table table-striped m-0">
+                <table class="table table-striped text-center m-0">
                     <thead>
                         <tr>
                             <th>Distance (Km)</th>
@@ -40,8 +38,8 @@
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
         (row, cell) switch
         {
-            { row: { Min: { } }, cell: _ } when row.Min.Key == cell.Key => "min-distance text-success",
-            { row: { Max: { } }, cell: _ } when row.Max.Key == cell.Key => "max-distance text-danger",
+            { row: { Min: { } }, cell: _ } when row.Min.Key == cell.Key => "min-distance bg-info bg-opacity-25",
+            { row: { Max: { } }, cell: _ } when row.Max.Key == cell.Key => "max-distance",
             { row: _, cell: { DistanceInKilometers: 0 } } => "text-muted",
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"

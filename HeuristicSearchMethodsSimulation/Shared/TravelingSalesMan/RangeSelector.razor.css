@@ -1,8 +1,8 @@
 ﻿.traveling-salesman-range-selector-container {
-    --base-width: 25px;
-    --base-half-width: calc(var(--base-width, 25px) * .5);
-    --base-quarter-width: calc(var(--base-half-width, 12.5px) * .5);
-    --base-eigth-width: calc(var(--base-quarter-width, 6.25px) * .5);
+    --track-size: 5px;
+    --thumb-size: 14px;
+    --box-shadow: 0 0 0 .25rem rgba(0,140,186,.25);
+    --thumb-box-shadow: 0 0 0 .125rem rgba(211, 211, 211, 0.375);
     --disabled-opacity: .75;
 }
 
@@ -12,73 +12,39 @@
         cursor: default;
     }
 
-.traveling-salesman-range-selector-container > .range-selector {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 15px;
-    border-radius: 5px;
-    background: var(--bs-light, #d3d3d3);
-    outline: none;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-}
-
-    .traveling-salesman-range-selector-container > .range-selector::-webkit-slider-thumb {
+    .traveling-salesman-range-selector-container > .range-selector-container > .range-selector {
         -webkit-appearance: none;
-        appearance: none;
-        width: var(--base-width, 25px);
-        height: var(--base-width, 25px);
-        border-radius: 50%;
-        background-color: var(--bs-success, #04AA6D);
-        cursor: pointer;
+        width: 100%;
+        height: var(--track-size, 5px);
+        border-radius: var(--track-size, 5px);
+        background-color: var(--bs-light, #d3d3d3);
     }
 
-    .traveling-salesman-range-selector-container > .range-selector::-moz-range-thumb {
-        width: var(--base-width, 25px);
-        height: var(--base-width, 25px);
-        border-radius: 50%;
-        background-color: var(--bs-success, #04AA6D);
-        cursor: pointer;
-    }
-
-    .traveling-salesman-range-selector-container > .bubble-container {
-        position: relative;
-        height: calc(var(--base-width, 25px) * 2);
-    }
-
-    .traveling-salesman-range-selector-container > .bubble-container > .bubble {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        height: 1px;
-        width: var(--base-width, 25px);
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
-    }
-
-        .traveling-salesman-range-selector-container > .bubble-container > .bubble > .bubble-text {
-            position: relative;
-            box-sizing: content-box;
-            background-color: var(--bs-success, #04AA6D);
-            color: var(--bs-white, #fff);
-            padding: var(--base-eigth-width, 3.125px);
-            min-width: var(--base-width, 25px);
-            flex-shrink: 0;
-            text-align: center;
-            border-radius: 50%;
-            margin-bottom: var(--base-half-width, 12.5px);
+        .traveling-salesman-range-selector-container > .range-selector-container > .range-selector:focus {
+            box-shadow: var(--box-shadow, 0 0 0 .25rem rgba(0,140,186,.25));
         }
 
-            .traveling-salesman-range-selector-container > .bubble-container > .bubble > .bubble-text:after {
-                content: '';
-                position: absolute;
-                top: calc(100% - var(--base-quarter-width, 6.25px));
-                left: 50%;
-                margin-left: calc(var(--base-half-width, 12.5px) * -1);
-                width: 0;
-                height: 0;
-                border-top: solid var(--base-half-width, 12.5px) var(--bs-success, #04AA6D);
-                border-left: solid var(--base-half-width, 12.5px) transparent;
-                border-right: solid var(--base-half-width, 12.5px) transparent;
-            }
+        .traveling-salesman-range-selector-container > .range-selector-container > .range-selector::-moz-range-progress {
+            background-color: var(--bs-info, #5bc0de);
+        }
+
+        .traveling-salesman-range-selector-container > .range-selector-container > .range-selector::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: var(--thumb-size, 10px);
+            height: var(--thumb-size, 10px);
+            border-radius: 50%;
+            background-color: var(--bs-white, #fff);
+            box-shadow: var(--thumb-box-shadow, 0 0 0 .125rem rgba(211, 211, 211, 0.375));
+            cursor: pointer;
+        }
+
+        .traveling-salesman-range-selector-container > .range-selector-container > .range-selector::-moz-range-thumb {
+            border: none;
+            width: var(--thumb-size, 10px);
+            height: var(--thumb-size, 10px);
+            border-radius: 50%;
+            background-color: var(--bs-white, #fff);
+            box-shadow: var(--thumb-box-shadow, 0 0 0 .125rem rgba(211, 211, 211, 0.375));
+            cursor: pointer;
+        }
