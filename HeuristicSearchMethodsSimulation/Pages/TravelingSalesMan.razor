@@ -10,56 +10,54 @@
     <Content>
         <Condition Evaluation="tsms.HasLocations">
             <NotMatch>
-                <h4>No data available at the moment..</h4>
+                <div class="d-flex flex-wrap align-items-center mb-2">
+                    <h4 class="m-0 me-2">No data available at the moment..</h4>
+                    <button type="button" class="btn btn-primary btn-sm" @onclick="() => tsms.Refresh()">Refresh?</button>
+                </div>
             </NotMatch>
             <Match>
                 <div class="me-2 d-inline-block">
                     <AlgorithmsDropDown Value="tsms.Algorithm" ValueChanged="tsms.SetAlgo" Disabled="tsms.Loading" />
                 </div>
 
-                <Condition Evaluation="tsms.Algorithm != TravelingSalesManAlgorithms.None">
-                    <NotMatch>
-                        <small class="text-muted">Select an algorithm to get started!</small>
-                    </NotMatch>
+
+                <div class="traveling-salesman-locations-container mt-3">
+                    <RangeSelector Min="tsms.MinSliderValue"
+                                   Max="tsms.MaxSliderValue"
+                                   Step="tsms.SliderStepValue"
+                                   Value="tsms.SliderValue"
+                                   ValueChanged="tsms.UpdateState"
+                                   Disabled="tsms.Loading" />
+                </div>
+
+                <div class="mt-3">
+                    <RouteSymmetry Value="tsms.RouteSymmetry" ValueChanged="tsms.SetRouteSymmetry" Disabled="tsms.Loading" />
+                </div>
+
+                <LocationsTable Data="tsms.LocationsBySelection" CssClass="mt-3" />
+
+                <LocationsMatrix Data="tsms.Matrix" NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes" CssClass="mt-3" />
+
+                <Condition Evaluation="tsms.NumberOfUniqueLocations.Count > 1">
                     <Match>
-                        <div class="traveling-salesman-locations-container mt-3">
-                            <RangeSelector Min="tsms.MinSliderValue"
-                                           Max="tsms.MaxSliderValue"
-                                           Step="tsms.SliderStepValue"
-                                           Value="tsms.SliderValue"
-                                           ValueChanged="tsms.UpdateState"
-                                           Disabled="tsms.Loading" />
-                        </div>
-
-                        <div class="mt-3">
-                            <RouteSymmetry Value="tsms.RouteSymmetry" ValueChanged="tsms.SetRouteSymmetry" Disabled="tsms.Loading" />
-                        </div>
-
-                        <LocationsTable Data="tsms.LocationsBySelection" CssClass="mt-3" />
-
-                        <LocationsMatrix Data="tsms.Matrix" NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes" CssClass="mt-3" />
-
-                        <Condition Evaluation="tsms.NumberOfUniqueLocations.Count > 1">
-                            <Match>
-                                <NumberOfUniqueLocationsChart Data="tsms.NumberOfUniqueLocations"
-                                                              CssClass="mt-3"
-                                                              MarkerColor="#5bc0de"
-                                                              LineColor="#5bc0de" />
-                            </Match>
-                        </Condition>
-
-                        <LocationsMap Data="tsms.MapChartData"
-                                      CssClass="mt-3"
-                                      MarkerColor="#5bc0de"
-                                      LineColor="#5bc0de"
-                                      LandColor="rgb(243,243,243)"
-                                      CountryColor="rgb(204,204,204)" />
-
-                        <LocationsPie Value="tsms.PieChartData" CssClass="mt-3" />
+                        <NumberOfUniqueLocationsChart Data="tsms.NumberOfUniqueLocations"
+                                                      CssClass="mt-3"
+                                                      MarkerColor="#5bc0de"
+                                                      LineColor="#5bc0de" />
                     </Match>
                 </Condition>
+
+                <LocationsMap Data="tsms.MapChartData"
+                              CssClass="mt-3"
+                              MarkerColor="#5bc0de"
+                              LineColor="#5bc0de"
+                              LandColor="rgb(243,243,243)"
+                              CountryColor="rgb(204,204,204)" />
+
+                @*<LocationsPie Value="tsms.PieChartData" CssClass="mt-3" />*@
             </Match>
         </Condition>
+
     </Content>
 </ContentWithLoader>
 

@@ -29,7 +29,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
 
         event Action? OnStateChange;
 
-        Task Init();
+        Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None);
+        Task Refresh();
         Task SetAlgo(TravelingSalesManAlgorithms algo);
         Task SetRouteSymmetry(bool routeSymmetry);
         Task UpdateState(int sliderValue);

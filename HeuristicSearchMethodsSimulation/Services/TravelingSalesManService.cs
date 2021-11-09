@@ -151,7 +151,34 @@ namespace HeuristicSearchMethodsSimulation.Services
             .ConfigureAwait(false);
         }
 
-        public async Task Init()
+        public async Task Refresh()
+        {
+            Loading = true;
+            OnStateChangeDelegate?.Invoke();
+
+            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(false);
+
+            Locations.Clear();
+            Locations.AddRange(locations);
+
+            await Task.WhenAll(
+                new[]
+                {
+                    HasLocations
+                        ? UpdateState(SliderValue, _cts.Token)
+                        : Task.Run(() => Reset()),
+                    Delay()
+                }
+            )
+            .ContinueWith(_ =>
+            {
+                Loading = false;
+                OnStateChangeDelegate?.Invoke();
+            })
+            .ConfigureAwait(false);
+        }
+
+        public async Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None)
         {
             if (_isInitializing) return;
 
@@ -166,6 +193,8 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             Locations.Clear();
             Locations.AddRange(locations);
+
+            Algorithm = algo;
 
             await (
                 HasLocations

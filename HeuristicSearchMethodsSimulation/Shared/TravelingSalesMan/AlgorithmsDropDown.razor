@@ -1,9 +1,16 @@
-﻿<select class="traveling-salesman-algo-dropdown form-select form-select-sm d-inline-block w-auto"
+﻿<select class="traveling-salesman-algo-dropdown form-select form-select-sm d-inline-block w-auto @(Value == TravelingSalesManAlgorithms.None ? "text-black-50" : "text-black")"
         value="@Value"
         disabled="@Disabled"
         @oninput="OnValue">
     <Iterations T="KeyValuePair<string, TravelingSalesManAlgorithms>" Items="List">
-        <option value="@context.Value">@context.Key</option>
+        <Condition Evaluation="context.Value == TravelingSalesManAlgorithms.None && Value == TravelingSalesManAlgorithms.None">
+            <Match>
+                <option value="@context.Value">Select search method...</option>
+            </Match>
+            <NotMatch>
+                <option class="text-black" value="@context.Value">@context.Key</option>
+            </NotMatch>
+        </Condition>
     </Iterations>
 </select>
 
