@@ -46,6 +46,7 @@ namespace HeuristicSearchMethodsSimulation
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
             services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
             services.Configure<MongoOptions>(mongoOptionsSection);
+            services.Configure<TravelingSalesManOptions>(Configuration.GetSection(nameof(TravelingSalesManOptions)));
             #endregion
 
             #region Identity

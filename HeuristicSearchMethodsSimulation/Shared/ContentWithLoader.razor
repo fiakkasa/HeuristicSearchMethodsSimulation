@@ -1,14 +1,23 @@
-﻿<Condition Evaluation="Loading">
+﻿<Condition Evaluation="Title is { }">
+    <Match>
+        <h3>
+            @Title
+        </h3>
+    </Match>
+</Condition>
+<Condition Evaluation="Loading">
     <NotMatch>
         <PageLoader />
     </NotMatch>
     <Match>
-        @ChildContent
+        <ProgressBar Show="Progress" />
+        @Content
     </Match>
 </Condition>
 
-
 @code {
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool Progress { get; set; }
     [Parameter] public bool Loading { get; set; }
+    [Parameter] public RenderFragment? Content { get; set; }
+    [Parameter] public RenderFragment? Title { get; set; }
 }

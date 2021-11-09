@@ -8,7 +8,8 @@
                step="@Step"
                value="@Value"
                disabled="@Disabled"
-               @oninput="OnValue" />
+               @oninput="OnInput"
+               @onchange="OnValue" />
     </div>
     <div>@Value</div>
 </div>
@@ -31,12 +32,19 @@
         if (Max < Min || Max < Step) Max = Math.Max(Min, Step);
     }
 
-    private async Task OnValue(ChangeEventArgs e)
+    private void OnInput(ChangeEventArgs e)
     {
         if (Disabled) return;
 
         int.TryParse(e.Value?.ToString() ?? "0", out var value);
         Value = value;
-        await ValueChanged.InvokeAsync(value).ConfigureAwait(true);
+    }
+
+    private async Task OnValue(ChangeEventArgs e)
+    {
+        if (Disabled) return;
+
+        OnInput(e);
+        await ValueChanged.InvokeAsync(Value).ConfigureAwait(true);
     }
 }

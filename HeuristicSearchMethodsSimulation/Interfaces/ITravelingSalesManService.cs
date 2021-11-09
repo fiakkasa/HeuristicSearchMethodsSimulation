@@ -1,16 +1,37 @@
-﻿using HeuristicSearchMethodsSimulation.Models;
+﻿using HeuristicSearchMethodsSimulation.Enums;
+using HeuristicSearchMethodsSimulation.Models;
 using Plotly.Blazor;
+using Plotly.Blazor.Traces;
+using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces
 {
     public interface ITravelingSalesManService
     {
-        Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, CancellationToken cancellationToken = default);
-        Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken = default);
-        Task<List<LocationGeo>> Fetch(int limit = 1000, CancellationToken cancellationToken = default);
-        Task<List<long>> CalculateNumberOfUniqueRoutes(int numberOfLocations, CancellationToken cancellationToken = default);
+        TravelingSalesManAlgorithms Algorithm { get; }
+        bool HasLocations { get; }
+        bool IsInit { get; }
+        bool Loading { get; }
+        List<LocationGeo> Locations { get; }
+        List<LocationGeo> LocationsBySelection { get; }
+        List<ITrace> MapChartData { get; }
+        List<LocationRow> Matrix { get; }
+        int MaxSliderValue { get; }
+        int MinSliderValue { get; }
+        List<long> NumberOfUniqueLocations { get; }
+        long NumberOfUniqueRoutes { get; }
+        Pie? PieChartData { get; }
+        bool RouteSymmetry { get; }
+        int SliderStepValue { get; }
+        int SliderValue { get; }
+
+        event Action? OnStateChange;
+
+        Task Init();
+        Task SetAlgo(TravelingSalesManAlgorithms algo);
+        Task SetRouteSymmetry(bool routeSymmetry);
+        Task UpdateState(int sliderValue);
     }
 }
