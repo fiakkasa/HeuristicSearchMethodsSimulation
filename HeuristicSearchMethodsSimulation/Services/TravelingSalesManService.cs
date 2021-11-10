@@ -98,7 +98,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     Loading = false;
                     OnStateChangeDelegate?.Invoke();
                 })
-                .ConfigureAwait(false);
+                .ConfigureAwait(true);
         }
 
         public async Task SetAlgo(TravelingSalesManAlgorithms algo)
@@ -128,7 +128,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 Loading = false;
                 OnStateChangeDelegate?.Invoke();
             })
-            .ConfigureAwait(false);
+            .ConfigureAwait(true);
         }
 
         public async Task UpdateState(int sliderValue)
@@ -148,7 +148,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 Loading = false;
                 OnStateChangeDelegate?.Invoke();
             })
-            .ConfigureAwait(false);
+            .ConfigureAwait(true);
         }
 
         public async Task Refresh()
@@ -156,7 +156,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             Loading = true;
             OnStateChangeDelegate?.Invoke();
 
-            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(false);
+            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
 
             Locations.Clear();
             Locations.AddRange(locations);
@@ -175,7 +175,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 Loading = false;
                 OnStateChangeDelegate?.Invoke();
             })
-            .ConfigureAwait(false);
+            .ConfigureAwait(true);
         }
 
         public async Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None)
@@ -189,7 +189,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             OnStateChangeDelegate?.Invoke();
 
-            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(false);
+            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
 
             Locations.Clear();
             Locations.AddRange(locations);
@@ -208,14 +208,14 @@ namespace HeuristicSearchMethodsSimulation.Services
                 _isInitializing = false;
                 OnStateChangeDelegate?.Invoke();
             })
-            .ConfigureAwait(false);
+            .ConfigureAwait(true);
         }
 
         private async Task Delay()
         {
             try
             {
-                await Task.Delay(250, _cts.Token).ConfigureAwait(false);
+                await Task.Delay(250, _cts.Token).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -273,7 +273,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .ThenBy(x => x.Id)
                         .Limit(limit)
                         .ToListAsync(cancellationToken)
-                        .ConfigureAwait(false)
+                        .ConfigureAwait(true)
                     )
                     .ConvertAll(x =>
                         _mapper.Map<LocationGeo>(x) with
@@ -297,10 +297,10 @@ namespace HeuristicSearchMethodsSimulation.Services
                 SliderValue = sliderValue;
 
                 var locationsBySelection = Locations.Take(sliderValue).ToList();
-                var matrix = await CalculateMatrix(locationsBySelection, cancellationToken).ConfigureAwait(false);
-                var numberOfUniqueLocations = await CalculateNumberOfUniqueRoutes(sliderValue, cancellationToken).ConfigureAwait(false);
+                var matrix = await CalculateMatrix(locationsBySelection, cancellationToken).ConfigureAwait(true);
+                var numberOfUniqueLocations = await CalculateNumberOfUniqueRoutes(sliderValue, cancellationToken).ConfigureAwait(true);
                 var mapMarkerData =
-                  await CalculateMapMarkers(locationsBySelection, cancellationToken).ConfigureAwait(false) is { Count: > 0 } mc
+                  await CalculateMapMarkers(locationsBySelection, cancellationToken).ConfigureAwait(true) is { Count: > 0 } mc
                       ? mc
                       : new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
                 var samplePieData =
@@ -326,7 +326,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                             };
                         },
                         cancellationToken
-                    ).ConfigureAwait(false);
+                    ).ConfigureAwait(true);
 
                 LocationsBySelection.Clear();
                 Matrix.Clear();
@@ -367,7 +367,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                             }
                         ),
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -388,7 +388,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x))
                         .ToList(),
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -442,7 +442,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     ),
                     cancellationToken
                 )
-                .ConfigureAwait(false);
+                .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
