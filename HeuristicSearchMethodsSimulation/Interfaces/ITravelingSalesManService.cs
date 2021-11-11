@@ -26,6 +26,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
         bool RouteSymmetry { get; }
         int SliderStepValue { get; }
         int SliderValue { get; }
+        long? TotalDistance { get; }
 
         event Action? OnStateChange;
 

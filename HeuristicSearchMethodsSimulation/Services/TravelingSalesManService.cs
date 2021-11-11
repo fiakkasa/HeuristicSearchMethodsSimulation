@@ -66,8 +66,10 @@ namespace HeuristicSearchMethodsSimulation.Services
         public int MaxSliderValue { get; private set; }
         public int SliderStepValue { get; private set; }
         public int SliderValue { get; private set; }
-
+        public long? TotalDistance { get; private set; }
         public List<ITrace> MapChartData { get; } = new();
+        public List<ITrace> MapMarkerData { get; } = new();
+        public List<ITrace> MapLinesData { get; } = new();
         public Pie? PieChartData { get; private set; }
 
         public TravelingSalesManService(
@@ -250,9 +252,10 @@ namespace HeuristicSearchMethodsSimulation.Services
                 var matrix = await CalculateMatrix(locationsBySelection, cancellationToken).ConfigureAwait(true);
                 var numberOfUniqueLocations = await CalculateNumberOfUniqueRoutes(sliderValue, cancellationToken).ConfigureAwait(true);
                 var mapMarkerData =
-                  await CalculateMapMarkers(locationsBySelection, cancellationToken).ConfigureAwait(true) is { Count: > 0 } mc
-                      ? mc
+                  await CalculateMapMarkers(locationsBySelection, cancellationToken).ConfigureAwait(true) is { Count: > 0 } markers
+                      ? markers
                       : new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+                var mapLineData = await CalculateMapLines(locationsBySelection, cancellationToken).ConfigureAwait(true);
                 var samplePieData =
                     await Task.Run(
                         () =>
@@ -277,22 +280,73 @@ namespace HeuristicSearchMethodsSimulation.Services
                         },
                         cancellationToken
                     ).ConfigureAwait(true);
+                var totalDistance = await CalculateTotalDistance(mapLineData, cancellationToken).ConfigureAwait(true);
 
                 LocationsBySelection.Clear();
                 Matrix.Clear();
                 NumberOfUniqueLocations.Clear();
                 MapChartData.Clear();
+                MapMarkerData.Clear();
+                MapLinesData.Clear();
                 PieChartData = default;
 
                 LocationsBySelection.AddRange(locationsBySelection);
                 Matrix.AddRange(matrix);
                 NumberOfUniqueLocations.AddRange(numberOfUniqueLocations);
-                MapChartData.AddRange(mapMarkerData);
+                MapChartData.AddRange(mapMarkerData.Concat(mapLineData));
+                MapMarkerData.AddRange(mapMarkerData);
+                MapLinesData.AddRange(mapLineData);
                 PieChartData = samplePieData;
+                TotalDistance = totalDistance;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        private async Task<long?> CalculateTotalDistance(List<ITrace> locations, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (Algorithm == TravelingSalesManAlgorithms.None) return default;
+
+                if (locations.Count == 0) return 0L;
+
+                return await Task.Run(() =>
+                    Algorithm switch
+                    {
+                        TravelingSalesManAlgorithms.Evolutionary => 0L,
+                        TravelingSalesManAlgorithms.Exhaustive => 0L,
+                        TravelingSalesManAlgorithms.Guided_Direct => 0L,
+                        TravelingSalesManAlgorithms.Partial_Improving => 0L,
+                        TravelingSalesManAlgorithms.Partial_Random => 0L,
+                        _ => default
+                    },
+                    cancellationToken
+                ).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return default;
+            }
+        }
+
+        private async Task<List<ITrace>> CalculateMapLines(List<LocationGeo> locations, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (locations.Count == 0) return new List<ITrace>();
+
+                return await Task.Run(() => new List<ITrace>(), cancellationToken).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return new List<ITrace>();
             }
         }
 

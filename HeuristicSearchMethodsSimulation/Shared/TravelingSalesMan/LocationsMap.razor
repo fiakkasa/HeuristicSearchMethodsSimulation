@@ -14,6 +14,20 @@
                  Data="_chartData"
                  @ref="_chartRef"
                  style="min-height: 640px" />
+    <Condition Evaluation="TotalDistance is { }">
+        <Match>
+            <div class="traveling-salesman-distance-container row m-0 mt-1">
+                <div class="p-0 col-12 offset-lg-6 col-lg-6 d-flex flex-wrap align-items-center justify-content-center text-muted">
+                    <div class="me-2">
+                        Total Distance:
+                    </div>
+                    <div class="border px-5 py-1 small">
+                        @TotalDistance
+                    </div>
+                </div>
+            </div>
+        </Match>
+    </Condition>
 </div>
 
 @code {
@@ -59,6 +73,7 @@
     private string? _lineColor;
 
     [Parameter] public string? CssClass { get; set; }
+    [Parameter] public long? TotalDistance { get; set; }
     [Parameter]
     public List<ITrace> Data
     {
