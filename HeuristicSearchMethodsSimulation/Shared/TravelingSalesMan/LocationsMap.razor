@@ -9,31 +9,28 @@
 @inject ILogger<LocationsMap> logger
 
 <div class="traveling-salesman-map-container overflow-auto @CssClass">
-    <div class="flex-shrink-0 d-flex justify-content-center">
-        <PlotlyChart Config="_chartConfig"
-                     Layout="_chartLayout"
-                     Data="_chartData"
-                     @ref="_chartRef"
-                     style="min-height: 0; height: auto; transform: scale(1.25);" />
-    </div>
+    <PlotlyChart Config="_chartConfig"
+                 Layout="_chartLayout"
+                 Data="_chartData"
+                 @ref="_chartRef"
+                 style="min-height: 640px" />
 </div>
 
 @code {
     private PlotlyChart? _chartRef;
     private readonly Config _chartConfig = new()
     {
-        Responsive = false,
         DisplayLogo = false,
         DisplayModeBar = DisplayModeBarEnum.False,
-        AutoSizable = false,
+        AutoSizable = true,
+        Responsive = true,
         ShowTips = false
     };
     private readonly Layout _chartLayout = new()
     {
-        Width = 640,
-        Height = 450,
-        AutoSize = false,
+        Height = 640,
         ShowLegend = false,
+        AutoSize = true,
         Margin = new()
         {
             AutoExpand = false,
