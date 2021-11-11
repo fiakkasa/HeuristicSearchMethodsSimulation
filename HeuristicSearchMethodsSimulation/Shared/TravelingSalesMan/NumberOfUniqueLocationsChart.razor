@@ -87,7 +87,7 @@
                     Name = string.Empty,
                     Marker = new() { Color = _markerColor },
                     Line = new() { Color = _lineColor },
-                    HoverInfo = HoverInfoFlag.X | HoverInfoFlag.Y,
+                    HoverLabel = new() { NameLength = 0 },
                     HoverTemplate = $"{_chartLayout.YAxis[0].Title.Text}: %{{y}}<br />{_chartLayout.XAxis[0].Title.Text}: %{{x}}"
                 };
 

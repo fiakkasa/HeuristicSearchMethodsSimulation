@@ -311,8 +311,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 Lat = new List<object> { x.Latitude },
                                 Mode = ModeFlag.Markers,
                                 Text = $"{x.Label} ({x.ShortCode})",
-                                Name = string.Empty,
-                                HoverInfo = HoverInfoFlag.Lat | HoverInfoFlag.Lon,
+                                Name = $"{x.Label} ({x.ShortCode})",
+                                HoverLabel = new() { NameLength = 0 },
                                 HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
                             }
                         ),
