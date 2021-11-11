@@ -31,6 +31,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         private readonly IMongoClient? _client;
         private readonly CancellationTokenSource _cts = new();
         private bool _isInitializing;
+        private int _initialSliderValue = 1;
         private int _fetchLimit = 100;
         private event Action? OnStateChangeDelegate;
 
@@ -101,36 +102,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public async Task SetAlgo(TravelingSalesManAlgorithms algo)
-        {
-            Algorithm = algo;
-
-            if (Algorithm == TravelingSalesManAlgorithms.None)
-            {
-                Reset();
-                OnStateChangeDelegate?.Invoke();
-
-                return;
-            }
-
-            Loading = true;
-            OnStateChangeDelegate?.Invoke();
-
-            await Task.WhenAll(
-                new[]
-                {
-                    UpdateState(TravelingSalesManOptions.InitialSliderValue, _cts.Token),
-                    Delay()
-                }
-            )
-            .ContinueWith(_ =>
-            {
-                Loading = false;
-                OnStateChangeDelegate?.Invoke();
-            })
-            .ConfigureAwait(true);
-        }
-
         public async Task UpdateState(int sliderValue)
         {
             Loading = true;
@@ -164,9 +135,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             await Task.WhenAll(
                 new[]
                 {
-                    HasLocations
-                        ? UpdateState(SliderValue, _cts.Token)
-                        : Task.Run(() => Reset()),
+                    UpdateState(HasLocations ? SliderValue : _initialSliderValue, _cts.Token),
                     Delay()
                 }
             )
@@ -180,6 +149,8 @@ namespace HeuristicSearchMethodsSimulation.Services
 
         public async Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None)
         {
+            Algorithm = algo;
+
             if (_isInitializing) return;
 
             _isInitializing = true;
@@ -189,26 +160,23 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             OnStateChangeDelegate?.Invoke();
 
-            var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
-
-            Locations.Clear();
-            Locations.AddRange(locations);
-
-            Algorithm = algo;
-
-            await (
-                HasLocations
-                    ? UpdateState(SliderValue, _cts.Token)
-                    : Task.Run(() => Reset())
-            )
-            .ContinueWith(_ =>
+            if (!HasLocations)
             {
-                IsInit = true;
-                Loading = false;
-                _isInitializing = false;
-                OnStateChangeDelegate?.Invoke();
-            })
-            .ConfigureAwait(true);
+                var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
+
+                Locations.Clear();
+                Locations.AddRange(locations);
+            }
+
+            await UpdateState(HasLocations ? SliderValue : _initialSliderValue, _cts.Token)
+                .ContinueWith(_ =>
+                {
+                    IsInit = true;
+                    Loading = false;
+                    _isInitializing = false;
+                    OnStateChangeDelegate?.Invoke();
+                })
+                .ConfigureAwait(true);
         }
 
         private async Task Delay()
@@ -231,26 +199,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                 MaxSliderValue = TravelingSalesManOptions.MaxSliderValue;
                 SliderStepValue = TravelingSalesManOptions.SliderStepValue;
                 SliderValue = TravelingSalesManOptions.InitialSliderValue;
+                _initialSliderValue = TravelingSalesManOptions.InitialSliderValue;
                 _fetchLimit = TravelingSalesManOptions.FetchLimit;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-        }
-
-        private void Reset()
-        {
-            try
-            {
-                MapChartData.Clear();
-                PieChartData = default;
-
-                LocationsBySelection.Clear();
-                Matrix.Clear();
-                NumberOfUniqueLocations.Clear();
-
-                SliderValue = TravelingSalesManOptions.InitialSliderValue;
             }
             catch (Exception ex)
             {

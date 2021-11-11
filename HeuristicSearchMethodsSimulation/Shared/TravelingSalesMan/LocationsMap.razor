@@ -8,8 +8,8 @@
 @implements IDisposable
 @inject ILogger<LocationsMap> logger
 
-<div class="traveling-salesman-map-container @CssClass">
-    <div class="flex-shrink-0 d-flex justify-content-center overflow-hidden pb-3">
+<div class="traveling-salesman-map-container overflow-auto @CssClass">
+    <div class="flex-shrink-0 d-flex justify-content-center">
         <PlotlyChart Config="_chartConfig"
                      Layout="_chartLayout"
                      Data="_chartData"

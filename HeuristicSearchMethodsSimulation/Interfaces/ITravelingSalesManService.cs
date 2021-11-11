@@ -31,7 +31,6 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
 
         Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None);
         Task Refresh();
-        Task SetAlgo(TravelingSalesManAlgorithms algo);
         Task SetRouteSymmetry(bool routeSymmetry);
         Task UpdateState(int sliderValue);
     }

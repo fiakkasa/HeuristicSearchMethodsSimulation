@@ -1,9 +1,13 @@
-﻿<select class="traveling-salesman-algo-dropdown form-select form-select-sm d-inline-block w-auto @(Value == TravelingSalesManAlgorithms.None ? "text-black-50" : "text-black")"
-        value="@Value"
+﻿@inject ITravelingSalesManService tsms
+@inject NavigationManager nav
+@using System.Text
+
+<select class="traveling-salesman-algo-dropdown form-select form-select-sm d-inline-block w-auto @(tsms.Algorithm == TravelingSalesManAlgorithms.None ? "text-black-50" : "text-black")"
+        value="@tsms.Algorithm"
         disabled="@Disabled"
         @oninput="OnValue">
     <Iterations T="KeyValuePair<string, TravelingSalesManAlgorithms>" Items="List">
-        <Condition Evaluation="context.Value == TravelingSalesManAlgorithms.None && Value == TravelingSalesManAlgorithms.None">
+        <Condition Evaluation="context.Value == TravelingSalesManAlgorithms.None && tsms.Algorithm == TravelingSalesManAlgorithms.None">
             <Match>
                 <option value="@context.Value">Select search method...</option>
             </Match>
@@ -15,8 +19,6 @@
 </select>
 
 @code {
-    [Parameter] public TravelingSalesManAlgorithms Value { get; set; } = TravelingSalesManAlgorithms.None;
-    [Parameter] public EventCallback<TravelingSalesManAlgorithms> ValueChanged { get; set; }
     [Parameter] public bool Disabled { get; set; }
 
     private List<KeyValuePair<string, TravelingSalesManAlgorithms>>? _list;
@@ -34,12 +36,19 @@
             )
             .ToList();
 
-    private async Task OnValue(ChangeEventArgs e)
+    private void OnValue(ChangeEventArgs e)
     {
         if (Disabled) return;
 
-        Enum.TryParse<TravelingSalesManAlgorithms>(e.Value?.ToString() ?? "0", out var value);
-        Value = value;
-        await ValueChanged.InvokeAsync(value).ConfigureAwait(true);
+        var selection = e.Value?.ToString() ?? ((int)TravelingSalesManAlgorithms.None).ToString();
+
+        Enum.TryParse<TravelingSalesManAlgorithms>(selection, out var value);
+
+        var uri = new StringBuilder(nav.BaseUri).Append("TravelingSalesMan");
+
+        if (value != TravelingSalesManAlgorithms.None)
+            uri.Append('/').Append(value.ToString().Replace("_", string.Empty));
+
+        nav.NavigateTo(uri.ToString());
     }
 }
