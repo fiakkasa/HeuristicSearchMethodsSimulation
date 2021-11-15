@@ -26,11 +26,12 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
         bool RouteSymmetry { get; }
         int SliderStepValue { get; }
         int SliderValue { get; }
-        long? TotalDistance { get; }
+        double? TotalDistanceInKilometers { get; }
+        TravelingSalesManMapOptions MapOptions { get; }
 
         event Action? OnStateChange;
 
-        Task Init(TravelingSalesManAlgorithms algo = TravelingSalesManAlgorithms.None);
+        Task Init(TravelingSalesManAlgorithms algo);
         Task Refresh();
         Task SetRouteSymmetry(bool routeSymmetry);
         Task UpdateState(int sliderValue);

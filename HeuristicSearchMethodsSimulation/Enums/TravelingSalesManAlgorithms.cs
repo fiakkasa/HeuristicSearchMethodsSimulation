@@ -7,6 +7,7 @@
         Exhaustive = 2,
         Partial_Improving = 3,
         Guided_Direct = 4,
-        Evolutionary = 5
+        Evolutionary = 5,
+        Ordinal_Based_Cycle = 6
     }
 }

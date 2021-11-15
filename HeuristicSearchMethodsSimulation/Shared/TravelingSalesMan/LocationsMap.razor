@@ -5,6 +5,7 @@
 @using Plotly.Blazor.LayoutLib.GeoLib
 @using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
 @using Plotly.Blazor.Traces.ScatterGeoLib
+@using Plotly.Blazor.Traces.ScatterGeoLib.MarkerLib;
 @implements IDisposable
 @inject ILogger<LocationsMap> logger
 
@@ -22,7 +23,7 @@
                         Total Distance:
                     </div>
                     <div class="border px-5 py-1 small">
-                        @TotalDistance
+                        @TotalDistance?.ToString("#0.##")
                     </div>
                 </div>
             </div>
@@ -70,10 +71,12 @@
     };
     private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
     private string? _markerColor;
+    private SymbolEnum? _markerSymbol = SymbolEnum.Circle;
     private string? _lineColor;
+    private int? _lineWidth;
 
     [Parameter] public string? CssClass { get; set; }
-    [Parameter] public long? TotalDistance { get; set; }
+    [Parameter] public double? TotalDistance { get; set; }
     [Parameter]
     public List<ITrace> Data
     {
@@ -84,7 +87,7 @@
                     ? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
                     : value!
             )
-            .ConvertAll(x => ApplyLineColor(ApplyMarkerColor(x)));
+            .ConvertAll(x => ApplyLineWidth(ApplyLineColor(ApplyMarkerSymbol(ApplyMarkerColor(x)))));
 
             _chartData.Clear();
             _chartData.AddRange(collection!);
@@ -121,6 +124,16 @@
         }
     }
     [Parameter]
+    public SymbolEnum? MarkerSymbol
+    {
+        set
+        {
+            _markerSymbol = value;
+
+            _chartData.ForEach(x => _ = ApplyMarkerSymbol(x));
+        }
+    }
+    [Parameter]
     public string? LineColor
     {
         set
@@ -128,6 +141,16 @@
             _lineColor = value;
 
             _chartData.ForEach(x => _ = ApplyLineColor(x));
+        }
+    }
+    [Parameter]
+    public int? LineWidth
+    {
+        set
+        {
+            _lineWidth = value;
+
+            _chartData.ForEach(x => _ = ApplyLineWidth(x));
         }
     }
 
@@ -142,6 +165,17 @@
         return item;
     }
 
+    private ITrace ApplyMarkerSymbol(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Markers } item) return obj;
+
+        if (item.Marker is not { }) item.Marker = new();
+
+        item.Marker.Symbol = _markerSymbol;
+
+        return item;
+    }
+
     private ITrace ApplyLineColor(ITrace obj)
     {
         if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
@@ -149,6 +183,17 @@
         if (item.Line is not { }) item.Line = new();
 
         item.Line.Color = _lineColor;
+
+        return item;
+    }
+
+    private ITrace ApplyLineWidth(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
+
+        if (item.Line is not { }) item.Line = new();
+
+        item.Line.Width = _lineWidth;
 
         return item;
     }

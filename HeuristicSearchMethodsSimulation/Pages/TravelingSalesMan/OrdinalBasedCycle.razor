@@ -1,11 +1,11 @@
-﻿@page "/TravelingSalesMan/GuidedDirect"
+﻿@page "/TravelingSalesMan/OrdinalBasedCycle"
 @using HeuristicSearchMethodsSimulation.Shared.TravelingSalesMan
 @inject ITravelingSalesManService tsms
 @implements IDisposable
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
     <Title>
-        Traveling Sales Man - Guided Direct
+        Traveling Sales Man - Ordinal Based Cycle
     </Title>
     <Content>
         <Condition Evaluation="@tsms.HasLocations">
@@ -57,7 +57,7 @@
     protected override async Task OnInitializedAsync()
     {
         tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
-        await tsms.Init(TravelingSalesManAlgorithms.Guided_Direct);
+        await tsms.Init(TravelingSalesManAlgorithms.Ordinal_Based_Cycle);
     }
 
     public void Dispose()

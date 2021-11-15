@@ -17,7 +17,7 @@
                                 <th>@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
                                     <td class="@CellCssClass(context, childContext)">
-                                        @childContext.DistanceInKilometers.ToString("0,")
+                                        @childContext.DistanceInKilometers.ToString("#0.##")
                                     </td>
                                 </Iterations>
                             </tr>
@@ -38,9 +38,8 @@
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
         (row, cell) switch
         {
-            { row: { Min: { } }, cell: _ } when row.Min.Key == cell.Key => "min-distance bg-info bg-opacity-25",
-            { row: { Max: { } }, cell: _ } when row.Max.Key == cell.Key => "max-distance",
-            { row: _, cell: { DistanceInKilometers: 0 } } => "text-muted",
+            { row: { Min: { } }, cell: { IsShortestDistance: true } } => "min-distance bg-info bg-opacity-25",
+            { row: _, cell: { OrdinalFromOrigin: 0 } } => "text-muted",
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
     ).Trim();
