@@ -23,7 +23,7 @@
 
     private List<KeyValuePair<string, TravelingSalesManAlgorithms>>? _list;
     private List<KeyValuePair<string, TravelingSalesManAlgorithms>> List =>
-        _list ??
+        _list ??=
         Enum.GetValues(typeof(TravelingSalesManAlgorithms))
             .Cast<TravelingSalesManAlgorithms>()
             .Select(x =>
