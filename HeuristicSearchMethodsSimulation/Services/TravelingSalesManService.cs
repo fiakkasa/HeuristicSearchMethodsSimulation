@@ -160,8 +160,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (_isInitializing) return;
 
             _isInitializing = true;
-
-            IsInit = false;
+                        
             Loading = true;
 
             OnStateChangeDelegate?.Invoke();
