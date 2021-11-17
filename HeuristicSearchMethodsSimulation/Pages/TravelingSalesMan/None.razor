@@ -4,68 +4,68 @@
 @implements IDisposable
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
-    <Title>
-        Traveling Sales Man
-    </Title>
-    <Content>
-        <Condition Evaluation="@tsms.HasLocations">
-            <NotMatch>
-                <div class="d-flex flex-wrap align-items-center mb-2">
-                    <h4 class="m-0 me-2">No data available at the moment..</h4>
-                    <button type="button" class="btn btn-primary btn-sm" @onclick="() => tsms.Refresh()">Refresh?</button>
-                </div>
-            </NotMatch>
-            <Match>
-                <div class="row">
-                    <div class="col-12 col-lg-6">
-                        <LocationsMatrix Data="@tsms.Matrix" NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" />
-                        <NumberOfUniqueLocationsChart Data="@tsms.NumberOfUniqueLocations"
-                                                      CssClass="mt-3"
-                                                      MarkerColor="@tsms.MapOptions.MarkerColor"
-                                                      LineColor="@tsms.MapOptions.LineColor" />
-                    </div>
-                    <div class="col-12 mt-3 mt-lg-0 col-lg-6">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between">
-                            <RangeSelector Min="@tsms.MinSliderValue"
-                                           Max="@tsms.MaxSliderValue"
-                                           Step="@tsms.SliderStepValue"
-                                           Value="@tsms.SliderValue"
-                                           ValueChanged="tsms.UpdateState"
-                                           Disabled="@tsms.Loading" />
-                            <RouteSymmetry Value="@tsms.RouteSymmetry"
-                                           ValueChanged="tsms.SetRouteSymmetry"
-                                           Disabled="@tsms.Loading" />
-                        </div>
+	<Title>
+		Traveling Sales Man
+	</Title>
+	<Content>
+		<Condition Evaluation="@tsms.HasLocations">
+			<NotMatch>
+				<div class="d-flex flex-wrap align-items-center mb-2">
+					<h4 class="m-0 me-2">No data available at the moment..</h4>
+					<button type="button" class="btn btn-primary btn-sm" @onclick="() => tsms.Refresh()">Refresh?</button>
+				</div>
+			</NotMatch>
+			<Match>
+				<div class="row">
+					<div class="col-12 col-lg-6">
+						<LocationsMatrix Data="@tsms.Matrix" NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" />
+						<NumberOfUniqueRoutesPerLocationsChart Data="@tsms.NumberOfUniqueRoutesPerNumberOfLocations" 
+															   CssClass="mt-3" 
+															   MarkerColor="@tsms.MapOptions.MarkerColor" 
+															   LineColor="@tsms.MapOptions.LineColor" />
+					</div>
+					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
+						<div class="d-flex flex-wrap align-items-center justify-content-between">
+							<RangeSelector Min="@tsms.MinSliderValue"
+										   Max="@tsms.MaxSliderValue"
+										   Step="@tsms.SliderStepValue"
+										   Value="@tsms.SliderValue"
+										   ValueChanged="tsms.UpdateState"
+										   Disabled="@tsms.Loading" />
+							<RouteSymmetry Value="@tsms.RouteSymmetry"
+										   ValueChanged="tsms.SetRouteSymmetry"
+										   Disabled="@tsms.Loading" />
+						</div>
 
-                        <LocationsMap Data="@tsms.MapChartData"
-                                      TotalDistance="@tsms.TotalDistanceInKilometers"
-                                      CssClass="mt-3"
-                                      MarkerColor="@tsms.MapOptions.MarkerColor"
-                                      MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
-                                      LineColor="@tsms.MapOptions.LineColor"
-                                      LineWidth="@tsms.MapOptions.LineWidth"
-                                      LandColor="@tsms.MapOptions.LandColor"
-                                      CountryColor="@tsms.MapOptions.CountryColor" />
+						<LocationsMap Data="@tsms.MapChartData"
+									  TotalDistance="@tsms.TotalDistanceInKilometers"
+									  CssClass="mt-3"
+									  MarkerColor="@tsms.MapOptions.MarkerColor"
+									  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
+									  LineColor="@tsms.MapOptions.LineColor"
+									  LineWidth="@tsms.MapOptions.LineWidth"
+									  LandColor="@tsms.MapOptions.LandColor"
+									  CountryColor="@tsms.MapOptions.CountryColor" />
 
-                        <div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
-                            <AlgorithmsDropDown Disabled="@tsms.Loading" />
-                        </div>
-                    </div>
-                </div>
-            </Match>
-        </Condition>
-    </Content>
+						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
+							<AlgorithmsDropDown Disabled="@tsms.Loading" />
+						</div>
+					</div>
+				</div>
+			</Match>
+		</Condition>
+	</Content>
 </ContentWithLoader>
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
-        await tsms.Init(TravelingSalesManAlgorithms.None);
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
+		await tsms.Init(TravelingSalesManAlgorithms.None);
+	}
 
-    public void Dispose()
-    {
-        tsms.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
-    }
+	public void Dispose()
+	{
+		tsms.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
+	}
 }

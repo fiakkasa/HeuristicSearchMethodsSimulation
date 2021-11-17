@@ -20,7 +20,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
         List<LocationRow> Matrix { get; }
         int MaxSliderValue { get; }
         int MinSliderValue { get; }
-        List<long> NumberOfUniqueLocations { get; }
+        List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; }
         long NumberOfUniqueRoutes { get; }
         Pie? PieChartData { get; }
         bool RouteSymmetry { get; }

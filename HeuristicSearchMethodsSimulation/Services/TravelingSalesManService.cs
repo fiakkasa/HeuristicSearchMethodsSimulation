@@ -61,8 +61,8 @@ namespace HeuristicSearchMethodsSimulation.Services
         public bool HasLocations => Locations.Count > 0;
         public List<LocationGeo> LocationsBySelection { get; } = new();
         public List<LocationRow> Matrix { get; } = new();
-        public List<long> NumberOfUniqueLocations { get; } = new();
-        public long NumberOfUniqueRoutes => NumberOfUniqueLocations.LastOrDefault();
+        public List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; } = new();
+        public long NumberOfUniqueRoutes => NumberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
         public bool RouteSymmetry { get; private set; }
         public TravelingSalesManAlgorithms Algorithm { get; private set; }
         public int MinSliderValue { get; private set; }
@@ -160,7 +160,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (_isInitializing) return;
 
             _isInitializing = true;
-                        
+
             Loading = true;
 
             OnStateChangeDelegate?.Invoke();
@@ -273,21 +273,21 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 var locationsBySelection = Locations.Take(sliderValue).ToList();
                 var matrix = await CalculateMatrix(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
-                var numberOfUniqueLocations = await CalculateNumberOfUniqueRoutes(sliderValue, cancellationToken).ConfigureAwait(true);
+                var numberOfUniqueRoutes = await CalculateNumberOfUniqueRoutesPerNumberOfLocations(sliderValue, cancellationToken).ConfigureAwait(true);
                 var mapMarkerData = await CalculateMapMarkers(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
                 var mapLineData = await CalculateMapLines(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
                 var totalDistance = await CalculateTotalDistance(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
 
                 LocationsBySelection.Clear();
                 Matrix.Clear();
-                NumberOfUniqueLocations.Clear();
+                NumberOfUniqueRoutesPerNumberOfLocations.Clear();
                 MapChartData.Clear();
                 MapMarkerData.Clear();
                 MapLinesData.Clear();
 
                 LocationsBySelection.AddRange(locationsBySelection);
                 Matrix.AddRange(matrix);
-                NumberOfUniqueLocations.AddRange(numberOfUniqueLocations);
+                NumberOfUniqueRoutesPerNumberOfLocations.AddRange(numberOfUniqueRoutes);
                 MapChartData.AddRange(mapLineData.Concat(mapMarkerData));
                 MapMarkerData.AddRange(mapMarkerData);
                 MapLinesData.AddRange(mapLineData);
@@ -433,7 +433,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private async Task<List<long>> CalculateNumberOfUniqueRoutes(int numberOfLocations, CancellationToken cancellationToken)
+        private async Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(int numberOfLocations, CancellationToken cancellationToken)
         {
             try
             {
@@ -454,53 +454,81 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
+        private List<LocationRow> MarkIsHighlightedDistance(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        {
+            if (algo == TravelingSalesManAlgorithms.Ordinal_Based_Cycle)
+            {
+                return matrix
+                    .Select((row, rowIndex) =>
+                        row with
+                        {
+                            Collection = row.Collection
+                                .Select((cell, cellIndex) =>
+                                    rowIndex + 1 == cellIndex ||
+                                    (rowIndex + 1 == row.Collection.Count && cellIndex == 0)
+                                        ? cell with { IsHighlightedDistance = true }
+                                        : cell
+                                )
+                                .ToList()
+                        }
+                    )
+                    .ToList();
+            }
+
+            return matrix;
+        }
+
         private async Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
         {
             try
             {
                 return await Task.Run(() =>
-                    locations.ConvertAll(
-                        location =>
-                        {
-                            var rowCollection =
-                                locations.Select(
-                                    (otherLocation, index) =>
-                                        new LocationToLocation(
-                                            A: location,
-                                            B: otherLocation,
-                                            DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
-                                            ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                            Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
-                                                ? $"{location.ShortCode}-{otherLocation.ShortCode}"
-                                                : $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                            DistanceInKilometers: CalculateDistancePointToPointInKilometers(location, otherLocation),
-                                            Index: index,
-                                            OrdinalFromOrigin: 0,
-                                            IsShortestDistance: false
+                    {
+                        var matrix =
+                            locations.ConvertAll(
+                            location =>
+                            {
+                                var rowCollection =
+                                    locations.Select(
+                                        (otherLocation, index) =>
+                                            new LocationToLocation(
+                                                A: location,
+                                                B: otherLocation,
+                                                DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
+                                                ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
+                                                Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
+                                                    ? $"{location.ShortCode}-{otherLocation.ShortCode}"
+                                                    : $"{otherLocation.ShortCode}-{location.ShortCode}",
+                                                DistanceInKilometers: CalculateDistancePointToPointInKilometers(location, otherLocation),
+                                                Index: index,
+                                                OrdinalFromOrigin: 0,
+                                                IsHighlightedDistance: false
+                                            )
                                         )
-                                    )
-                                    .OrderBy(x => x.DistanceInKilometers)
-                                    .Select((x, ordinalFromOrigin) =>
-                                        x with
-                                        {
-                                            OrdinalFromOrigin = ordinalFromOrigin,
-                                            IsShortestDistance = algo == TravelingSalesManAlgorithms.Ordinal_Based_Cycle && ordinalFromOrigin == 1 // 0 self
-                                        }
-                                    )
-                                    .OrderBy(x => x.Index)
-                                    .ToList();
+                                        .OrderBy(x => x.DistanceInKilometers)
+                                        .Select((x, ordinalFromOrigin) =>
+                                            x with
+                                            {
+                                                OrdinalFromOrigin = ordinalFromOrigin
+                                            }
+                                        )
+                                        .OrderBy(x => x.Index)
+                                        .ToList();
 
-                            var selfKey = $"{location.ShortCode}-{location.ShortCode}";
+                                var selfKey = $"{location.ShortCode}-{location.ShortCode}";
 
-                            return new LocationRow(
-                                Collection: rowCollection,
-                                Ylabel: $"{location.Label} ({location.ShortCode})",
-                                Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})"),
-                                Min: rowCollection.Where(x => x.Key != selfKey).Min(),
-                                Max: rowCollection.Where(x => x.Key != selfKey).Max()
-                            );
-                        }
-                    ),
+                                return new LocationRow(
+                                    Collection: rowCollection,
+                                    Ylabel: $"{location.Label} ({location.ShortCode})",
+                                    Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})"),
+                                    Min: rowCollection.Where(x => x.Key != selfKey).Min(),
+                                    Max: rowCollection.Where(x => x.Key != selfKey).Max()
+                                );
+                            }
+                        );
+
+                        return MarkIsHighlightedDistance(matrix, algo);
+                    },
                     cancellationToken
                 )
                 .ConfigureAwait(true);

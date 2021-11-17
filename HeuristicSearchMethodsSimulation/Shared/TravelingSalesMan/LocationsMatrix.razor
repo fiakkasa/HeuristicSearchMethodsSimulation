@@ -38,7 +38,7 @@
     private string CellCssClass(LocationRow row, LocationToLocation cell) => (
         (row, cell) switch
         {
-            { row: { Min: { } }, cell: { IsShortestDistance: true } } => "min-distance bg-info bg-opacity-25",
+            { row: { Min: { } }, cell: { IsHighlightedDistance: true } } => "min-distance bg-info bg-opacity-25",
             { row: _, cell: { OrdinalFromOrigin: 0 } } => "text-muted",
             _ => string.Empty
         } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
