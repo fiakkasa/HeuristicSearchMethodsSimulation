@@ -22,3 +22,6 @@ dotnet_diagnostic.IDE0060.severity = none
 dotnet_diagnostic.S3459.severity = none
 
 dotnet_diagnostic.CS0649.severity = none
+
+# CA2254: Template should be a static expression
+dotnet_diagnostic.CA2254.severity = none

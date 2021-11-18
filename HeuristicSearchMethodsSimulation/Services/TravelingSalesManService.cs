@@ -4,6 +4,7 @@ using HeuristicSearchMethodsSimulation.Enums;
 using HeuristicSearchMethodsSimulation.Extensions;
 using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Models;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -113,19 +114,17 @@ namespace HeuristicSearchMethodsSimulation.Services
             Loading = true;
             OnStateChangeDelegate?.Invoke();
 
-            await Task.WhenAll(
-                new[]
+            await Task.WhenAll(new[]
                 {
                     UpdateState(sliderValue, Algorithm, _cts.Token),
                     Delay()
-                }
-            )
-            .ContinueWith(_ =>
-            {
-                Loading = false;
-                OnStateChangeDelegate?.Invoke();
-            })
-            .ConfigureAwait(true);
+                })
+                .ContinueWith(_ =>
+                {
+                    Loading = false;
+                    OnStateChangeDelegate?.Invoke();
+                })
+                .ConfigureAwait(true);
         }
 
         public async Task Refresh()
@@ -138,19 +137,17 @@ namespace HeuristicSearchMethodsSimulation.Services
             Locations.Clear();
             Locations.AddRange(locations);
 
-            await Task.WhenAll(
-                new[]
+            await Task.WhenAll(new[]
                 {
                     UpdateState(HasLocations ? SliderValue : _initialSliderValue, Algorithm, _cts.Token),
                     Delay()
-                }
-            )
-            .ContinueWith(_ =>
-            {
-                Loading = false;
-                OnStateChangeDelegate?.Invoke();
-            })
-            .ConfigureAwait(true);
+                })
+                .ContinueWith(_ =>
+                {
+                    Loading = false;
+                    OnStateChangeDelegate?.Invoke();
+                })
+                .ConfigureAwait(true);
         }
 
         public async Task Init(TravelingSalesManAlgorithms algo)
@@ -230,13 +227,13 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .Limit(limit)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true)
-                    )
-                    .ConvertAll(x =>
-                        _mapper.Map<LocationGeo>(x) with
-                        {
-                            Geo = new GeoCoordinate(x.Latitude, x.Longitude)
-                        }
-                    );
+                )
+                .ConvertAll(x =>
+                    _mapper.Map<LocationGeo>(x) with
+                    {
+                        Geo = new GeoCoordinate(x.Latitude, x.Longitude)
+                    }
+                );
             }
             catch (Exception ex)
             {
@@ -314,17 +311,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                     algo switch
                     {
                         TravelingSalesManAlgorithms.None => default(double?),
-                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle =>
-                            locations
-                                .Append(locations[0])
-                                .Skip(1)
-                                .Select((location, i) => CalculateDistancePointToPointInKilometers(location, locations[i]))
-                                .Sum()
-                        ,
+                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle => OrdinalBasedCycle(locations),
                         _ => 0D
                     },
                     cancellationToken
-                ).ConfigureAwait(true);
+                )
+                .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -332,6 +324,13 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return 0D;
             }
+
+            static double OrdinalBasedCycle(List<LocationGeo> locations) =>
+                locations
+                    .Append(locations[0])
+                    .Skip(1)
+                    .Select((location, i) => CalculateDistancePointToPointInKilometers(location, locations[i]))
+                    .Sum();
         }
 
         private async Task<List<ITrace>> CalculateMapLines(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
@@ -343,24 +342,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                 return await Task.Run(() =>
                     algo switch
                     {
-                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle =>
-                            locations
-                                .Skip(1)
-                                .Append(locations[0])
-                                .Select((x, i) =>
-                                    new ScatterGeo
-                                    {
-                                        LocationMode = LocationModeEnum.ISO3,
-                                        Lon = new List<object> { locations[i].Longitude, x.Longitude },
-                                        Lat = new List<object> { locations[i].Latitude, x.Latitude },
-                                        Mode = ModeFlag.Lines
-                                    }
-                                )
-                                .ToList<ITrace>(),
+                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle => OrdinalBasedCycle(locations),
                         _ => new List<ITrace>()
                     },
                     cancellationToken
-                ).ConfigureAwait(true);
+                )
+                .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -368,6 +355,21 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return new List<ITrace>();
             }
+
+            static List<ITrace> OrdinalBasedCycle(List<LocationGeo> locations) =>
+                locations
+                    .Skip(1)
+                    .Append(locations[0])
+                    .Select((x, i) =>
+                        new ScatterGeo
+                        {
+                            LocationMode = LocationModeEnum.ISO3,
+                            Lon = new List<object> { locations[i].Longitude, x.Longitude },
+                            Lat = new List<object> { locations[i].Latitude, x.Latitude },
+                            Mode = ModeFlag.Lines
+                        }
+                    )
+                    .ToList<ITrace>();
         }
 
         private async Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
@@ -380,50 +382,13 @@ namespace HeuristicSearchMethodsSimulation.Services
                 return await Task.Run(
                     () => algo switch
                     {
-                        TravelingSalesManAlgorithms.Evolutionary =>
-                            locations.Select((x, i) =>
-                                 new ScatterGeo
-                                 {
-                                     LocationMode = LocationModeEnum.ISO3,
-                                     Lon = new List<object> { x.Longitude },
-                                     Lat = new List<object> { x.Latitude },
-                                     Mode = ModeFlag.Markers,
-                                     Text = $"{x.Label} ({x.ShortCode})",
-                                     Name = $"{x.Label} ({x.ShortCode})",
-                                     HoverLabel = new() { NameLength = 0 },
-                                     HoverTemplate = $"Ordinal: {i + 1}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
-                                 }
-                            ).ToList<ITrace>(),
-                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle =>
-                            locations.Select((x, i) =>
-                                new ScatterGeo
-                                {
-                                    LocationMode = LocationModeEnum.ISO3,
-                                    Lon = new List<object> { x.Longitude },
-                                    Lat = new List<object> { x.Latitude },
-                                    Mode = ModeFlag.Markers,
-                                    Text = $"{x.Label} ({x.ShortCode})",
-                                    Name = $"{x.Label} ({x.ShortCode})",
-                                    HoverLabel = new() { NameLength = 0 },
-                                    HoverTemplate = $"Ordinal: {x.Ordinal}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
-                                }
-                            ).ToList<ITrace>(),
-                        _ => locations.ConvertAll<ITrace>(x =>
-                             new ScatterGeo
-                             {
-                                 LocationMode = LocationModeEnum.ISO3,
-                                 Lon = new List<object> { x.Longitude },
-                                 Lat = new List<object> { x.Latitude },
-                                 Mode = ModeFlag.Markers,
-                                 Text = $"{x.Label} ({x.ShortCode})",
-                                 Name = $"{x.Label} ({x.ShortCode})",
-                                 HoverLabel = new() { NameLength = 0 },
-                                 HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
-                             }
-                        )
+                        TravelingSalesManAlgorithms.Evolutionary => Evolutionary(locations),
+                        TravelingSalesManAlgorithms.Ordinal_Based_Cycle => OrdinalBasedCycle(locations),
+                        _ => Default(locations)
                     },
                     cancellationToken
-                ).ConfigureAwait(true);
+                )
+                .ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -431,34 +396,77 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
             }
+
+            static List<ITrace> Evolutionary(List<LocationGeo> locations) =>
+                locations
+                    .Select((x, i) =>
+                        new ScatterGeo
+                        {
+                            LocationMode = LocationModeEnum.ISO3,
+                            Lon = new List<object> { x.Longitude },
+                            Lat = new List<object> { x.Latitude },
+                            Mode = ModeFlag.Markers,
+                            Text = $"{x.Label} ({x.ShortCode})",
+                            Name = $"{x.Label} ({x.ShortCode})",
+                            HoverLabel = new() { NameLength = 0 },
+                            HoverTemplate = $"Ordinal: {i + 1}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
+                        }
+                    )
+                    .ToList<ITrace>();
+
+            static List<ITrace> OrdinalBasedCycle(List<LocationGeo> locations) =>
+                locations
+                    .Select((x, i) =>
+                        new ScatterGeo
+                        {
+                            LocationMode = LocationModeEnum.ISO3,
+                            Lon = new List<object> { x.Longitude },
+                            Lat = new List<object> { x.Latitude },
+                            Mode = ModeFlag.Markers,
+                            Text = $"{x.Label} ({x.ShortCode})",
+                            Name = $"{x.Label} ({x.ShortCode})",
+                            HoverLabel = new() { NameLength = 0 },
+                            HoverTemplate = $"Ordinal: {x.Ordinal}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
+                        }
+                    )
+                    .ToList<ITrace>();
+
+            static List<ITrace> Default(List<LocationGeo> locations) =>
+                locations
+                    .ConvertAll<ITrace>(x =>
+                        new ScatterGeo
+                        {
+                            LocationMode = LocationModeEnum.ISO3,
+                            Lon = new List<object> { x.Longitude },
+                            Lat = new List<object> { x.Latitude },
+                            Mode = ModeFlag.Markers,
+                            Text = $"{x.Label} ({x.ShortCode})",
+                            Name = $"{x.Label} ({x.ShortCode})",
+                            HoverLabel = new() { NameLength = 0 },
+                            HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}"
+                        }
+                    );
         }
 
-        private async Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(int numberOfLocations, CancellationToken cancellationToken)
+        private static Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(int numberOfLocations, CancellationToken cancellationToken) =>
+            Task.Run(() =>
+                Enumerable.Range(0, numberOfLocations)
+                    .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x) / 2) // (n − 1)! / 2
+                    .Take(numberOfLocations)
+                    .ToList(),
+                cancellationToken
+            );
+
+        private static List<LocationRow> MarkIsHighlightedDistance(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
         {
-            try
+            return algo switch
             {
-                if (numberOfLocations < 1) return new List<long>();
+                TravelingSalesManAlgorithms.Ordinal_Based_Cycle => OrdinalBasedCycle(matrix),
+                _ => matrix
+            };
 
-                return await Task.Run(() =>
-                    Enumerable.Range(1, numberOfLocations)
-                        .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x))
-                        .ToList(),
-                    cancellationToken
-                ).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-
-                return new List<long>();
-            }
-        }
-
-        private List<LocationRow> MarkIsHighlightedDistance(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
-        {
-            if (algo == TravelingSalesManAlgorithms.Ordinal_Based_Cycle)
-            {
-                return matrix
+            static List<LocationRow> OrdinalBasedCycle(List<LocationRow> matrix) =>
+                matrix
                     .Select((row, rowIndex) =>
                         row with
                         {
@@ -473,9 +481,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                         }
                     )
                     .ToList();
-            }
-
-            return matrix;
         }
 
         private async Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
@@ -485,47 +490,46 @@ namespace HeuristicSearchMethodsSimulation.Services
                 return await Task.Run(() =>
                     {
                         var matrix =
-                            locations.ConvertAll(
-                            location =>
-                            {
-                                var rowCollection =
-                                    locations.Select(
-                                        (otherLocation, index) =>
-                                            new LocationToLocation(
-                                                A: location,
-                                                B: otherLocation,
-                                                DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
-                                                ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                                Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
-                                                    ? $"{location.ShortCode}-{otherLocation.ShortCode}"
-                                                    : $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                                DistanceInKilometers: CalculateDistancePointToPointInKilometers(location, otherLocation),
-                                                Index: index,
-                                                OrdinalFromOrigin: 0,
-                                                IsHighlightedDistance: false
+                            locations
+                                .ConvertAll(location =>
+                                {
+                                    var rowCollection =
+                                        locations
+                                            .Select((otherLocation, index) =>
+                                                new LocationToLocation(
+                                                    A: location,
+                                                    B: otherLocation,
+                                                    DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
+                                                    ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
+                                                    Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
+                                                        ? $"{location.ShortCode}-{otherLocation.ShortCode}"
+                                                        : $"{otherLocation.ShortCode}-{location.ShortCode}",
+                                                    DistanceInKilometers: CalculateDistancePointToPointInKilometers(location, otherLocation),
+                                                    Index: index,
+                                                    OrdinalFromOrigin: 0,
+                                                    IsHighlightedDistance: false
+                                                )
                                             )
-                                        )
-                                        .OrderBy(x => x.DistanceInKilometers)
-                                        .Select((x, ordinalFromOrigin) =>
-                                            x with
-                                            {
-                                                OrdinalFromOrigin = ordinalFromOrigin
-                                            }
-                                        )
-                                        .OrderBy(x => x.Index)
-                                        .ToList();
+                                            .OrderBy(x => x.DistanceInKilometers)
+                                            .Select((x, ordinalFromOrigin) =>
+                                                x with
+                                                {
+                                                    OrdinalFromOrigin = ordinalFromOrigin
+                                                }
+                                            )
+                                            .OrderBy(x => x.Index)
+                                            .ToList();
 
-                                var selfKey = $"{location.ShortCode}-{location.ShortCode}";
+                                    var selfKey = $"{location.ShortCode}-{location.ShortCode}";
 
-                                return new LocationRow(
-                                    Collection: rowCollection,
-                                    Ylabel: $"{location.Label} ({location.ShortCode})",
-                                    Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})"),
-                                    Min: rowCollection.Where(x => x.Key != selfKey).Min(),
-                                    Max: rowCollection.Where(x => x.Key != selfKey).Max()
-                                );
-                            }
-                        );
+                                    return new LocationRow(
+                                        Collection: rowCollection,
+                                        Ylabel: $"{location.Label} ({location.ShortCode})",
+                                        Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})"),
+                                        Min: rowCollection.Where(x => x.Key != selfKey).Min(),
+                                        Max: rowCollection.Where(x => x.Key != selfKey).Max()
+                                    );
+                                });
 
                         return MarkIsHighlightedDistance(matrix, algo);
                     },
