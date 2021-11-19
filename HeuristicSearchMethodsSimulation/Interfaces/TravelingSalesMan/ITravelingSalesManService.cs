@@ -28,6 +28,7 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		int SliderValue { get; }
 		double? TotalDistanceInKilometers { get; }
 		TravelingSalesManMapOptions MapOptions { get; }
+		bool MaxExhaustiveLocationsToCalculateReached { get; }
 
 		event Action? OnStateChange;
 

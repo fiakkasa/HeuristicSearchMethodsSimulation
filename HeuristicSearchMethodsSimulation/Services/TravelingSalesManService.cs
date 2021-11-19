@@ -38,6 +38,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 		private int _fetchLimit = 100;
 		private TravelingSalesManMapsOptions _mapOptions = new();
 		private const int _minNumberOfLocations = 2;
+		private int _maxExhaustiveLocationsToCalculate = 7;
 
 		private event Action? OnStateChangeDelegate;
 
@@ -78,6 +79,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 		public List<ITrace> MapLinesData { get; } = new();
 		public TravelingSalesManMapOptions MapOptions { get; private set; } = new();
 		public Pie? PieChartData { get; }
+		public bool MaxExhaustiveLocationsToCalculateReached => SliderValue > _maxExhaustiveLocationsToCalculate;
 
 		public TravelingSalesManService(
 			IOptions<MongoOptions> mongoOptions,
@@ -207,6 +209,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 				_initialSliderValue = TravelingSalesManOptions.InitialSliderValue;
 				_fetchLimit = TravelingSalesManOptions.FetchLimit;
 				_mapOptions = TravelingSalesManOptions.Map;
+				_maxExhaustiveLocationsToCalculate = TravelingSalesManOptions.MaxExhaustiveLocationsToCalculate;
 			}
 			catch (Exception ex)
 			{

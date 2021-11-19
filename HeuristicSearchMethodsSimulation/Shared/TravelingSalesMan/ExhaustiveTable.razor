@@ -1,8 +1,30 @@
-﻿<div class="@CssClass">
+﻿<Condition Evaluation="DisplayExcessRecordsMessage">
+	<Match>
+		<div class="traveling-salesman-exhaustive-table-container @CssClass">
+			<h6 class="text-danger">
+				There are too many candidate solutions to exhaustively display on the screen. Please try another search method.
+			</h6>
+		</div>
+	</Match>
+	<NotMatch>
+		<Condition Evaluation="Collection?.Count > 0">
+			<Match>
+				<div class="traveling-salesman-exhaustive-table-container row @CssClass">
+					<Iterations T="ExhaustiveItem" Items="Collection">
+						<div class="col-6 @(context.Id == SelectedId ? "text-info" : string.Empty)">
+							@context.Text (@context.DistanceInKilometers.ToString("#0.## Km"))
+						</div>
+					</Iterations>
+				</div>
+			</Match>
+		</Condition>
+	</NotMatch>
+</Condition>
 
-</div>
 @code {
 	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public bool Disabled { get; set; }
 	[Parameter] public List<ExhaustiveItem>? Collection { get; set; }
-	[Parameter] public ExhaustiveItem? Smallest { get; set; }
+	[Parameter] public string? SelectedId { get; set; }
+	[Parameter] public bool DisplayExcessRecordsMessage { get; set; }
 }

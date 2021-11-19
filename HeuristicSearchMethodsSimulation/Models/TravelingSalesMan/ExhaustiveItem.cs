@@ -2,10 +2,5 @@
 
 namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
 {
-    public record ExhaustiveItem
-    {
-        public List<LocationGeo> Collection { get; set; } = new();
-
-        public string Text { get; set; } = string.Empty;
-    }
+    public record ExhaustiveItem(List<LocationGeo> Collection, string Text, double DistanceInKilometers, string Id);
 }
