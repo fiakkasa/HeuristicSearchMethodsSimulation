@@ -2,5 +2,5 @@
 
 namespace HeuristicSearchMethodsSimulation.Models
 {
-    public record LocationRow(List<LocationToLocation> Collection, string Ylabel, List<string> Xlabels, LocationToLocation? Min, LocationToLocation? Max);
+    public record LocationRow(List<LocationToLocation> Collection, string Ylabel, List<string> Xlabels);
 }

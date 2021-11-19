@@ -4,6 +4,16 @@
             <div class="table-responsive">
                 <table class="table table-striped text-center m-0">
                     <thead>
+                        <Condition Evaluation="Algorithm == TravelingSalesManAlgorithms.Evolutionary">
+                            <Match>
+                                <tr>
+                                    <th></th>
+                                    <Iterations T="string" Items="HeaderIndices">
+                                        <th>@context</th>
+                                    </Iterations>
+                                </tr>
+                            </Match>
+                        </Condition>
                         <tr>
                             <th>Distance (Km)</th>
                             <Iterations T="string" Items="Data![0].Xlabels">
@@ -16,7 +26,7 @@
                             <tr>
                                 <th>@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
-                                    <td class="@CellCssClass(context, childContext)">
+                                    <td class="@CellCssClass(childContext)">
                                         @childContext.DistanceInKilometers.ToString("#0.##")
                                     </td>
                                 </Iterations>
@@ -34,13 +44,20 @@
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public List<LocationRow>? Data { get; set; }
     [Parameter] public long NumberOfUniqueRoutes { get; set; } = 0L;
+    [Parameter] public TravelingSalesManAlgorithms? Algorithm { get; set; }
 
-    private string CellCssClass(LocationRow row, LocationToLocation cell) => (
-        (row, cell) switch
+    private IEnumerable<string> HeaderIndices => Data switch 
+    {
+        { Count: > 0 and var count } => Enumerable.Range(0, count).Take(count).Select(x => x == 0 ? string.Empty : x.ToString()),
+       _ => Enumerable.Empty<string>()
+    };
+
+    private string CellCssClass(LocationToLocation cell) => (
+        cell switch
         {
-            { row: { Min: { } }, cell: { IsHighlightedDistance: true } } => "min-distance bg-info bg-opacity-25",
-            { row: _, cell: { OrdinalFromOrigin: 0 } } => "text-muted",
+            { IsHighlightedDistance: true } => "min-distance bg-info bg-opacity-25",
+            { A.ShortCode: var a, B.ShortCode: var b } when a == b => "text-muted",
             _ => string.Empty
-        } + $" ordinal-from-origin-{cell.OrdinalFromOrigin}"
-    ).Trim();
+        }
+    );
 }

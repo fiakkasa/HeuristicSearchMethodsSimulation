@@ -18,7 +18,9 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="@tsms.Matrix" NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" />
+						<LocationsMatrix Data="@tsms.Matrix" 
+										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" 
+										 Algorithm="@tsms.Algorithm" />
 						<NumberOfUniqueRoutesPerLocationsChart Data="@tsms.NumberOfUniqueRoutesPerNumberOfLocations" 
 															   CssClass="mt-3" 
 															   MarkerColor="@tsms.MapOptions.MarkerColor" 
