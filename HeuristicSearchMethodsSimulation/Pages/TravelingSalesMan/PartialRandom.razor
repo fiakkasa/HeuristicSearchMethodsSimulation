@@ -5,7 +5,7 @@
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
 	<Title>
-		Traveling Sales Man - Partial Random
+		<Header AlgorithmName="Partial Random" ShowSubtitle="@tsms.IsInit" />
 	</Title>
 	<Content>
 		<Condition Evaluation="@tsms.HasLocations">

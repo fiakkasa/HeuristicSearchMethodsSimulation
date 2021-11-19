@@ -5,7 +5,7 @@
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
 	<Title>
-		Traveling Sales Man - Exhaustive
+		<Header AlgorithmName="Exhaustive" ShowSubtitle="@tsms.IsInit" />
 	</Title>
 	<Content>
 		<Condition Evaluation="@tsms.HasLocations">

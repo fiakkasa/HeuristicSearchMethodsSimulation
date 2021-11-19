@@ -1,0 +1,21 @@
+﻿<div class="header-container mb-2">
+	<div class="header-text lead pb-1">
+		Traveling Salesman @Text
+	</div>
+	<Condition Evaluation="ShowSubtitle">
+		<Match>
+			<div class="header-subtitle small text-muted pb-1">
+				Given a list of cities, and the distances between each pair of cities,
+				find the shortest possible route that visits each city once and then
+				returns to the origin city.
+			</div>
+		</Match>
+	</Condition>
+</div>
+
+@code {
+	[Parameter] public string? AlgorithmName { get; set; }
+	[Parameter] public bool ShowSubtitle { get; set; }
+
+	private string Text => AlgorithmName?.Trim() is { Length: > 0 } name ? $"- Complexity Increase {AlgorithmName}" : string.Empty;
+}
