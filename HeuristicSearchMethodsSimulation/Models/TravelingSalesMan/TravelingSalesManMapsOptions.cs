@@ -1,4 +1,4 @@
-﻿namespace HeuristicSearchMethodsSimulation.Models
+﻿namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
 {
     public record TravelingSalesManMapsOptions
     {

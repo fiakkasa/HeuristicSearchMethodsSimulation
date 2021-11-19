@@ -1,6 +1,4 @@
 ﻿@page "/TravelingSalesMan/PartialRandom"
-@using HeuristicSearchMethodsSimulation.Shared.TravelingSalesMan
-@inject ITravelingSalesManService tsms
 @implements IDisposable
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">

@@ -1,10 +1,10 @@
-﻿@inject NavigationManager NavigationManager
+﻿@inject NavigationManager nav
 
 @code{
     protected override async Task OnInitializedAsync()
     {
-        NavigationManager.NavigateTo(
-            await Task.FromResult($"{NavigationManager.BaseUri}Identity/Account/Login"),
+        nav.NavigateTo(
+            await Task.FromResult($"{nav.BaseUri}Identity/Account/Login"),
             forceLoad: true
         );
     }

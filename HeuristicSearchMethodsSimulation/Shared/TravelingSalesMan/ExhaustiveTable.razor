@@ -1,0 +1,8 @@
+﻿<div class="@CssClass">
+
+</div>
+@code {
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public List<ExhaustiveItem>? Collection { get; set; }
+	[Parameter] public ExhaustiveItem? Smallest { get; set; }
+}

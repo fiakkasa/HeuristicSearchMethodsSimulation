@@ -1,7 +1,8 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using HeuristicSearchMethodsSimulation.Models;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDbGenericRepository.Attributes;
 
-namespace HeuristicSearchMethodsSimulation.Models
+namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
 {
     [BsonIgnoreExtraElements]
     [CollectionName("Locations")]
