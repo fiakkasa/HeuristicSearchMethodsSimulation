@@ -22,13 +22,14 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		int MinSliderValue { get; }
 		List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; }
 		long NumberOfUniqueRoutes { get; }
-		Pie? PieChartData { get; }
 		bool RouteSymmetry { get; }
 		int SliderStepValue { get; }
 		int SliderValue { get; }
 		double? TotalDistanceInKilometers { get; }
 		TravelingSalesManMapOptions MapOptions { get; }
 		bool MaxExhaustiveLocationsToCalculateReached { get; }
+		List<ExhaustiveItem> ExhaustiveItems { get; }
+		ExhaustiveItem? SelectedExhaustiveItem { get; }
 
 		event Action? OnStateChange;
 

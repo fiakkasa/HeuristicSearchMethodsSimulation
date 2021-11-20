@@ -11,7 +11,7 @@
 			<Match>
 				<div class="traveling-salesman-exhaustive-table-container row @CssClass">
 					<Iterations T="ExhaustiveItem" Items="Collection">
-						<div class="col-6 @(context.Id == SelectedId ? "text-info" : string.Empty)">
+						<div class="col-12 col-lg-6 @(context.Id == SelectedId ? "text-info" : string.Empty)">
 							@context.Text (@context.DistanceInKilometers.ToString("#0.## Km"))
 						</div>
 					</Iterations>
