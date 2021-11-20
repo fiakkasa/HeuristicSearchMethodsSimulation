@@ -22,7 +22,6 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		int MinSliderValue { get; }
 		List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; }
 		long NumberOfUniqueRoutes { get; }
-		bool RouteSymmetry { get; }
 		int SliderStepValue { get; }
 		int SliderValue { get; }
 		double? TotalDistanceInKilometers { get; }
@@ -35,7 +34,6 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 
 		Task Init(TravelingSalesManAlgorithms algo);
 		Task Refresh();
-		Task SetRouteSymmetry(bool routeSymmetry);
 		Task UpdateState(int sliderValue);
 	}
 }

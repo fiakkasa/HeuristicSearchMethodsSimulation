@@ -68,7 +68,6 @@ namespace HeuristicSearchMethodsSimulation.Services
         public List<LocationRow> Matrix { get; } = new();
         public List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; } = new();
         public long NumberOfUniqueRoutes => NumberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
-        public bool RouteSymmetry { get; private set; } = true;
         public TravelingSalesManAlgorithms Algorithm { get; private set; }
         public int MinSliderValue { get; private set; }
         public int MaxSliderValue { get; private set; }
@@ -98,22 +97,6 @@ namespace HeuristicSearchMethodsSimulation.Services
             _logger = logger;
 
             InitValuesFromOptions();
-        }
-
-        public async Task SetRouteSymmetry(bool routeSymmetry)
-        {
-            Loading = true;
-            RouteSymmetry = routeSymmetry;
-
-            OnStateChangeDelegate?.Invoke();
-
-            await Delay()
-                .ContinueWith(_ =>
-                {
-                    Loading = false;
-                    OnStateChangeDelegate?.Invoke();
-                })
-                .ConfigureAwait(true);
         }
 
         public async Task UpdateState(int sliderValue)

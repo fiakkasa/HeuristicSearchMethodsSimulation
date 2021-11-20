@@ -14,7 +14,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     yield return (collection[i], collection[i - 1]);
 
                 if (collection.Count > 2)
-                    yield return (collection[collection.Count - 1], collection[0]);
+                    yield return (collection[^1], collection[0]);
             }
         }
 
