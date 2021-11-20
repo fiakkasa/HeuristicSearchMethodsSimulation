@@ -304,11 +304,6 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private static double CalculateDistancePointToPointInKilometers(LocationGeo location, LocationGeo otherLocation) =>
-            (location, otherLocation) is { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } }
-                ? lcGeo.GetDistanceTo(olcGeo) / 1000
-                : 0D;
-
         private async Task<double?> CalculateTotalDistance(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
         {
             try
