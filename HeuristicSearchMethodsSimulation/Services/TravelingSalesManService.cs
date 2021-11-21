@@ -171,13 +171,18 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public async Task SetExhaustiveItem(ExhaustiveItem item)
+        public Task SetExhaustiveItem(ExhaustiveItem item) => SetExhaustiveItem(item, false);
+
+        private async Task SetExhaustiveItem(ExhaustiveItem item, bool silent)
         {
             try
             {
-                Loading = true;
+                if (!silent)
+                {
+                    Loading = true;
 
-                OnStateChangeDelegate?.Invoke();
+                    OnStateChangeDelegate?.Invoke();
+                }
 
                 var mapLineData = await Task.Run(() => item.Collection.ToMapLines(), _cts.Token).ConfigureAwait(true);
 
@@ -190,9 +195,13 @@ namespace HeuristicSearchMethodsSimulation.Services
                 TotalDistanceInKilometers = item.DistanceInKilometers;
 
                 SelectedExhaustiveItem = item;
-                Loading = false;
 
-                OnStateChangeDelegate?.Invoke();
+                if (!silent)
+                {
+                    Loading = false;
+
+                    OnStateChangeDelegate?.Invoke();
+                }
             }
             catch (Exception ex)
             {
@@ -320,7 +329,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 TotalDistanceInKilometers = totalDistance;
 
                 ExhaustiveItems.AddRange(exhaustiveItems);
-                if(ExhaustiveItems.Count == 1) await SetExhaustiveItem(ExhaustiveItems[0]).ConfigureAwait(true);
+                if(ExhaustiveItems.Count == 1) await SetExhaustiveItem(ExhaustiveItems[0], true).ConfigureAwait(true);
 
                 MapLinesData.AddRange(mapLineData);
                 #endregion
