@@ -22,6 +22,8 @@
 						<ExhaustiveTable CssClass="mt-2"
 										 Collection="@tsms.ExhaustiveItems"
 										 SelectedId="@tsms.SelectedExhaustiveItem?.Id" 
+										 Disabled="@tsms.Loading"
+										 Loading="@tsms.Loading"
 										 DisplayExcessRecordsMessage="@tsms.MaxExhaustiveLocationsToCalculateReached"
 										 OnSelection="@tsms.SetExhaustiveItem"/>
 					</div>
