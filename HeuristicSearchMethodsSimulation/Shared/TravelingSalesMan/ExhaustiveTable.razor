@@ -1,6 +1,6 @@
 ﻿<Condition Evaluation="DisplayExcessRecordsMessage">
 	<Match>
-		<div class="traveling-salesman-exhaustive-table-container overflow-auto @CssClass">
+		<div class="traveling-salesman-exhaustive-table-container py-1 overflow-auto @CssClass">
 			<h6 class="text-danger">
 				There are too many candidate solutions to exhaustively display on the screen. Please try another search method.
 			</h6>
@@ -9,14 +9,14 @@
 	<NotMatch>
 		<Condition Evaluation="Collection?.Count > 0">
 			<NotMatch>
-				<div class="traveling-salesman-exhaustive-table-container overflow-auto @CssClass">
+				<div class="traveling-salesman-exhaustive-table-container py-1 overflow-auto @CssClass">
 					<h6 class="text-secondary">
 						It would appear that no routes are available. Please try increasing the number of cities.
 					</h6>
 				</div>
 			</NotMatch>
 			<Match>
-				<div class="traveling-salesman-exhaustive-table-container overflow-auto row @CssClass">
+				<div class="traveling-salesman-exhaustive-table-container py-1 overflow-auto row @CssClass">
 					<Iterations T="ExhaustiveItem" Items="Collection">
 						<div class="col-12 col-lg-6">
 							<button type="button" 
