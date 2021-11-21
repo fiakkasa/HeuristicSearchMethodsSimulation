@@ -4,6 +4,8 @@ using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
@@ -20,15 +22,14 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static string ToReverseDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
             $"{otherLocation.ShortCode}-{location.ShortCode}";
 
-        public static IEnumerable<(LocationGeo A, LocationGeo B)> ToCyclePairs(this List<LocationGeo> collection)
+        public static IEnumerable<LocationPair> ToCyclePairs(this List<LocationGeo> collection)
         {
-            if (collection.Count > 1)
+            if (collection.Count > Consts.MinNumberOfLocations)
             {
                 for (int i = 1; i < collection.Count; i++)
-                    yield return (collection[i - 1], collection[i]);
+                    yield return new(collection[i - 1], collection[i]);
 
-                if (collection.Count > 2)
-                    yield return (collection[0], collection[^1]);
+                yield return new(collection[^1], collection[0]);
             }
         }
 
@@ -37,15 +38,22 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 ? lcGeo.GetDistanceTo(olcGeo) / 1000
                 : 0D;
 
+        public static async Task<double> CalculateDistanceOfCycle(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
+            await collection
+                .ToCyclePairs()
+                .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
+                .ToAsyncEnumerable()
+                .SumAsync(cancellationToken)
+                .ConfigureAwait(true);
+
         public static double CalculateDistanceOfCycle(this List<LocationGeo> collection) =>
             collection
                 .ToCyclePairs()
                 .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
                 .Sum();
 
-        public static List<ITrace> ToMapLines(this List<LocationGeo> collection) =>
+        public static IEnumerable<ITrace> ToMapLines(this IEnumerable<LocationPair> collection) =>
             collection
-                .ToCyclePairs()
                 .Select(x =>
                     new ScatterGeo
                     {
@@ -55,7 +63,11 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         Mode = ModeFlag.Lines,
                         Meta = (x.A.Id, x.B.Id)
                     }
-                )
-                .ToList<ITrace>();
+                );
+
+        public static IEnumerable<ITrace> ToMapLines(this List<LocationGeo> collection) =>
+            collection
+                .ToCyclePairs()
+                .ToMapLines();
     }
 }
