@@ -1,3 +1,4 @@
 ﻿.header-subtitle {
-    letter-spacing: -0.75px;
+    --letter-spacing-size: -0.75px;
+    letter-spacing: var(--letter-spacing-size, -0.75px);
 }

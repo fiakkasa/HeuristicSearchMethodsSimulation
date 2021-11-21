@@ -1,4 +1,7 @@
 ﻿using HeuristicSearchMethodsSimulation.TravelingSalesMan.Models;
+using Plotly.Blazor;
+using Plotly.Blazor.Traces;
+using Plotly.Blazor.Traces.ScatterGeoLib;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -28,5 +31,20 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .ToCyclePairs()
                 .Select(x => x.Item1.CalculateDistancePointToPointInKilometers(x.Item2))
                 .Sum();
+
+        public static List<ITrace> ToMapLines(this List<LocationGeo> collection) =>
+            collection
+                .ToCyclePairs()
+                .Select(x =>
+                    new ScatterGeo
+                    {
+                        LocationMode = LocationModeEnum.ISO3,
+                        Lon = new List<object> { x.Item1.Longitude, x.Item2.Longitude },
+                        Lat = new List<object> { x.Item1.Latitude, x.Item2.Latitude },
+                        Mode = ModeFlag.Lines,
+                        Meta = (x.Item1.Id, x.Item2.Id)
+                    }
+                )
+                .ToList<ITrace>();
     }
 }

@@ -34,6 +34,7 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 
 		Task Init(TravelingSalesManAlgorithms algo);
 		Task Refresh();
-		Task UpdateState(int sliderValue);
+        Task SetExhaustiveItem(ExhaustiveItem item);
+        Task UpdateState(int sliderValue);
 	}
 }

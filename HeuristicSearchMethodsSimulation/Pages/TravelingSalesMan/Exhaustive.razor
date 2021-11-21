@@ -19,7 +19,11 @@
 						<LocationsMatrix Data="@tsms.Matrix"
 										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
 										 Algorithm="@tsms.Algorithm" />
-						<ExhaustiveTable CssClass="mt-3" DisplayExcessRecordsMessage="@tsms.MaxExhaustiveLocationsToCalculateReached" />
+						<ExhaustiveTable CssClass="pt-3 pb-1"
+										 Collection="@tsms.ExhaustiveItems"
+										 SelectedId="@tsms.SelectedExhaustiveItem?.Id" 
+										 DisplayExcessRecordsMessage="@tsms.MaxExhaustiveLocationsToCalculateReached"
+										 OnSelection="@tsms.SetExhaustiveItem"/>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
