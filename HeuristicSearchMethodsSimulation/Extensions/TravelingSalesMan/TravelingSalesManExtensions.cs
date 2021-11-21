@@ -9,15 +9,26 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManExtensions
     {
-        public static IEnumerable<(LocationGeo, LocationGeo)> ToCyclePairs(this List<LocationGeo> collection)
+        public static string ToKey(this LocationGeo location, LocationGeo otherLocation) =>
+            location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
+                ? location.ToDirectionalKey(otherLocation)
+                : location.ToReverseDirectionalKey(otherLocation);
+
+        public static string ToDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
+            $"{location.ShortCode}-{otherLocation.ShortCode}";
+
+        public static string ToReverseDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
+            $"{otherLocation.ShortCode}-{location.ShortCode}";
+
+        public static IEnumerable<(LocationGeo A, LocationGeo B)> ToCyclePairs(this List<LocationGeo> collection)
         {
             if (collection.Count > 1)
             {
                 for (int i = 1; i < collection.Count; i++)
-                    yield return (collection[i], collection[i - 1]);
+                    yield return (collection[i - 1], collection[i]);
 
                 if (collection.Count > 2)
-                    yield return (collection[^1], collection[0]);
+                    yield return (collection[0], collection[^1]);
             }
         }
 
@@ -29,7 +40,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static double CalculateDistanceOfCycle(this List<LocationGeo> collection) =>
             collection
                 .ToCyclePairs()
-                .Select(x => x.Item1.CalculateDistancePointToPointInKilometers(x.Item2))
+                .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
                 .Sum();
 
         public static List<ITrace> ToMapLines(this List<LocationGeo> collection) =>
@@ -39,10 +50,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     new ScatterGeo
                     {
                         LocationMode = LocationModeEnum.ISO3,
-                        Lon = new List<object> { x.Item1.Longitude, x.Item2.Longitude },
-                        Lat = new List<object> { x.Item1.Latitude, x.Item2.Latitude },
+                        Lon = new List<object> { x.A.Longitude, x.B.Longitude },
+                        Lat = new List<object> { x.A.Latitude, x.B.Latitude },
                         Mode = ModeFlag.Lines,
-                        Meta = (x.Item1.Id, x.Item2.Id)
+                        Meta = (x.A.Id, x.B.Id)
                     }
                 )
                 .ToList<ITrace>();

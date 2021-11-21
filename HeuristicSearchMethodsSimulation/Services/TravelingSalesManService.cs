@@ -13,6 +13,7 @@ using MongoDB.Driver;
 using Plotly.Blazor;
 using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
+using Plotly.Blazor.Traces.TableLib;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -171,9 +172,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public Task SetExhaustiveItem(ExhaustiveItem item) => SetExhaustiveItem(item, false);
+        public Task SetExhaustiveItem(ExhaustiveItem item) => SetExhaustiveItem(item, false, _cts.Token);
 
-        private async Task SetExhaustiveItem(ExhaustiveItem item, bool silent)
+        private async Task SetExhaustiveItem(ExhaustiveItem item, bool silent, CancellationToken cancellationToken)
         {
             try
             {
@@ -184,7 +185,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     OnStateChangeDelegate?.Invoke();
                 }
 
-                var mapLineData = await Task.Run(() => item.Collection.ToMapLines(), _cts.Token).ConfigureAwait(true);
+                var mapLineData = await Task.Run(() => item.Collection.ToMapLines(), cancellationToken).ConfigureAwait(true);
 
                 MapLinesData.Clear();
                 MapChartData.Clear();
@@ -329,7 +330,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 TotalDistanceInKilometers = totalDistance;
 
                 ExhaustiveItems.AddRange(exhaustiveItems);
-                if(ExhaustiveItems.Count == 1) await SetExhaustiveItem(ExhaustiveItems[0], true).ConfigureAwait(true);
+                if (ExhaustiveItems.Count == 1) await SetExhaustiveItem(ExhaustiveItems[0], true, cancellationToken).ConfigureAwait(true);
 
                 MapLinesData.AddRange(mapLineData);
                 #endregion
@@ -538,11 +539,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                                                 new LocationToLocation(
                                                     A: location,
                                                     B: otherLocation,
-                                                    DirectionalKey: $"{location.ShortCode}-{otherLocation.ShortCode}",
-                                                    ReverseDirectionalKey: $"{otherLocation.ShortCode}-{location.ShortCode}",
-                                                    Key: location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
-                                                        ? $"{location.ShortCode}-{otherLocation.ShortCode}"
-                                                        : $"{otherLocation.ShortCode}-{location.ShortCode}",
+                                                    DirectionalKey: location.ToDirectionalKey(otherLocation),
+                                                    ReverseDirectionalKey: location.ToReverseDirectionalKey(otherLocation),
+                                                    Key: location.ToKey(otherLocation),
                                                     DistanceInKilometers: location.CalculateDistancePointToPointInKilometers(otherLocation),
                                                     Index: index,
                                                     IsHighlightedDistance: false
