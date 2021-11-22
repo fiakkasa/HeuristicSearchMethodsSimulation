@@ -2,12 +2,12 @@
 {
     public enum TravelingSalesManAlgorithms
     {
-        None = 0,
-        Partial_Random = 1,
-        Exhaustive = 2,
-        Partial_Improving = 3,
-        Guided_Direct = 4,
-        Evolutionary = 5,
-        Ordinal_Based_Cycle = 6
+        None,
+        Preselected,
+        Exhaustive,
+        Partial_Random,
+        Partial_Improving,
+        Guided_Direct,
+        Evolutionary
     }
 }

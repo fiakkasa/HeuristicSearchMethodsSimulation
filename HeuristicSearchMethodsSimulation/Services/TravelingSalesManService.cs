@@ -72,11 +72,13 @@ namespace HeuristicSearchMethodsSimulation.Services
         public int MaxSliderValue { get; private set; }
         public int SliderStepValue { get; private set; }
         public int SliderValue { get; private set; }
+        public bool RouteSymmetry { get; } = true;
         public double? TotalDistanceInKilometers { get; private set; }
         public List<ITrace> MapChartData { get; } = new();
         public List<ITrace> MapMarkerData { get; } = new();
         public List<ITrace> MapLinesData { get; } = new();
         public TravelingSalesManMapOptions MapOptions { get; private set; } = new();
+        public string? PreselectedCycleText { get; private set; }
         public bool MaxExhaustiveLocationsToCalculateReached => SliderValue > _maxExhaustiveLocationsToCalculate;
         public List<ExhaustiveItem> ExhaustiveItems { get; } = new();
         public ExhaustiveItem? SelectedExhaustiveItem { get; private set; }
@@ -176,6 +178,8 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             try
             {
+                if (item.Id == SelectedExhaustiveItem?.Id) return;
+
                 if (!silent)
                 {
                     Loading = true;
@@ -292,7 +296,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             TravelingSalesManAlgorithms.Exhaustive => _mapOptions.Exhaustive,
             TravelingSalesManAlgorithms.Guided_Direct => _mapOptions.GuidedDirect,
             TravelingSalesManAlgorithms.None => _mapOptions.None,
-            TravelingSalesManAlgorithms.Ordinal_Based_Cycle => _mapOptions.OrdinalBasedCycle,
+            TravelingSalesManAlgorithms.Preselected => _mapOptions.Preselected,
             TravelingSalesManAlgorithms.Partial_Improving => _mapOptions.PartialImproving,
             TravelingSalesManAlgorithms.Partial_Random => _mapOptions.PartialRandom,
             _ => _mapOptions.Default
@@ -333,10 +337,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                 MapChartData.AddRange(mapMarkerData);
                 MapMarkerData.AddRange(mapMarkerData);
 
-                UpdateOtherStates(matrix, algo);
                 UpdateNoneState(matrix, algo);
+                await UpdatePreselectedState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdateExhaustiveState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
-                await UpdateOrdinalBasedCycleState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
+
+                UpdateOtherStates(matrix, algo);
                 #endregion
             }
             catch (Exception ex)
@@ -371,31 +376,15 @@ namespace HeuristicSearchMethodsSimulation.Services
             TotalDistanceInKilometers = default;
         }
 
-        private async Task UpdateExhaustiveState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
+        private async Task UpdatePreselectedState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
         {
-            ExhaustiveItems.Clear();
-            SelectedExhaustiveItem = default;
+            PreselectedCycleText = default;
 
-            if (algo != TravelingSalesManAlgorithms.Exhaustive) return;
-
-            var exhaustiveItems = await CalculateExhaustiveItems(locations, algo, cancellationToken).ConfigureAwait(true);
-
-            if (ExhaustiveItems.Count != 1) Matrix.AddRange(matrix);
-
-            TotalDistanceInKilometers = default;
-            ExhaustiveItems.AddRange(exhaustiveItems);
-
-            if (ExhaustiveItems.Count == 1)
-                await SetExhaustiveItem(ExhaustiveItems[0], true, cancellationToken).ConfigureAwait(true);
-        }
-
-        private async Task UpdateOrdinalBasedCycleState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
-        {
-            if (algo != TravelingSalesManAlgorithms.Ordinal_Based_Cycle) return;
+            if (algo != TravelingSalesManAlgorithms.Preselected) return;
 
             var matrixWithHighlights = matrix switch
             {
-                { Count: > Consts.MinNumberOfLocations } =>
+                { Count: >= Consts.MinNumberOfLocations } =>
                     await matrix
                         .Select((row, rowIndex) =>
                             row with
@@ -417,11 +406,31 @@ namespace HeuristicSearchMethodsSimulation.Services
             };
             var totalDistance = await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
             var mapLineData = await locations.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var text = locations.ToText();
 
             Matrix.AddRange(matrixWithHighlights);
             TotalDistanceInKilometers = totalDistance;
             MapChartData.InsertRange(0, mapLineData);
             MapLinesData.AddRange(mapLineData);
+            PreselectedCycleText = text;
+        }
+
+        private async Task UpdateExhaustiveState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
+        {
+            ExhaustiveItems.Clear();
+            SelectedExhaustiveItem = default;
+
+            if (algo != TravelingSalesManAlgorithms.Exhaustive) return;
+
+            var exhaustiveItems = await CalculateExhaustiveItems(locations, algo, cancellationToken).ConfigureAwait(true);
+
+            if (ExhaustiveItems.Count != 1) Matrix.AddRange(matrix);
+
+            TotalDistanceInKilometers = default;
+            ExhaustiveItems.AddRange(exhaustiveItems);
+
+            if (ExhaustiveItems.Count == 1)
+                await SetExhaustiveItem(ExhaustiveItems[0], true, cancellationToken).ConfigureAwait(true);
         }
 
         private async Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
@@ -433,8 +442,8 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return await (algo switch
                 {
+                    TravelingSalesManAlgorithms.Preselected => Preselected(locations, cancellationToken),
                     TravelingSalesManAlgorithms.Evolutionary => Evolutionary(locations, _mapOptions, cancellationToken),
-                    TravelingSalesManAlgorithms.Ordinal_Based_Cycle => OrdinalBasedCycle(locations, cancellationToken),
                     _ => Default(locations, cancellationToken)
                 })
                 .ConfigureAwait(true);
@@ -479,7 +488,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     .ToListAsync<ITrace>(cancellationToken)
                     .ConfigureAwait(true);
 
-            static async Task<List<ITrace>> OrdinalBasedCycle(List<LocationGeo> locations, CancellationToken cancellationToken) =>
+            static async Task<List<ITrace>> Preselected(List<LocationGeo> locations, CancellationToken cancellationToken) =>
                 await locations
                     .Select((x, i) =>
                         new ScatterGeo
@@ -570,7 +579,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             try
             {
                 if (
-                    locations.Count <= Consts.MinNumberOfLocations ||
+                    locations.Count < Consts.MinNumberOfLocations ||
                     locations.Count > _maxExhaustiveLocationsToCalculate ||
                     algo != TravelingSalesManAlgorithms.Exhaustive
                 )
@@ -579,16 +588,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                 }
 
                 return await Permute(locations)
-                    .Select(x =>
-                    {
-                        var collection = x.ToList();
-                        var text = string.Join(" > ", collection.Append(collection[0]).Select(y => y.ShortCode));
-
-                        return new ExhaustiveItem(collection, text, collection.CalculateDistanceOfCycle(), text);
-                    })
+                    .Select(collection => new ExhaustiveItem(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
                     .GroupBy(x => x.DistanceInKilometers.ToString("0.00"))
                     .Select(x => x.First())
-                    .OrderBy(x => x.DistanceInKilometers)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
             }

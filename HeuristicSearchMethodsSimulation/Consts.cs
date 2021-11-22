@@ -4,6 +4,6 @@
     {
         public const string MongoConnectionKey = "MongoConnection";
         public const string HealthEndPoint = "/health";
-        public const int MinNumberOfLocations = 2;
+        public const int MinNumberOfLocations = 3;
     }
 }

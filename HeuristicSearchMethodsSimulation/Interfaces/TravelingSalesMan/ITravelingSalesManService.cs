@@ -29,8 +29,10 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		bool MaxExhaustiveLocationsToCalculateReached { get; }
 		List<ExhaustiveItem> ExhaustiveItems { get; }
 		ExhaustiveItem? SelectedExhaustiveItem { get; }
+        string? PreselectedCycleText { get; }
+        bool RouteSymmetry { get; }
 
-		event Action? OnStateChange;
+        event Action? OnStateChange;
 
 		Task Init(TravelingSalesManAlgorithms algo);
 		Task Refresh();

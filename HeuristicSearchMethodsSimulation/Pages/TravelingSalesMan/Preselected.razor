@@ -1,9 +1,9 @@
-﻿@page "/TravelingSalesMan/OrdinalBasedCycle"
+﻿@page "/TravelingSalesMan/Preselected"
 @implements IDisposable
 
 <ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
 	<Title>
-		<Header AlgorithmName="Ordinal Based Cycle" ShowSubtitle="@tsms.IsInit" />
+		<Header AlgorithmName="Preselected" ShowSubtitle="@tsms.IsInit" />
 	</Title>
 	<Content>
 		<Condition Evaluation="@tsms.HasLocations">
@@ -16,9 +16,22 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="@tsms.Matrix" 
-										 NumberOfUniqueRoutes="@(tsms.SliderValue > Consts.MinNumberOfLocations ?  1 : 0)" 
+						<LocationsMatrix Data="@tsms.Matrix"
+										 NumberOfUniqueRoutes="@(tsms.LocationsBySelection.Count >= Consts.MinNumberOfLocations ?  1 : 0)"
 										 Algorithm="@tsms.Algorithm" />
+
+						<Condition Evaluation="@(tsms.LocationsBySelection.Count >= Consts.MinNumberOfLocations)">
+							<Match>
+								<div class="overflow-auto row mt-2">
+									<div class="col-12 col-lg-6 p-1">
+										<CycleWithDistanceButton Text="@tsms.PreselectedCycleText"
+																 DistanceInKilometers="@tsms.TotalDistanceInKilometers"
+																 Selected="true"
+																 Disabled="@tsms.Loading" />
+									</div>
+								</div>
+							</Match>
+						</Condition>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -28,7 +41,7 @@
 										   Value="@tsms.SliderValue"
 										   ValueChanged="tsms.UpdateState"
 										   Disabled="@tsms.Loading" />
-							<RouteSymmetry />
+							<RouteSymmetry Value="@tsms.RouteSymmetry" />
 						</div>
 
 						<LocationsMap Data="@tsms.MapChartData"
@@ -55,7 +68,7 @@
 	protected override async Task OnInitializedAsync()
 	{
 		tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
-		await tsms.Init(TravelingSalesManAlgorithms.Ordinal_Based_Cycle);
+		await tsms.Init(TravelingSalesManAlgorithms.Preselected);
 	}
 
 	public void Dispose()

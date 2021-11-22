@@ -22,9 +22,18 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static string ToReverseDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
             $"{otherLocation.ShortCode}-{location.ShortCode}";
 
+        public static string ToText(this List<LocationGeo> collection, string separator = " > ") =>
+            string.Join(
+                separator,
+                collection
+                    .Append(collection.FirstOrDefault())
+                    .Where(x => x?.ShortCode is not null)
+                    .Select(x => x!.ShortCode)
+            );
+
         public static IEnumerable<LocationPair> ToCyclePairs(this List<LocationGeo> collection)
         {
-            if (collection.Count > Consts.MinNumberOfLocations)
+            if (collection.Count >= Consts.MinNumberOfLocations)
             {
                 for (int i = 1; i < collection.Count; i++)
                     yield return new(collection[i - 1], collection[i]);
