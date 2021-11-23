@@ -468,6 +468,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 Lon = new List<object> { x.Longitude },
                                 Lat = new List<object> { x.Latitude },
                                 Mode = ModeFlag.Markers,
+                                Marker = new()
+                                {
+                                    Color = options.Evolutionary.MarkerColor,
+                                    Symbol = options.Evolutionary.MarkerSymbol
+                                },
                                 Text = $"{x.Label} ({x.ShortCode})",
                                 Name = $"{x.Label} ({x.ShortCode})",
                                 HoverLabel = new() { NameLength = 0 },
@@ -480,7 +485,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 Lon = new List<object> { x.Longitude },
                                 Lat = new List<object> { x.Latitude },
                                 Mode = ModeFlag.Markers,
-                                Marker = new() { Symbol = options.Default.MarkerSymbol },
+                                Marker = new()
+                                {
+                                    Color = options.Evolutionary.MarkerColor,
+                                    Symbol = options.Default.MarkerSymbol
+                                },
                                 Text = $"{x.Label} ({x.ShortCode})",
                                 Name = $"{x.Label} ({x.ShortCode})",
                                 HoverLabel = new() { NameLength = 0 },

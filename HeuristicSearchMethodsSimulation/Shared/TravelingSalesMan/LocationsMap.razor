@@ -160,7 +160,8 @@
 
         if (item.Marker is not { }) item.Marker = new();
 
-        item.Marker.Color = _markerColor;
+        if(item.Marker.Color is not { })
+            item.Marker.Color = _markerColor;
 
         return item;
     }
@@ -171,7 +172,8 @@
 
         if (item.Marker is not { }) item.Marker = new();
 
-        item.Marker.Symbol = _markerSymbol;
+        if(item.Marker.Symbol is not { })
+            item.Marker.Symbol = _markerSymbol;
 
         return item;
     }
