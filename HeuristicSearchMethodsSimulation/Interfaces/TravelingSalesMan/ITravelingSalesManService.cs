@@ -25,12 +25,13 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		int SliderStepValue { get; }
 		int SliderValue { get; }
 		double? TotalDistanceInKilometers { get; }
-		TravelingSalesManMapOptions MapOptions { get; }
+		MapOptions MapOptions { get; }
 		bool MaxExhaustiveLocationsToCalculateReached { get; }
 		List<ExhaustiveItem> ExhaustiveItems { get; }
 		ExhaustiveItem? SelectedExhaustiveItem { get; }
         string? PreselectedCycleText { get; }
         bool RouteSymmetry { get; }
+        ChartsOptions ChartsOptions { get; }
 
         event Action? OnStateChange;
 

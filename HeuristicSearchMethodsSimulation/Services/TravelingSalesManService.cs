@@ -37,7 +37,8 @@ namespace HeuristicSearchMethodsSimulation.Services
         private bool _isInitializing;
         private int _initialSliderValue = 1;
         private int _fetchLimit = 100;
-        private TravelingSalesManMapsOptions _mapOptions = new();
+        private ChartsOptions _chartOptions = new();
+        private MapsOptions _mapsOptions = new();
         private int _maxExhaustiveLocationsToCalculate = 7;
 
         private event Action? OnStateChangeDelegate;
@@ -74,10 +75,11 @@ namespace HeuristicSearchMethodsSimulation.Services
         public int SliderValue { get; private set; }
         public bool RouteSymmetry { get; } = true;
         public double? TotalDistanceInKilometers { get; private set; }
+        public ChartsOptions ChartsOptions => _chartOptions;
         public List<ITrace> MapChartData { get; } = new();
         public List<ITrace> MapMarkerData { get; } = new();
         public List<ITrace> MapLinesData { get; } = new();
-        public TravelingSalesManMapOptions MapOptions { get; private set; } = new();
+        public MapOptions MapOptions { get; private set; } = new();
         public string? PreselectedCycleText { get; private set; }
         public bool MaxExhaustiveLocationsToCalculateReached => SliderValue > _maxExhaustiveLocationsToCalculate;
         public List<ExhaustiveItem> ExhaustiveItems { get; } = new();
@@ -249,7 +251,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                 SliderValue = TravelingSalesManOptions.InitialSliderValue;
                 _initialSliderValue = TravelingSalesManOptions.InitialSliderValue;
                 _fetchLimit = TravelingSalesManOptions.FetchLimit;
-                _mapOptions = TravelingSalesManOptions.Map;
+                _chartOptions = TravelingSalesManOptions.Charts;
+                _mapsOptions = TravelingSalesManOptions.Maps;
                 _maxExhaustiveLocationsToCalculate = TravelingSalesManOptions.MaxExhaustiveLocationsToCalculate;
             }
             catch (Exception ex)
@@ -290,16 +293,16 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private TravelingSalesManMapOptions ResolveMapOptions(TravelingSalesManAlgorithms algo) => algo switch
+        private MapOptions ResolveMapOptions(TravelingSalesManAlgorithms algo) => algo switch
         {
-            TravelingSalesManAlgorithms.Evolutionary => _mapOptions.Evolutionary,
-            TravelingSalesManAlgorithms.Exhaustive => _mapOptions.Exhaustive,
-            TravelingSalesManAlgorithms.Guided_Direct => _mapOptions.GuidedDirect,
-            TravelingSalesManAlgorithms.None => _mapOptions.None,
-            TravelingSalesManAlgorithms.Preselected => _mapOptions.Preselected,
-            TravelingSalesManAlgorithms.Partial_Improving => _mapOptions.PartialImproving,
-            TravelingSalesManAlgorithms.Partial_Random => _mapOptions.PartialRandom,
-            _ => _mapOptions.Default
+            TravelingSalesManAlgorithms.Evolutionary => _mapsOptions.Evolutionary,
+            TravelingSalesManAlgorithms.Exhaustive => _mapsOptions.Exhaustive,
+            TravelingSalesManAlgorithms.Guided_Direct => _mapsOptions.GuidedDirect,
+            TravelingSalesManAlgorithms.None => _mapsOptions.None,
+            TravelingSalesManAlgorithms.Preselected => _mapsOptions.Preselected,
+            TravelingSalesManAlgorithms.Partial_Improving => _mapsOptions.PartialImproving,
+            TravelingSalesManAlgorithms.Partial_Random => _mapsOptions.PartialRandom,
+            _ => _mapsOptions.Default
         };
 
         private void SetPivotValues(int sliderValue, TravelingSalesManAlgorithms algo)
@@ -443,7 +446,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 return await (algo switch
                 {
                     TravelingSalesManAlgorithms.Preselected => Preselected(locations, cancellationToken),
-                    TravelingSalesManAlgorithms.Evolutionary => Evolutionary(locations, _mapOptions, cancellationToken),
+                    TravelingSalesManAlgorithms.Evolutionary => Evolutionary(locations, _mapsOptions, cancellationToken),
                     _ => Default(locations, cancellationToken)
                 })
                 .ConfigureAwait(true);
@@ -455,7 +458,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 return new() { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
             }
 
-            static async Task<List<ITrace>> Evolutionary(List<LocationGeo> locations, TravelingSalesManMapsOptions options, CancellationToken cancellationToken) =>
+            static async Task<List<ITrace>> Evolutionary(List<LocationGeo> locations, MapsOptions options, CancellationToken cancellationToken) =>
                 await locations
                     .Select((x, i) =>
                         i > 0

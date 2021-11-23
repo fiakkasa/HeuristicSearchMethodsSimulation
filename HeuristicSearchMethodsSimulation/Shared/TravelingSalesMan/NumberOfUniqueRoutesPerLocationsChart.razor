@@ -4,6 +4,7 @@
 @using Plotly.Blazor.LayoutLib
 @using Plotly.Blazor.LayoutLib.XAxisLib
 @using Plotly.Blazor.Traces.ScatterLib
+@using Plotly.Blazor.Traces.ScatterLib.MarkerLib
 @implements IDisposable
 @inject ILogger<NumberOfUniqueRoutesPerLocationsChart> logger
 
@@ -63,7 +64,9 @@
     };
     private List<ITrace> _chartData = new();
     private string? _markerColor;
+    private SymbolEnum? _markerSymbol;
     private string? _lineColor;
+    private int? _lineWidth;
 
     private string VisibilityClass =>
     _chartData.FirstOrDefault() is Scatter scatter && scatter.X?.Count > 0 && scatter.X?.Count == scatter.Y?.Count
@@ -85,14 +88,12 @@
                     Y = value.Cast<object>().ToList(),
                     Text = string.Empty,
                     Name = string.Empty,
-                    Marker = new() { Color = _markerColor },
-                    Line = new() { Color = _lineColor },
                     HoverLabel = new() { NameLength = 0 },
                     HoverTemplate = $"{_chartLayout.YAxis[0].Title.Text}: %{{y}}<br />{_chartLayout.XAxis[0].Title.Text}: %{{x}}"
                 };
 
                 _chartData.Clear();
-                _chartData.Add(data);
+                _chartData.Add(ApplyLineWidth(ApplyLineColor(ApplyMarkerSymbol(ApplyMarkerColor(data)))));
             }
             else
             {
@@ -112,6 +113,16 @@
         }
     }
     [Parameter]
+    public SymbolEnum? MarkerSymbol
+    {
+        set
+        {
+            _markerSymbol = value;
+
+            _chartData.ForEach(x => _ = ApplyMarkerSymbol(x));
+        }
+    }
+    [Parameter]
     public string? LineColor
     {
         set
@@ -121,10 +132,20 @@
             _chartData.ForEach(x => _ = ApplyLineColor(x));
         }
     }
+    [Parameter]
+    public int? LineWidth
+    {
+        set
+        {
+            _lineWidth = value;
+
+            _chartData.ForEach(x => _ = ApplyLineWidth(x));
+        }
+    }
 
     private ITrace ApplyMarkerColor(ITrace obj)
     {
-        if (obj is not Scatter { Mode: ModeFlag.Markers } item) return obj;
+        if (obj is not Scatter item) return obj;
 
         if (item.Marker is not { }) item.Marker = new();
 
@@ -133,13 +154,35 @@
         return item;
     }
 
+    private ITrace ApplyMarkerSymbol(ITrace obj)
+    {
+        if (obj is not Scatter item) return obj;
+
+        if (item.Marker is not { }) item.Marker = new();
+
+        item.Marker.Symbol = _markerSymbol;
+
+        return item;
+    }
+
     private ITrace ApplyLineColor(ITrace obj)
     {
-        if (obj is not Scatter { Mode: ModeFlag.Lines } item) return obj;
+        if (obj is not Scatter item) return obj;
 
         if (item.Line is not { }) item.Line = new();
 
         item.Line.Color = _lineColor;
+
+        return item;
+    }
+
+    private ITrace ApplyLineWidth(ITrace obj)
+    {
+        if (obj is not Scatter item) return obj;
+
+        if (item.Line is not { }) item.Line = new();
+
+        item.Line.Width = _lineWidth;
 
         return item;
     }

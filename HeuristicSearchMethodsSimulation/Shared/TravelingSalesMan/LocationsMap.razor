@@ -171,8 +171,7 @@
 
         if (item.Marker is not { }) item.Marker = new();
 
-        if(item.Marker.Symbol is not { })
-            item.Marker.Symbol = _markerSymbol;
+        item.Marker.Symbol = _markerSymbol;
 
         return item;
     }
