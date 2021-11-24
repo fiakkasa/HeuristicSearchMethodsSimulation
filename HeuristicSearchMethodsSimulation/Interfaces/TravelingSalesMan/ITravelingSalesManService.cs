@@ -32,12 +32,16 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
         string? PreselectedCycleText { get; }
         bool RouteSymmetry { get; }
         ChartsOptions ChartsOptions { get; }
+        List<PartialRandomItem> PartialRandomItems { get; }
+        PartialRandomItem? SelectedPartialRandomItem { get; }
+        List<LocationGeo> PartialRandomBuild { get; }
 
         event Action? OnStateChange;
 
 		Task Init(TravelingSalesManAlgorithms algo);
 		Task Refresh();
         Task SetExhaustiveItem(ExhaustiveItem item);
+        Task SetPartialRandomItem(PartialRandomItem item);
         Task UpdateState(int sliderValue);
 	}
 }

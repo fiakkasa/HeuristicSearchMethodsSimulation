@@ -15,7 +15,8 @@
 							<Virtualize Items="@Collection" OverscanCount="10">
 								<ItemContent>
 									<div class="col-12 col-lg-6 p-1" @key="context.Id">
-										<CycleWithDistanceButton Text="@context.Text"
+										<CycleWithDistanceButton TItem="ExhaustiveItem" 
+																 Text="@context.Text"
 																 DistanceInKilometers="@context.DistanceInKilometers"
 																 Selected="@(context.Id == SelectedId)"
 																 Disabled="@Disabled"

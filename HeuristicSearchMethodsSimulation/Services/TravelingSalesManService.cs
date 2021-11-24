@@ -84,6 +84,9 @@ namespace HeuristicSearchMethodsSimulation.Services
         public bool MaxExhaustiveLocationsToCalculateReached => SliderValue > _maxExhaustiveLocationsToCalculate;
         public List<ExhaustiveItem> ExhaustiveItems { get; } = new();
         public ExhaustiveItem? SelectedExhaustiveItem { get; private set; }
+        public List<PartialRandomItem> PartialRandomItems { get; } = new();
+        public PartialRandomItem? SelectedPartialRandomItem { get; private set; }
+        public List<LocationGeo> PartialRandomBuild { get; } = new();
 
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
@@ -174,14 +177,27 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
+        private async Task<List<LocationRow>> ResetMatrix(CancellationToken cancellationToken) =>
+            await Matrix
+                .Select((row, rowIndex) => row with
+                {
+                    Collection =
+                        row.Collection
+                            .Select((cell, cellIndex) => cell with
+                            {
+                                IsHighlightedDistance = false
+                            })
+                            .ToList()
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
+
         public Task SetExhaustiveItem(ExhaustiveItem item) => SetExhaustiveItem(item, false, _cts.Token);
 
         private async Task SetExhaustiveItem(ExhaustiveItem item, bool silent, CancellationToken cancellationToken)
         {
             try
             {
-                if (item.Id == SelectedExhaustiveItem?.Id) return;
-
                 if (!silent)
                 {
                     Loading = true;
@@ -189,32 +205,117 @@ namespace HeuristicSearchMethodsSimulation.Services
                     OnStateChangeDelegate?.Invoke();
                 }
 
-                var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
-                var matrix =
-                    await Matrix
-                        .Select((row, rowIndex) => row with
-                        {
-                            Collection =
-                                row.Collection
-                                    .Select((cell, cellIndex) => cell with
-                                    {
-                                        IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
-                                    })
-                                    .ToList()
-                        })
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                if (item.Id == SelectedExhaustiveItem?.Id)
+                {
+                    var resetMatrix = await ResetMatrix(cancellationToken).ConfigureAwait(true);
 
-                Matrix.Clear();
-                MapLinesData.Clear();
-                MapChartData.Clear();
+                    Matrix.Clear();
+                    MapLinesData.Clear();
+                    MapChartData.Clear();
 
-                Matrix.AddRange(matrix);
-                TotalDistanceInKilometers = item.DistanceInKilometers;
-                MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
-                MapLinesData.AddRange(mapLineData);
-                SelectedExhaustiveItem = item;
+                    Matrix.AddRange(resetMatrix);
+                    TotalDistanceInKilometers = default;
+                    MapChartData.AddRange(MapMarkerData);
+                    SelectedExhaustiveItem = default;
+                }
+                else
+                {
+                    var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var matrix =
+                        await Matrix
+                            .Select((row, rowIndex) => row with
+                            {
+                                Collection =
+                                    row.Collection
+                                        .Select((cell, cellIndex) => cell with
+                                        {
+                                            IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
+                                        })
+                                        .ToList()
+                            })
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true);
+
+                    Matrix.Clear();
+                    MapLinesData.Clear();
+                    MapChartData.Clear();
+
+                    Matrix.AddRange(matrix);
+                    TotalDistanceInKilometers = item.DistanceInKilometers;
+                    MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
+                    MapLinesData.AddRange(mapLineData);
+                    SelectedExhaustiveItem = item;
+                }
+
+                if (!silent)
+                {
+                    Loading = false;
+
+                    OnStateChangeDelegate?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        public Task SetPartialRandomItem(PartialRandomItem item) => SetPartialRandomItem(item, false, _cts.Token);
+
+        private async Task SetPartialRandomItem(PartialRandomItem item, bool silent, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!silent)
+                {
+                    Loading = true;
+
+                    OnStateChangeDelegate?.Invoke();
+                }
+
+                if (item.Id == SelectedPartialRandomItem?.Id)
+                {
+                    var resetMatrix = await ResetMatrix(cancellationToken).ConfigureAwait(true);
+
+                    Matrix.Clear();
+                    MapLinesData.Clear();
+                    MapChartData.Clear();
+
+                    Matrix.AddRange(resetMatrix);
+                    TotalDistanceInKilometers = default;
+                    MapChartData.AddRange(MapMarkerData);
+                    SelectedPartialRandomItem = default;
+                }
+                else
+                {
+                    var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var matrix =
+                        await Matrix
+                            .Select((row, rowIndex) => row with
+                            {
+                                Collection =
+                                    row.Collection
+                                        .Select((cell, cellIndex) => cell with
+                                        {
+                                            IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
+                                        })
+                                        .ToList()
+                            })
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true);
+
+                    Matrix.Clear();
+                    MapLinesData.Clear();
+                    MapChartData.Clear();
+
+                    Matrix.AddRange(matrix);
+                    TotalDistanceInKilometers = item.DistanceInKilometers;
+                    MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
+                    MapLinesData.AddRange(mapLineData);
+                    SelectedPartialRandomItem = item;
+                }
 
                 if (!silent)
                 {
@@ -343,6 +444,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 UpdateNoneState(matrix, algo);
                 await UpdatePreselectedState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdateExhaustiveState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
+                UpdatePartialRandomState(matrix, algo);
 
                 UpdateOtherStates(matrix, algo);
                 #endregion
@@ -357,7 +459,6 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             if (algo switch
             {
-                TravelingSalesManAlgorithms.Partial_Random => false,
                 TravelingSalesManAlgorithms.Partial_Improving => false,
                 TravelingSalesManAlgorithms.Guided_Direct => false,
                 TravelingSalesManAlgorithms.Evolutionary => false,
@@ -434,6 +535,18 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (ExhaustiveItems.Count == 1)
                 await SetExhaustiveItem(ExhaustiveItems[0], true, cancellationToken).ConfigureAwait(true);
+        }
+
+        private void UpdatePartialRandomState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        {
+            PartialRandomItems.Clear();
+            SelectedExhaustiveItem = default;
+            PartialRandomBuild.Clear();
+
+            if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
+
+            Matrix.AddRange(matrix);
+            TotalDistanceInKilometers = default;
         }
 
         private async Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)

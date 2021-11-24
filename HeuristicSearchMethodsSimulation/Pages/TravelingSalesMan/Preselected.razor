@@ -24,10 +24,12 @@
 							<Match>
 								<div class="overflow-auto row mt-2">
 									<div class="col-12 col-lg-6 p-1">
-										<CycleWithDistanceButton Text="@tsms.PreselectedCycleText"
+										<CycleWithDistanceButton TItem="bool"
+																 Text="@tsms.PreselectedCycleText"
 																 DistanceInKilometers="@tsms.TotalDistanceInKilometers"
 																 Selected="true"
-																 Disabled="@tsms.Loading" />
+																 Disabled="@tsms.Loading"
+																 Toggleable="false" />
 									</div>
 								</div>
 							</Match>

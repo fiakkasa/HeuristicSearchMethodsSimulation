@@ -19,6 +19,12 @@
 						<LocationsMatrix Data="@tsms.Matrix" 
 										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" 
 										 Algorithm="@tsms.Algorithm" />
+						<PartialRandomTable CssClass="mt-2"
+										    Collection="@tsms.PartialRandomItems"
+										    SelectedId="@tsms.SelectedPartialRandomItem?.Id" 
+										    Loading="@tsms.Loading"
+										    Disabled="@tsms.Loading"
+										    OnSelection="@tsms.SetPartialRandomItem"/>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">

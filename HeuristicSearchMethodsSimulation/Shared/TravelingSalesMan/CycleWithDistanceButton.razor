@@ -1,4 +1,6 @@
-﻿<Condition Evaluation="Text is { Length: > 0}">
+﻿@typeparam TItem
+
+<Condition Evaluation="Text is { Length: > 0}">
 	<Match>
 		<button type="button"
 				class="btn btn-sm w-100 border-0 @ButtonCssClass @CssClass"
@@ -18,15 +20,16 @@
 	[Parameter] public string? CssClass { get; set; }
 	[Parameter] public bool Disabled { get; set; }
 	[Parameter] public bool Selected { get; set; }
+	[Parameter] public bool Toggleable { get; set; } = true;
 	[Parameter] public string? Text { get; set; } = string.Empty;
 	[Parameter] public double? DistanceInKilometers { get; set; }
 
-	[Parameter] public EventCallback<ExhaustiveItem> OnSelection { get; set; }
+	[Parameter] public EventCallback<TItem> OnSelection { get; set; }
 
 	private string ButtonCssClass => (Selected, Disabled) switch
 	{
-		(Selected: true, Disabled: true) => "btn-outline-info",
-		(Selected: true, Disabled: false) => "btn-outline-info disabled opacity-100",
+		(Selected: true, Disabled: true) => "btn-outline-info disabled",
+		(Selected: true, Disabled: false) => $"btn-outline-info{(Toggleable ? string.Empty : " disabled opacity-100")}",
 		(Selected: false, Disabled: true) => "btn-outline-secondary disabled text-black",
 		(Selected: false, Disabled: false) => "btn-outline-secondary text-black"
 	};

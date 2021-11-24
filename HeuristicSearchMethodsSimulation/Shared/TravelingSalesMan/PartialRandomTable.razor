@@ -1,0 +1,44 @@
+﻿@using HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
+
+<Condition Evaluation="Loading">
+	<NotMatch>
+		<Condition Evaluation="Collection?.Count > 0">
+			<Match>
+				<div class="traveling-salesman-partial-random-table-container overflow-auto row @CssClass">
+					<Virtualize Items="@Collection" OverscanCount="10">
+						<ItemContent>
+							<div class="col-12 col-lg-6 p-1" @key="context.Id">
+								<CycleWithDistanceButton TItem="PartialRandomItem" 
+													     Text="@context.Text"
+														 DistanceInKilometers="@context.DistanceInKilometers"
+														 Selected="@(context.Id == SelectedId)"
+														 Disabled="@Disabled"
+														 OnSelection="OnSelectionChange(context)" />
+							</div>
+							<div class="col-lg-6"></div>
+						</ItemContent>
+						<Placeholder>
+							<div class="d-flex justify-content-center">
+								<div class="spinner-grow text-secondary"></div>
+							</div>
+						</Placeholder>
+					</Virtualize>
+				</div>
+			</Match>
+		</Condition>
+	</NotMatch>
+</Condition>
+
+
+@code {
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public bool Disabled { get; set; }
+	[Parameter] public bool Loading { get; set; }
+	[Parameter] public List<PartialRandomItem>? Collection { get; set; }
+	[Parameter] public Guid? SelectedId { get; set; }
+	[Parameter] public bool DisplayExcessRecordsMessage { get; set; }
+	[Parameter] public EventCallback<PartialRandomItem> OnSelection { get; set; }
+
+	private Func<Task> OnSelectionChange(PartialRandomItem item) =>
+		() => OnSelection.InvokeAsync(item);
+}
