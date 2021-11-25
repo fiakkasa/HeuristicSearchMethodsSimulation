@@ -16,15 +16,15 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="@tsms.Matrix" 
-										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" 
+						<LocationsMatrix Data="@tsms.Matrix"
+										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
 										 Algorithm="@tsms.Algorithm" />
 						<PartialRandomTable CssClass="mt-2"
-										    Collection="@tsms.PartialRandomItems"
-										    SelectedId="@tsms.SelectedPartialRandomItem?.Id" 
-										    Loading="@tsms.Loading"
-										    Disabled="@tsms.Loading"
-										    OnSelection="@tsms.SetPartialRandomItem"/>
+											Collection="@tsms.PartialRandomItems"
+											SelectedId="@tsms.SelectedPartialRandomItem?.Id"
+											Loading="@tsms.Loading"
+											Disabled="@tsms.Loading"
+											OnSelection="@tsms.SetPartialRandomItem" />
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -39,6 +39,7 @@
 
 						<LocationsMap Data="@tsms.MapChartData"
 									  TotalDistance="@tsms.TotalDistanceInKilometers"
+									  Text="@tsms.PartialRandomBuildText"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
 									  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
@@ -46,6 +47,13 @@
 									  LineWidth="@tsms.MapOptions.LineWidth"
 									  LandColor="@tsms.MapOptions.LandColor"
 									  CountryColor="@tsms.MapOptions.CountryColor" />
+
+						<PartialRandomBuilder CssClass="mt-3" 
+											  Disabled="@tsms.Loading" 
+											  Collection="@tsms.LocationsBySelection"
+											  Selected="@tsms.PartialRandomBuild"
+											  OnSelection="@tsms.SetPartialRandomLocation" 
+											  OnClear="@tsms.ClearPartialRandomBuilder" />
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
 							<AlgorithmsDropDown Disabled="@tsms.Loading" />

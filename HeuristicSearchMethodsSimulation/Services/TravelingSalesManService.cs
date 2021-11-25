@@ -86,7 +86,8 @@ namespace HeuristicSearchMethodsSimulation.Services
         public ExhaustiveItem? SelectedExhaustiveItem { get; private set; }
         public List<PartialRandomItem> PartialRandomItems { get; } = new();
         public PartialRandomItem? SelectedPartialRandomItem { get; private set; }
-        public List<LocationGeo> PartialRandomBuild { get; } = new();
+        public Dictionary<Guid, LocationGeo> PartialRandomBuild { get; } = new();
+        public string? PartialRandomBuildText { get; set; }
 
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
@@ -254,6 +255,111 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                     OnStateChangeDelegate?.Invoke();
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        public Task ClearPartialRandomBuilder() => ClearPartialRandomBuilder(_cts.Token);
+
+        private async Task ClearPartialRandomBuilder(CancellationToken cancellationToken)
+        {
+            try
+            {
+                Loading = true;
+                OnStateChangeDelegate?.Invoke();
+
+                var matrix = await ResetMatrix(cancellationToken).ConfigureAwait(true);
+
+                Matrix.Clear();
+                MapLinesData.Clear();
+                MapChartData.Clear();
+                PartialRandomBuild.Clear();
+                PartialRandomBuildText = default;
+
+                Matrix.AddRange(matrix);
+                TotalDistanceInKilometers = default;
+                MapChartData.AddRange(MapMarkerData);
+                SelectedPartialRandomItem = default;
+
+                Loading = false;
+                OnStateChangeDelegate?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, _cts.Token);
+
+        public async Task SetPartialRandomLocation(LocationGeo item, CancellationToken cancellationToken)
+        {
+            try
+            {
+                Loading = true;
+
+                OnStateChangeDelegate?.Invoke();
+
+                PartialRandomBuild[item.Id] = item;
+
+                var collection = await PartialRandomBuild.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                if (PartialRandomBuild.Count == LocationsBySelection.Count)
+                {
+                    var totalDistance = await collection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+
+                    var obj = new PartialRandomItem(
+                        collection,
+                        collection.ToText(),
+                        totalDistance,
+                        Guid.NewGuid()
+                    );
+                    PartialRandomItems.Add(obj);
+
+                    PartialRandomBuild.Clear();
+                    PartialRandomBuildText = default;
+
+                    await SetPartialRandomItem(obj, true, cancellationToken).ConfigureAwait(true);
+                }
+                else
+                {
+                    var cyclePairs = await collection.ToPartialCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                    var text = collection.ToText(customLastElemText: "...");
+                    var matrix =
+                        await Matrix
+                            .Select((row, rowIndex) => row with
+                            {
+                                Collection =
+                                    row.Collection
+                                        .Select((cell, cellIndex) => cell with
+                                        {
+                                            IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
+                                        })
+                                        .ToList()
+                            })
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true);
+
+                    Matrix.Clear();
+                    MapLinesData.Clear();
+                    MapChartData.Clear();
+
+                    Matrix.AddRange(matrix);
+                    TotalDistanceInKilometers = totalDistance;
+                    MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
+                    MapLinesData.AddRange(mapLineData);
+                    SelectedPartialRandomItem = default;
+                    PartialRandomBuildText = text;
+                }
+
+                Loading = false;
+
+                OnStateChangeDelegate?.Invoke();
             }
             catch (Exception ex)
             {
@@ -542,6 +648,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             PartialRandomItems.Clear();
             SelectedExhaustiveItem = default;
             PartialRandomBuild.Clear();
+            PartialRandomBuildText = default;
 
             if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
 

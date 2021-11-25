@@ -29,19 +29,22 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
 		bool MaxExhaustiveLocationsToCalculateReached { get; }
 		List<ExhaustiveItem> ExhaustiveItems { get; }
 		ExhaustiveItem? SelectedExhaustiveItem { get; }
-        string? PreselectedCycleText { get; }
-        bool RouteSymmetry { get; }
-        ChartsOptions ChartsOptions { get; }
-        List<PartialRandomItem> PartialRandomItems { get; }
-        PartialRandomItem? SelectedPartialRandomItem { get; }
-        List<LocationGeo> PartialRandomBuild { get; }
+		string? PreselectedCycleText { get; }
+		bool RouteSymmetry { get; }
+		ChartsOptions ChartsOptions { get; }
+		List<PartialRandomItem> PartialRandomItems { get; }
+		PartialRandomItem? SelectedPartialRandomItem { get; }
+		Dictionary<Guid, LocationGeo> PartialRandomBuild { get; }
+        string? PartialRandomBuildText { get; set; }
 
         event Action? OnStateChange;
 
-		Task Init(TravelingSalesManAlgorithms algo);
+        Task ClearPartialRandomBuilder();
+        Task Init(TravelingSalesManAlgorithms algo);
 		Task Refresh();
-        Task SetExhaustiveItem(ExhaustiveItem item);
-        Task SetPartialRandomItem(PartialRandomItem item);
-        Task UpdateState(int sliderValue);
+		Task SetExhaustiveItem(ExhaustiveItem item);
+		Task SetPartialRandomItem(PartialRandomItem item);
+		Task SetPartialRandomLocation(LocationGeo item);
+		Task UpdateState(int sliderValue);
 	}
 }
