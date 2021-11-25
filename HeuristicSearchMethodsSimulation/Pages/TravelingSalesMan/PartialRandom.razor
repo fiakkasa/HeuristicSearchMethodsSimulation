@@ -37,22 +37,38 @@
 							<RouteSymmetry Value="@tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="@tsms.MapChartData"
-									  TotalDistance="@tsms.TotalDistanceInKilometers"
-									  Text="@tsms.PartialRandomBuildText"
-									  CssClass="mt-3"
-									  MarkerColor="@tsms.MapOptions.MarkerColor"
-									  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
-									  LineColor="@tsms.MapOptions.LineColor"
-									  LineWidth="@tsms.MapOptions.LineWidth"
-									  LandColor="@tsms.MapOptions.LandColor"
-									  CountryColor="@tsms.MapOptions.CountryColor" />
+						<Condition Evaluation="tsms.SelectedPartialRandomItem is {}">
+							<Match>
+								<LocationsMap Data="@tsms.MapChartData"
+											  TotalDistance="@tsms.TotalDistanceInKilometers"
+											  CssClass="mt-3"
+											  MarkerColor="@tsms.MapOptions.MarkerColor"
+											  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
+											  LineColor="@tsms.MapOptions.LineColor"
+											  LineWidth="@tsms.MapOptions.LineWidth"
+											  LandColor="@tsms.MapOptions.LandColor"
+											  CountryColor="@tsms.MapOptions.CountryColor" />
+							</Match>
+							<NotMatch>
+								<LocationsMap Data="@(tsms.PartialRandomBuilderItem?.MapChartData ?? tsms.MapMarkerData)"
+											  TotalDistance="@tsms.PartialRandomBuilderItem?.DistanceInKilometers"
+											  Text="@tsms.PartialRandomBuilderItem?.Text"
+											  CssClass="mt-3"
+											  MarkerColor="@tsms.MapOptions.MarkerColor"
+											  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
+											  LineColor="@tsms.MapOptions.LineColor"
+											  LineWidth="@tsms.MapOptions.LineWidth"
+											  LandColor="@tsms.MapOptions.LandColor"
+											  CountryColor="@tsms.MapOptions.CountryColor" />
+							</NotMatch>
+						</Condition>
 
-						<PartialRandomBuilder CssClass="mt-3" 
-											  Disabled="@tsms.Loading" 
+
+						<PartialRandomBuilder CssClass="mt-3"
+											  Disabled="@tsms.Loading"
 											  Collection="@tsms.LocationsBySelection"
-											  Selected="@tsms.PartialRandomBuild"
-											  OnSelection="@tsms.SetPartialRandomLocation" 
+											  Selected="@tsms.PartialRandomBuilderItem?.Collection"
+											  OnSelection="@tsms.SetPartialRandomLocation"
 											  OnClear="@tsms.ClearPartialRandomBuilder" />
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">

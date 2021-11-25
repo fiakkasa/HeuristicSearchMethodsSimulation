@@ -86,8 +86,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         public ExhaustiveItem? SelectedExhaustiveItem { get; private set; }
         public List<PartialRandomItem> PartialRandomItems { get; } = new();
         public PartialRandomItem? SelectedPartialRandomItem { get; private set; }
-        public Dictionary<Guid, LocationGeo> PartialRandomBuild { get; } = new();
-        public string? PartialRandomBuildText { get; set; }
+        public PartialRandomBuilderItem? PartialRandomBuilderItem { get; set; }
 
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
@@ -276,13 +275,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                 Matrix.Clear();
                 MapLinesData.Clear();
                 MapChartData.Clear();
-                PartialRandomBuild.Clear();
-                PartialRandomBuildText = default;
 
                 Matrix.AddRange(matrix);
                 TotalDistanceInKilometers = default;
                 MapChartData.AddRange(MapMarkerData);
                 SelectedPartialRandomItem = default;
+                PartialRandomBuilderItem = default;
 
                 Loading = false;
                 OnStateChangeDelegate?.Invoke();
@@ -303,11 +301,13 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 OnStateChangeDelegate?.Invoke();
 
-                PartialRandomBuild[item.Id] = item;
+                if (PartialRandomBuilderItem is null) PartialRandomBuilderItem = new();
 
-                var collection = await PartialRandomBuild.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
+                PartialRandomBuilderItem.Collection[item.Id] = item;
 
-                if (PartialRandomBuild.Count == LocationsBySelection.Count)
+                var collection = await PartialRandomBuilderItem.Collection.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                if (PartialRandomBuilderItem.Collection.Count == LocationsBySelection.Count)
                 {
                     var totalDistance = await collection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
 
@@ -319,8 +319,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     );
                     PartialRandomItems.Add(obj);
 
-                    PartialRandomBuild.Clear();
-                    PartialRandomBuildText = default;
+                    PartialRandomBuilderItem = default;
 
                     await SetPartialRandomItem(obj, true, cancellationToken).ConfigureAwait(true);
                 }
@@ -348,13 +347,18 @@ namespace HeuristicSearchMethodsSimulation.Services
                     Matrix.Clear();
                     MapLinesData.Clear();
                     MapChartData.Clear();
+                    PartialRandomBuilderItem.MapChartData.Clear();
+                    PartialRandomBuilderItem.MapMarkerData.Clear();
+                    PartialRandomBuilderItem.MapLinesData.Clear();
 
                     Matrix.AddRange(matrix);
-                    TotalDistanceInKilometers = totalDistance;
-                    MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
-                    MapLinesData.AddRange(mapLineData);
+
                     SelectedPartialRandomItem = default;
-                    PartialRandomBuildText = text;
+                    PartialRandomBuilderItem.Text = text;
+                    PartialRandomBuilderItem.DistanceInKilometers = totalDistance;
+                    PartialRandomBuilderItem.MapChartData.AddRange(mapLineData.Concat(MapMarkerData));
+                    PartialRandomBuilderItem.MapMarkerData.AddRange(MapMarkerData);
+                    PartialRandomBuilderItem.MapLinesData.AddRange(mapLineData);
                 }
 
                 Loading = false;
@@ -647,8 +651,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             PartialRandomItems.Clear();
             SelectedExhaustiveItem = default;
-            PartialRandomBuild.Clear();
-            PartialRandomBuildText = default;
+            PartialRandomBuilderItem = default;
 
             if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
 
