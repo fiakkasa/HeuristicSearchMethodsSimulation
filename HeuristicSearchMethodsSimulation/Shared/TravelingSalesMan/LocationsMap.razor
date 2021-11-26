@@ -170,7 +170,7 @@
 
 	private ITrace ApplyMarkerColor(ITrace obj)
 	{
-		if (obj is not ScatterGeo { Mode: ModeFlag.Markers or ModeFlag.Markers | ModeFlag.Text } item) return obj;
+		if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
 
 		if (item.Marker is not { }) item.Marker = new();
 
@@ -182,7 +182,7 @@
 
 	private ITrace ApplyMarkerSymbol(ITrace obj)
 	{
-		if (obj is not ScatterGeo { Mode: ModeFlag.Markers or ModeFlag.Markers | ModeFlag.Text } item) return obj;
+		if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
 
 		if (item.Marker is not { }) item.Marker = new();
 
