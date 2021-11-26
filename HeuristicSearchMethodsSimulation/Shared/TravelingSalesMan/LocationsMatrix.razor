@@ -7,24 +7,24 @@
                         <Condition Evaluation="Algorithm == TravelingSalesManAlgorithms.Evolutionary">
                             <Match>
                                 <tr>
-                                    <th></th>
+                                    <th class="small"></th>
                                     <Iterations T="string" Items="HeaderIndices">
-                                        <th>@context</th>
+                                        <th class="small">@context</th>
                                     </Iterations>
                                 </tr>
                             </Match>
                         </Condition>
                         <tr>
-                            <th>Distance (Km)</th>
+                            <th class="small">Distance (Km)</th>
                             <Iterations T="string" Items="Data![0].Xlabels">
-                                <th>@context</th>
+                                <th class="small">@context</th>
                             </Iterations>
                         </tr>
                     </thead>
                     <tbody>
                         <Iterations T="LocationRow" Items="Data">
                             <tr>
-                                <th>@context.Ylabel</th>
+                                <th class="small">@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
                                     <td class="@CellCssClass(childContext)">
                                         @childContext.DistanceInKilometers.ToString("#0.##")
