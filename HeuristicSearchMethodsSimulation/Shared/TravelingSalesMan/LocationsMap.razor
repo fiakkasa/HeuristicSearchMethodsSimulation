@@ -54,8 +54,7 @@
 			Responsive = true,
 			ShowTips = false
 		};
-	private readonly Layout _chartLayout = new()
-		{
+	private readonly Layout _chartLayout = new() {
 			Height = 640,
 			ShowLegend = false,
 			AutoSize = true,
@@ -71,17 +70,15 @@
 			DragMode = DragModeEnum.False,
 			Geo = new List<Geo> {
 			new Geo {
-				Scope = ScopeEnum.NorthAmerica,
-				Projection = new Projection
-				{
-					Type = TypeEnum.AzimuthalEqualArea
-				},
+				Scope = ScopeEnum.USA,
 				ShowLand = true,
-				LandColor = "#f8f4f4",
-				CountryColor = "#d3d3d3"
+				ShowSubUnits = true,
+				LandColor = "#d3d3d3",
+				SubUnitColor = "#ffffff",
+				SubUnitWidth = 2
 			}
 		},
-		};
+	};
 	private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
 	private string? _markerColor;
 	private SymbolEnum? _markerSymbol = SymbolEnum.Circle;
