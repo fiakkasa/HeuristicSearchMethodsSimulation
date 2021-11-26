@@ -690,16 +690,17 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 LocationMode = LocationModeEnum.ISO3,
                                 Lon = new List<object> { x.Longitude },
                                 Lat = new List<object> { x.Latitude },
-                                Mode = ModeFlag.Markers,
+                                Mode = ModeFlag.Markers | ModeFlag.Text,
                                 Marker = new()
                                 {
                                     Color = options.Evolutionary.MarkerColor,
                                     Symbol = options.Evolutionary.MarkerSymbol
                                 },
-                                Text = $"{x.Label} ({x.ShortCode})",
+                                Text = $"{i} - {x.ShortCode}",
+                                TextPosition = TextPositionEnum.TopCenter,
                                 Name = $"{x.Label} ({x.ShortCode})",
                                 HoverLabel = new() { NameLength = 0 },
-                                HoverTemplate = $"Ordinal: {i}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}",
+                                HoverTemplate = $"Ordinal: {i}<br />{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
                                 Meta = x.Id
                             }
                             : new ScatterGeo
@@ -707,16 +708,17 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 LocationMode = LocationModeEnum.ISO3,
                                 Lon = new List<object> { x.Longitude },
                                 Lat = new List<object> { x.Latitude },
-                                Mode = ModeFlag.Markers,
+                                Mode = ModeFlag.Markers | ModeFlag.Text,
                                 Marker = new()
                                 {
                                     Color = options.Evolutionary.MarkerColor,
                                     Symbol = options.Default.MarkerSymbol
                                 },
-                                Text = $"{x.Label} ({x.ShortCode})",
+                                Text = x.ShortCode,
+                                TextPosition = TextPositionEnum.TopCenter,
                                 Name = $"{x.Label} ({x.ShortCode})",
                                 HoverLabel = new() { NameLength = 0 },
-                                HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}",
+                                HoverTemplate = $"{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
                                 Meta = x.Id
                             }
                     )
@@ -731,11 +733,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                             LocationMode = LocationModeEnum.ISO3,
                             Lon = new List<object> { x.Longitude },
                             Lat = new List<object> { x.Latitude },
-                            Mode = ModeFlag.Markers,
-                            Text = $"{x.Label} ({x.ShortCode})",
+                            Mode = ModeFlag.Markers | ModeFlag.Text,
+                            Text = x.ShortCode,
+                            TextPosition = TextPositionEnum.TopCenter,
                             Name = $"{x.Label} ({x.ShortCode})",
                             HoverLabel = new() { NameLength = 0 },
-                            HoverTemplate = $"Ordinal: {i + 1}<br />%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}",
+                            HoverTemplate = $"Ordinal: {i + 1}<br />{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
                             Meta = x.Id
                         }
                     )
@@ -750,11 +753,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                             LocationMode = LocationModeEnum.ISO3,
                             Lon = new List<object> { x.Longitude },
                             Lat = new List<object> { x.Latitude },
-                            Mode = ModeFlag.Markers,
-                            Text = $"{x.Label} ({x.ShortCode})",
+                            Mode = ModeFlag.Markers | ModeFlag.Text,
+                            Text = x.ShortCode,
+                            TextPosition = TextPositionEnum.TopCenter,
                             Name = $"{x.Label} ({x.ShortCode})",
                             HoverLabel = new() { NameLength = 0 },
-                            HoverTemplate = $"%{{fullData.text}}<br />{nameof(HoverInfoFlag.Lat)}: %{{lat}}<br />{nameof(HoverInfoFlag.Lon)}: %{{lon}}",
+                            HoverTemplate = $"{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
                             Meta = x.Id
                         }
                     )
