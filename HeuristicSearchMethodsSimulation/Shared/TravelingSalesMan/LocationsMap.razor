@@ -20,8 +20,8 @@
 			<div class="traveling-salesman-map-info-container d-flex align-items-center justify-content-end flex-wrap mt-1 small">
 				<Condition Evaluation="Text is { }">
 					<Match>
-						<div class="d-flex flex-wrap align-items-center justify-content-center text-muted">
-							<div class="me-4">
+						<div class="text-container d-flex flex-wrap align-items-center justify-content-center text-muted">
+							<div class="text me-4">
 								@Text
 							</div>
 						</div>
@@ -29,11 +29,11 @@
 				</Condition>
 				<Condition Evaluation="TotalDistance is { }">
 					<Match>
-						<div class="d-flex flex-wrap align-items-center justify-content-center text-muted">
-							<div class="me-2">
+						<div class="total-distance-container d-flex flex-wrap align-items-center justify-content-center text-muted">
+							<div class="text me-2">
 								Total Distance:
 							</div>
-							<div class="border px-5 py-1">
+							<div class="total-distance text-center border px-4 py-1">
 								@TotalDistance?.ToString("#0.## Km")
 							</div>
 						</div>

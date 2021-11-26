@@ -16,9 +16,11 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="@tsms.Matrix" 
-										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes" 
+						<LocationsMatrix Data="@tsms.Matrix"
+										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
 										 Algorithm="@tsms.Algorithm" />
+						<PartialImprovingTable CssClass="mt-2"
+											   Disabled="@tsms.Loading" />
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">

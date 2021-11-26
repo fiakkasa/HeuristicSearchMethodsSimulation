@@ -2,3 +2,8 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+.total-distance {
+    --total-distance-min-width: 132px;
+    min-width: var(--total-distance-min-width, 132px);
+}

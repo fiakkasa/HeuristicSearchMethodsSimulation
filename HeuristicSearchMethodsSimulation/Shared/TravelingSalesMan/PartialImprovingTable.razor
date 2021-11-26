@@ -1,0 +1,46 @@
+﻿<div class="traveling-salesman-partial-improving-table-container row @CssClass">
+	<div class="step col-12 p-1">
+		<div class="p-1 px-2 @(Collection?.Count > 0 ? "text-muted" : "text-black")">
+			Step 0: Randomly traverse initial route
+		</div>
+	</div>
+	<Condition Evaluation="Collection?.Count > 0">
+		<Match>
+			<Iterations T="(int step, string message)" Items="Collection?.Select((x, i) => (i + 1, x))">
+				<div class="step col-12 p-1">
+					<div class="p-1 px-2 @(Collection?.Count == context.step ? "text-black" : "text-muted")">
+						Step @(context.step): @context.message
+					</div>
+				</div>
+			</Iterations>
+		</Match>
+	</Condition>
+	<div class="d-flex justify-content-end justify-content-lg-center">
+		<div class="d-flex flex-wrap">
+			<button type="button"
+					class="btn btn-sm btn-outline-info my-1 me-2 mx-lg-1"
+					disabled="@Disabled"
+					@onclick="OnNext.InvokeAsync">
+				Next
+			</button>
+			<Condition Evaluation="Collection?.Count > 0">
+				<Match>
+					<button type="button"
+							class="btn btn-sm btn-warning my-1 mx-lg-1"
+							disabled="@Disabled"
+							@onclick="OnReset.InvokeAsync">
+						Reset
+					</button>
+				</Match>
+			</Condition>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public bool Disabled { get; set; }
+	[Parameter] public List<string>? Collection { get; set; }
+	[Parameter] public EventCallback<bool> OnNext { get; set; }
+	[Parameter] public EventCallback<bool> OnReset { get; set; }
+}

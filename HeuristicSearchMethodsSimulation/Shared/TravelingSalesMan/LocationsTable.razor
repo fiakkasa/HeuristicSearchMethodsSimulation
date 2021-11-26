@@ -1,33 +1,33 @@
 ﻿<Condition Evaluation="Data?.Count > 0">
-    <Match>
-        <div class="traveling-salesman-locations-container @CssClass">
-            <div class="table-responsive text-center">
-                <table class="table table-striped m-0">
-                    <thead>
-                        <tr>
-                            <th>@nameof(Location.Label)</th>
-                            <th>@nameof(Location.ShortCode)</th>
-                            <th>@nameof(Location.Latitude)</th>
-                            <th>@nameof(Location.Longitude)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <Iterations T="Location" Items="Data">
-                            <tr>
-                                <td>@context.Label</td>
-                                <td>@context.ShortCode</td>
-                                <td>@context.Latitude</td>
-                                <td>@context.Longitude</td>
-                            </tr>
-                        </Iterations>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </Match>
+	<Match>
+		<div class="traveling-salesman-locations-container @CssClass">
+			<div class="table-responsive text-center">
+				<table class="table table-striped m-0">
+					<thead>
+						<tr>
+							<th class="small">@nameof(Location.Label)</th>
+							<th class="small">@nameof(Location.ShortCode)</th>
+							<th class="small">@nameof(Location.Latitude)</th>
+							<th class="small">@nameof(Location.Longitude)</th>
+						</tr>
+					</thead>
+					<tbody>
+						<Iterations T="Location" Items="Data">
+							<tr>
+								<td>@context.Label</td>
+								<td>@context.ShortCode</td>
+								<td>@context.Latitude</td>
+								<td>@context.Longitude</td>
+							</tr>
+						</Iterations>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</Match>
 </Condition>
 
 @code {
-    [Parameter] public string? CssClass { get; set; }
-    [Parameter] public List<LocationGeo>? Data { get; set; }
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public List<LocationGeo>? Data { get; set; }
 }
