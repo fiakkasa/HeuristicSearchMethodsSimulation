@@ -17,7 +17,7 @@
 				<div class="row">
 					<div class="col-12 col-lg-6">
 						<LocationsMatrix Data="@tsms.Matrix"
-										 NumberOfUniqueRoutes="@(tsms.LocationsBySelection.Count >= Consts.MinNumberOfLocations ?  1 : 0)"
+										 NumberOfUniqueRoutes="@(tsms.LocationsBySelection.HasInsufficientLocations() ?  0 : 1)"
 										 Algorithm="@tsms.Algorithm" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="@tsms.LocationsBySelection.HasInsufficientLocations()">
