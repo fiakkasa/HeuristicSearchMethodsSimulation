@@ -690,13 +690,15 @@ namespace HeuristicSearchMethodsSimulation.Services
                     await Permute(locations)
                         .Where(x => x.FirstOrDefault()?.Id == locations[0].Id)
                         .Select(collection => new { Collection = collection, DistanceInKilometers = collection.CalculateDistanceOfCycle() })
+                        .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
+                        .Select(x => x.First())
                         .OrderBy(x => x.DistanceInKilometers)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
 
                 var optimalCollection = collection[0].Collection;
                 var optimalCycle = await optimalCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                var random = new Random().Next(0, collection.Count - 1);
+                var random = new Random().Next(0, collection.Count);
                 var computed = collection[random];
                 var computedCollection = computed.Collection;
                 var computedCycle = await computedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
