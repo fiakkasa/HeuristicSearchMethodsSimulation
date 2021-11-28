@@ -654,7 +654,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         private void UpdatePartialRandomState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
         {
             PartialRandomItems.Clear();
-            SelectedExhaustiveItem = default;
+            SelectedPartialRandomItem = default;
             PartialRandomBuilderItem = default;
 
             if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
