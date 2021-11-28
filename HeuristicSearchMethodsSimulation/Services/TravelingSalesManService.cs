@@ -320,7 +320,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                         totalDistance,
                         Guid.NewGuid()
                     );
-                    PartialRandomItems.Add(obj);
 
                     await SetPartialRandomItem(obj, true, cancellationToken).ConfigureAwait(true);
 
@@ -328,6 +327,8 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                     if (LocationsBySelection.Count > 0)
                         PartialRandomBuilderItem.Collection[LocationsBySelection[0].Id] = LocationsBySelection[0];
+
+                    PartialRandomItems.Add(obj);
                 }
                 else
                 {
@@ -418,6 +419,29 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 _logger.LogError(ex, ex.Message);
             }
+        }
+
+        public async Task ResetPartialImproving()
+        {
+            Loading = true;
+
+            OnStateChangeDelegate?.Invoke();
+
+            var resetMatrix = await ResetMatrix(Matrix, _cts.Token).ConfigureAwait(true);
+
+            Matrix.Clear();
+
+            await Task.WhenAll(new[]
+                {
+                    UpdatePartialImprovingState(LocationsBySelection, resetMatrix, TravelingSalesManAlgorithms.Partial_Improving, _cts.Token),
+                    Delay()
+                })
+                .ContinueWith(_ =>
+                {
+                    Loading = false;
+                    OnStateChangeDelegate?.Invoke();
+                })
+                .ConfigureAwait(true);
         }
 
         private async Task Delay()
@@ -695,7 +719,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 PartialImprovingItem.MapMarkerData.AddRange(MapMarkerData);
                 PartialImprovingItem.MapLinesData.AddRange(mapLinesData);
                 PartialImprovingItem.CyclesMatch = cyclesMatch;
-                PartialImprovingItem.Log.Add(cyclesMatch ? "Congrats in finding the shortest possible route!" : "Randomly traverse initial route");
+                PartialImprovingItem.Log.Add(cyclesMatch ? "Congrats in finding an optimal route!" : "Randomly traverse initial route");
             }
             catch (Exception ex)
             {

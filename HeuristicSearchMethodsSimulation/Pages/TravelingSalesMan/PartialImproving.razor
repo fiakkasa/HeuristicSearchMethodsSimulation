@@ -27,7 +27,8 @@
 												   ShowButtons="@(tsms.PartialImprovingItem?.OptimalCollection.Count > Consts.MinNumberOfLocations)"
 												   Text="@tsms.PartialImprovingItem?.Text"
 												   TotalDistance="@tsms.PartialImprovingItem?.DistanceInKilometers"
-												   Collection="@tsms.PartialImprovingItem?.Log" />
+												   Collection="@tsms.PartialImprovingItem?.Log" 
+												   OnReset="@tsms.ResetPartialImproving" />
 						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">

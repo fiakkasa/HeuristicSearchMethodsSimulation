@@ -7,10 +7,10 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
     {
         public string? Text { get; set; }
         public double? DistanceInKilometers { get; set; }
-        public List<LocationGeo> ComputedCollection { get; set; } = new();
-        public List<LocationPair> ComputedCycle { get; set; } = new();
-        public List<LocationGeo> OptimalCollection { get; set; } = new();
-        public List<LocationPair> OptimalCycle { get; set; } = new();
+        public List<LocationGeo> ComputedCollection { get; } = new();
+        public List<LocationPair> ComputedCycle { get; } = new();
+        public List<LocationGeo> OptimalCollection { get; } = new();
+        public List<LocationPair> OptimalCycle { get; } = new();
         public bool CyclesMatch { get; set; }
         public List<string> Log { get; set; } = new();
         public List<ITrace> MapChartData { get; } = new();

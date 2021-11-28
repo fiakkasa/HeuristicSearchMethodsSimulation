@@ -42,6 +42,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         Task ClearPartialRandomBuilder();
         Task Init(TravelingSalesManAlgorithms algo);
         Task Refresh();
+        Task ResetPartialImproving();
         Task SetExhaustiveItem(ExhaustiveItem item);
         Task SetPartialRandomItem(PartialRandomItem item);
         Task SetPartialRandomLocation(LocationGeo item);
