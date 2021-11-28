@@ -690,7 +690,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     await Permute(locations)
                         .Where(x => x.FirstOrDefault()?.Id == locations[0].Id)
                         .Select(collection => new { Collection = collection, DistanceInKilometers = collection.CalculateDistanceOfCycle() })
-                        .OrderByDescending(x => x.DistanceInKilometers)
+                        .OrderBy(x => x.DistanceInKilometers)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
 
