@@ -642,8 +642,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             var exhaustiveItems = await CalculateExhaustiveItems(locations, algo, cancellationToken).ConfigureAwait(true);
 
-            if (ExhaustiveItems.Count != 1) Matrix.AddRange(matrix);
-
+            Matrix.AddRange(matrix);
             TotalDistanceInKilometers = default;
             ExhaustiveItems.AddRange(exhaustiveItems);
 
