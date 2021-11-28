@@ -842,6 +842,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 }
 
                 return await Permute(locations)
+                    .Where(x => x.FirstOrDefault()?.Id == locations[0].Id)
                     .Select(collection => new ExhaustiveItem(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
                     .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
                     .Select(x => x.First())
