@@ -1,6 +1,6 @@
 ﻿using Plotly.Blazor.Traces.ScatterGeoLib.MarkerLib;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
+namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     public record MapOptions : ChartOptions<SymbolEnum>
     {

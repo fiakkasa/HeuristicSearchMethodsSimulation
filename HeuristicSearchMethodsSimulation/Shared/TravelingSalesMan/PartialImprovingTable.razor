@@ -1,4 +1,14 @@
-﻿<div class="traveling-salesman-partial-improving-table-container row @CssClass">
+﻿
+<div class="traveling-salesman-partial-improving-table-container row @CssClass">
+	<Condition Evaluation="Text is { Length: > 0 } || TotalDistance >= 0">
+		<Match>
+			<div class="current col-12 p-1 text-muted small">
+				<div class="p-1 px-2">
+					<TextAndDistance Text="@Text" DistanceInKilometers="@TotalDistance" />
+				</div>
+			</div>
+		</Match>
+	</Condition>
 	<div class="step col-12 p-1">
 		<div class="p-1 px-2 @(Collection?.Count > 0 ? "text-muted" : "text-black")">
 			Step 0: Randomly traverse initial route
@@ -39,6 +49,8 @@
 
 @code {
 	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public string? Text { get; set; }
+	[Parameter] public double? TotalDistance { get; set; }
 	[Parameter] public bool Disabled { get; set; }
 	[Parameter] public List<string>? Collection { get; set; }
 	[Parameter] public EventCallback<bool> OnNext { get; set; }

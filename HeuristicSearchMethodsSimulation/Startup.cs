@@ -1,8 +1,8 @@
 using HeuristicSearchMethodsSimulation.Areas.Identity;
 using HeuristicSearchMethodsSimulation.Models;
 using HeuristicSearchMethodsSimulation.Services;
-using HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces;
-using HeuristicSearchMethodsSimulation.TravelingSalesMan.Models;
+using HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan;
+using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;

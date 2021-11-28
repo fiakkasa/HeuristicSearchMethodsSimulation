@@ -20,20 +20,18 @@
 										 NumberOfUniqueRoutes="@(tsms.LocationsBySelection.Count >= Consts.MinNumberOfLocations ?  1 : 0)"
 										 Algorithm="@tsms.Algorithm" />
 
-						<Condition Evaluation="@(tsms.LocationsBySelection.Count >= Consts.MinNumberOfLocations)">
-							<Match>
-								<div class="overflow-auto row mt-2">
-									<div class="col-12 col-lg-6 p-1">
-										<CycleWithDistanceButton TItem="bool"
-																 Text="@tsms.PreselectedCycleText"
-																 DistanceInKilometers="@tsms.TotalDistanceInKilometers"
-																 Selected="true"
-																 Disabled="@tsms.Loading"
-																 Toggleable="false" />
-									</div>
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="@tsms.LocationsBySelection.HasInsufficientLocations()">
+							<div class="overflow-auto row mt-2">
+								<div class="col-12 col-lg-6 p-1">
+									<CycleWithDistanceButton TItem="bool"
+															 Text="@tsms.PreselectedCycleText"
+															 DistanceInKilometers="@tsms.TotalDistanceInKilometers"
+															 Selected="true"
+															 Disabled="@tsms.Loading"
+															 Toggleable="false" />
 								</div>
-							</Match>
-						</Condition>
+							</div>
+						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">

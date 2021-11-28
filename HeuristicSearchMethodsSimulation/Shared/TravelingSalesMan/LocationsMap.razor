@@ -15,10 +15,10 @@
 				 Data="_chartData"
 				 @ref="_chartRef"
 				 style="min-height: 640px" />
-	<Condition Evaluation="Text is {} || TotalDistance is { }">
+	<Condition Evaluation="Text is { Length: > 0 } || TotalDistance >= 0">
 		<Match>
 			<div class="traveling-salesman-map-info-container d-flex align-items-center justify-content-end flex-wrap mt-1 small">
-				<Condition Evaluation="Text is { }">
+				<Condition Evaluation="Text is { Length: > 0 }">
 					<Match>
 						<div class="text-container d-flex flex-wrap align-items-center justify-content-center text-muted">
 							<div class="text me-4">
@@ -27,14 +27,14 @@
 						</div>
 					</Match>
 				</Condition>
-				<Condition Evaluation="TotalDistance is { }">
+				<Condition Evaluation="TotalDistance >= 0">
 					<Match>
 						<div class="total-distance-container d-flex flex-wrap align-items-center justify-content-center text-muted">
 							<div class="text me-2">
 								Total Distance:
 							</div>
 							<div class="total-distance text-center border px-4 py-1">
-								@TotalDistance?.ToString("#0.## Km")
+								@TotalDistance.ToFormattedDistance()
 							</div>
 						</div>
 					</Match>
@@ -54,7 +54,8 @@
 			Responsive = true,
 			ShowTips = false
 		};
-	private readonly Layout _chartLayout = new() {
+	private readonly Layout _chartLayout = new()
+		{
 			Height = 640,
 			ShowLegend = false,
 			AutoSize = true,
@@ -78,7 +79,7 @@
 				SubUnitWidth = 2
 			}
 		},
-	};
+		};
 	private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
 	private string? _markerColor;
 	private SymbolEnum? _markerSymbol = SymbolEnum.Circle;

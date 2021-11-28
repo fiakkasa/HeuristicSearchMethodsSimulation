@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using GeoCoordinatePortable;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
+namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     [AutoMap(typeof(Location), ReverseMap = true)]
     public record LocationGeo : Location

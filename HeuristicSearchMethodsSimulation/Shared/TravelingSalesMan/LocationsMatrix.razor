@@ -27,7 +27,7 @@
                                 <th class="small">@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
                                     <td class="@CellCssClass(childContext)">
-                                        @childContext.DistanceInKilometers.ToString("#0.##")
+                                        @childContext.DistanceInKilometers.ToFormattedDistance()
                                     </td>
                                 </Iterations>
                             </tr>

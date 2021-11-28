@@ -1,4 +1,4 @@
-﻿using HeuristicSearchMethodsSimulation.TravelingSalesMan.Models;
+﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Plotly.Blazor;
 using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
@@ -11,6 +11,13 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManExtensions
     {
+        public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
+            (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
+
+        public static string? ToFormattedDistance(this double? value) => value?.ToString("#0.## Km");
+
+        public static string ToFormattedDistance(this double value) => value.ToString("#0.## Km");
+
         public static string ToKey(this LocationGeo location, LocationGeo otherLocation) =>
             location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
                 ? location.ToDirectionalKey(otherLocation)

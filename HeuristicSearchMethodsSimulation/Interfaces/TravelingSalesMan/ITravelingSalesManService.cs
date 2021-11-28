@@ -1,11 +1,11 @@
 ﻿using HeuristicSearchMethodsSimulation.Enums;
-using HeuristicSearchMethodsSimulation.TravelingSalesMan.Models;
+using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Plotly.Blazor;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
+namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
     public interface ITravelingSalesManService
     {
@@ -35,6 +35,7 @@ namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces
         PartialRandomItem? SelectedPartialRandomItem { get; }
         PartialRandomBuilderItem? PartialRandomBuilderItem { get; set; }
         List<ITrace> MapMarkerData { get; }
+        PartialImprovingItem? PartialImprovingItem { get; set; }
 
         event Action? OnStateChange;
 

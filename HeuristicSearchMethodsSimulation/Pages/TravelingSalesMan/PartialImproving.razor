@@ -19,8 +19,14 @@
 						<LocationsMatrix Data="@tsms.Matrix"
 										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
 										 Algorithm="@tsms.Algorithm" />
-						<PartialImprovingTable CssClass="mt-2"
-											   Disabled="@tsms.Loading" />
+
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="@tsms.LocationsBySelection.HasInsufficientLocations()">
+							<PartialImprovingTable CssClass="mt-2"
+												   Disabled="@tsms.Loading"
+												   Text="@tsms.PartialImprovingItem?.Text"
+												   TotalDistance="@tsms.PartialImprovingItem?.DistanceInKilometers"
+												   Collection="@tsms.PartialImprovingItem?.Log" />
+						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">

@@ -19,13 +19,16 @@
 						<LocationsMatrix Data="@tsms.Matrix"
 										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
 										 Algorithm="@tsms.Algorithm" />
-						<ExhaustiveTable CssClass="mt-2"
-										 Collection="@tsms.ExhaustiveItems"
-										 SelectedId="@tsms.SelectedExhaustiveItem?.Id" 
-										 Loading="@tsms.Loading"
-										 Disabled="@tsms.Loading"
-										 DisplayExcessRecordsMessage="@tsms.MaxExhaustiveLocationsToCalculateReached"
-										 OnSelection="@tsms.SetExhaustiveItem"/>
+
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="@tsms.LocationsBySelection.HasInsufficientLocations()">
+							<ExhaustiveTable CssClass="mt-2"
+											 Collection="@tsms.ExhaustiveItems"
+											 SelectedId="@tsms.SelectedExhaustiveItem?.Id"
+											 Loading="@tsms.Loading"
+											 Disabled="@tsms.Loading"
+											 DisplayExcessRecordsMessage="@tsms.MaxExhaustiveLocationsToCalculateReached"
+											 OnSelection="@tsms.SetExhaustiveItem" />
+						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
+namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     public record PartialRandomBuilderItem
     {

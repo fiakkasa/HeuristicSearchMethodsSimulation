@@ -3,9 +3,9 @@ using GeoCoordinatePortable;
 using HeuristicSearchMethodsSimulation.Enums;
 using HeuristicSearchMethodsSimulation.Extensions;
 using HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan;
+using HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan;
 using HeuristicSearchMethodsSimulation.Models;
-using HeuristicSearchMethodsSimulation.TravelingSalesMan.Interfaces;
-using HeuristicSearchMethodsSimulation.TravelingSalesMan.Models;
+using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,7 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HoverInfoFlag = Plotly.Blazor.Traces.ScatterGeoLib.HoverInfoFlag;
-using Location = HeuristicSearchMethodsSimulation.TravelingSalesMan.Models.Location;
+using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Location;
 
 namespace HeuristicSearchMethodsSimulation.Services
 {
@@ -81,12 +81,13 @@ namespace HeuristicSearchMethodsSimulation.Services
         public List<ITrace> MapLinesData { get; } = new();
         public MapOptions MapOptions { get; private set; } = new();
         public string? PreselectedCycleText { get; private set; }
-        public bool MaxExhaustiveLocationsToCalculateReached => SliderValue > _maxExhaustiveLocationsToCalculate;
+        public bool MaxExhaustiveLocationsToCalculateReached => LocationsBySelection.Count > _maxExhaustiveLocationsToCalculate;
         public List<ExhaustiveItem> ExhaustiveItems { get; } = new();
         public ExhaustiveItem? SelectedExhaustiveItem { get; private set; }
         public List<PartialRandomItem> PartialRandomItems { get; } = new();
         public PartialRandomItem? SelectedPartialRandomItem { get; private set; }
         public PartialRandomBuilderItem? PartialRandomBuilderItem { get; set; }
+        public PartialImprovingItem? PartialImprovingItem { get; set; }
 
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
@@ -555,6 +556,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 await UpdatePreselectedState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdateExhaustiveState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 UpdatePartialRandomState(matrix, algo);
+                await UpdatePartialImprovingState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
 
                 UpdateOtherStates(matrix, algo);
                 #endregion
@@ -569,7 +571,6 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             if (algo switch
             {
-                TravelingSalesManAlgorithms.Partial_Improving => false,
                 TravelingSalesManAlgorithms.Guided_Direct => false,
                 TravelingSalesManAlgorithms.Evolutionary => false,
                 _ => true
@@ -618,7 +619,10 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .ConfigureAwait(true),
                 _ => matrix
             };
-            var totalDistance = await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+            var totalDistance =
+                locations.HasInsufficientLocations()
+                    ? default(double?)
+                    : await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
             var mapLineData = await locations.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
             var text = locations.ToText();
 
@@ -654,6 +658,18 @@ namespace HeuristicSearchMethodsSimulation.Services
             PartialRandomBuilderItem = default;
 
             if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
+
+            Matrix.AddRange(matrix);
+            TotalDistanceInKilometers = default;
+        }
+
+        private async Task UpdatePartialImprovingState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
+        {
+            PartialImprovingItem = default;
+
+            if (algo != TravelingSalesManAlgorithms.Partial_Improving) return;
+
+            PartialImprovingItem = new();
 
             Matrix.AddRange(matrix);
             TotalDistanceInKilometers = default;
@@ -818,7 +834,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             try
             {
                 if (
-                    locations.Count < Consts.MinNumberOfLocations ||
+                    locations.HasInsufficientLocations() ||
                     locations.Count > _maxExhaustiveLocationsToCalculate ||
                     algo != TravelingSalesManAlgorithms.Exhaustive
                 )
@@ -828,7 +844,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return await Permute(locations)
                     .Select(collection => new ExhaustiveItem(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
-                    .GroupBy(x => x.DistanceInKilometers.ToString("0.00"))
+                    .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
                     .Select(x => x.First())
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
@@ -839,52 +855,52 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 return new();
             }
+        }
 
-            static IEnumerable<List<T>> Permute<T>(List<T> set)
+        private static IEnumerable<List<LocationGeo>> Permute(List<LocationGeo> set)
+        {
+            var count = set.Count;
+            var a = new List<int>();
+            var p = new List<int>();
+
+            var list = new List<LocationGeo>(set);
+
+            int i, j, tmp;
+
+            for (i = 0; i < count; i++)
             {
-                var count = set.Count;
-                var a = new List<int>();
-                var p = new List<int>();
+                a.Insert(i, i + 1);
+                p.Insert(i, 0);
+            }
 
-                var list = new List<T>(set);
+            yield return list;
 
-                int i, j, tmp;
+            i = 1;
 
-                for (i = 0; i < count; i++)
+            while (i < count)
+            {
+                if (p[i] < i)
                 {
-                    a.Insert(i, i + 1);
-                    p.Insert(i, 0);
+                    j = i % 2 * p[i];
+
+                    tmp = a[j];
+                    a[j] = a[i];
+                    a[i] = tmp;
+
+                    var yieldRet = new List<LocationGeo>();
+
+                    for (int x = 0; x < count; x++)
+                        yieldRet.Insert(x, list[a[x] - 1]);
+
+                    yield return yieldRet;
+
+                    p[i]++;
+                    i = 1;
                 }
-
-                yield return list;
-
-                i = 1;
-
-                while (i < count)
+                else
                 {
-                    if (p[i] < i)
-                    {
-                        j = i % 2 * p[i];
-
-                        tmp = a[j];
-                        a[j] = a[i];
-                        a[i] = tmp;
-
-                        var yieldRet = new List<T>();
-
-                        for (int x = 0; x < count; x++)
-                            yieldRet.Insert(x, list[a[x] - 1]);
-
-                        yield return yieldRet;
-
-                        p[i]++;
-                        i = 1;
-                    }
-                    else
-                    {
-                        p[i] = 0;
-                        i++;
-                    }
+                    p[i] = 0;
+                    i++;
                 }
             }
         }

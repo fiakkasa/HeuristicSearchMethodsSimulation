@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDbGenericRepository.Attributes;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
+namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     [BsonIgnoreExtraElements]
     [CollectionName("Locations")]

@@ -1,0 +1,21 @@
+﻿<Condition Evaluation="Text is { Length: > 0 }">
+	<Match>
+		<span class="@TextCssClass">
+			@Text
+		</span>
+	</Match>
+</Condition>
+<Condition Evaluation="DistanceInKilometers >= 0">
+	<Match>
+		<span class="text-nowrap @DistanceInKilometersCssClass">
+			(@DistanceInKilometers.ToFormattedDistance())
+		</span>
+	</Match>
+</Condition>
+
+@code {
+	[Parameter] public string? Text { get; set; }
+	[Parameter] public string? TextCssClass { get; set; }
+	[Parameter] public double? DistanceInKilometers { get; set; }
+	[Parameter] public string? DistanceInKilometersCssClass { get; set; }
+}

@@ -1,0 +1,18 @@
+﻿<Condition Evaluation="@ShowMessage">
+	<Match>
+		<div class="@MessageCssClass">
+			<h6 class="text-danger m-0">
+				There are not enough locations to perform this method. Please select a greater number of locations.
+			</h6>
+		</div>
+	</Match>
+	<NotMatch>
+		@ChildContent
+	</NotMatch>
+</Condition>
+
+@code {
+	[Parameter] public string? MessageCssClass { get; set; }
+	[Parameter] public bool ShowMessage { get; set; }
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+}

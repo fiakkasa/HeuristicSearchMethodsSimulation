@@ -1,6 +1,6 @@
 ﻿using Plotly.Blazor.Traces.ScatterLib.MarkerLib;
 
-namespace HeuristicSearchMethodsSimulation.TravelingSalesMan.Models
+namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     public record ChartOptions<TMarkerSymbol> where TMarkerSymbol : struct
     {
