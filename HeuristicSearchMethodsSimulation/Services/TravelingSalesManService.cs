@@ -61,7 +61,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         private IMongoCollection<Location> LocationsCollection => Client.GetCollection<Location>(MongoOptions.Databases.Data);
 
         public bool IsInit { get; private set; }
-        public bool Loading { get; private set; }
+        public bool Progress { get; private set; }
         public List<LocationGeo> Locations { get; } = new();
         public bool HasLocations => !Locations.HasInsufficientLocations();
         public List<LocationGeo> LocationsBySelection { get; } = new();
@@ -109,7 +109,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
         public async Task UpdateState(int sliderValue)
         {
-            Loading = true;
+            Progress = true;
             OnStateChangeDelegate?.Invoke();
 
             await Task.WhenAll(new[]
@@ -119,7 +119,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 })
                 .ContinueWith(_ =>
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -127,7 +127,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
         public async Task Refresh()
         {
-            Loading = true;
+            Progress = true;
             OnStateChangeDelegate?.Invoke();
 
             var locations = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
@@ -142,7 +142,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 })
                 .ContinueWith(_ =>
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -156,7 +156,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             _isInitializing = true;
 
-            Loading = true;
+            Progress = true;
 
             OnStateChangeDelegate?.Invoke();
 
@@ -172,7 +172,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ContinueWith(_ =>
                 {
                     IsInit = true;
-                    Loading = false;
+                    Progress = false;
                     _isInitializing = false;
                     OnStateChangeDelegate?.Invoke();
                 })
@@ -187,7 +187,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 if (!silent)
                 {
-                    Loading = true;
+                    Progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -223,7 +223,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (!silent)
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -239,7 +239,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             try
             {
-                Loading = true;
+                Progress = true;
                 OnStateChangeDelegate?.Invoke();
 
                 var matrix = await Matrix.ResetMatrix(cancellationToken).ConfigureAwait(true);
@@ -257,7 +257,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (LocationsBySelection.Count > 0)
                     await SetPartialRandomLocation(LocationsBySelection[0], true, cancellationToken).ConfigureAwait(true);
 
-                Loading = false;
+                Progress = false;
                 OnStateChangeDelegate?.Invoke();
             }
             catch (Exception ex)
@@ -274,7 +274,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 if (!silent)
                 {
-                    Loading = true;
+                    Progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -331,7 +331,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (!silent)
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -349,7 +349,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 if (!silent)
                 {
-                    Loading = true;
+                    Progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -385,7 +385,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (!silent)
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -397,7 +397,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
         public async Task ResetPartialImproving()
         {
-            Loading = true;
+            Progress = true;
 
             OnStateChangeDelegate?.Invoke();
 
@@ -415,7 +415,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 })
                 .ContinueWith(_ =>
                 {
-                    Loading = false;
+                    Progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -455,7 +455,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
         private async Task<List<LocationGeo>> Fetch(int limit, CancellationToken cancellationToken)
         {
-            Loading = true;
+            Progress = true;
 
             try
             {

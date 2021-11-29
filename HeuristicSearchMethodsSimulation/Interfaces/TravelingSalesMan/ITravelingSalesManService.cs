@@ -11,7 +11,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
     {
         #region Base
         bool IsInit { get; }
-        bool Loading { get; }
+        bool Progress { get; }
         List<LocationGeo> Locations { get; }
         bool HasLocations { get; }
         List<LocationGeo> LocationsBySelection { get; }

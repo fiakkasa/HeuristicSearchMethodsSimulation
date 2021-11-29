@@ -4,20 +4,18 @@
 @inject IOptions<AppOptions> appOptionsAccessor
 
 <div class="page vh-100 d-flex flex-column">
-    <nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
-        <div class="container-fluid justify-content-center">
-            <NavLink class="navbar-brand text-truncate" href="" Match="NavLinkMatch.All">
-                @appOptionsAccessor.Value.Title
-            </NavLink>
-            <div class="flex-fill d-none d-md-block"></div>
-            <div class="d-flex flex-grow-0 flex-wrap">
-                <LoginDisplay />
-            </div>
-        </div>
-    </nav>
-    <div class="flex-fill overflow-auto p-3 position-relative">
-        <div class="container-fluid">
-            @Body
-        </div>
-    </div>
+	<nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
+		<div class="container-fluid justify-content-center">
+			<NavLink class="navbar-brand text-truncate" href="" Match="NavLinkMatch.All">
+				@appOptionsAccessor.Value.Title
+			</NavLink>
+			<div class="flex-fill d-none d-md-block"></div>
+			<div class="d-flex flex-grow-0 flex-wrap">
+				<LoginDisplay />
+			</div>
+		</div>
+	</nav>
+	<div class="flex-fill overflow-auto position-relative">
+		@Body
+	</div>
 </div>
