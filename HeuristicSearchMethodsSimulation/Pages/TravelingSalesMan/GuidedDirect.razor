@@ -1,12 +1,12 @@
 ﻿@page "/TravelingSalesMan/GuidedDirect"
 @implements IDisposable
 
-<ContentWithLoader Loading="@tsms.IsInit" Progress="@(tsms.IsInit && tsms.Loading)">
+<ContentWithLoader Loading="tsms.IsInit" Progress="tsms.IsInit && tsms.Loading">
 	<Title>
-		<Header AlgorithmName="Guided Direct" ShowSubtitle="@tsms.IsInit" />
+		<Header AlgorithmName="Guided Direct" ShowSubtitle="tsms.IsInit" />
 	</Title>
 	<Content>
-		<Condition Evaluation="@tsms.HasLocations">
+		<Condition Evaluation="tsms.HasLocations">
 			<NotMatch>
 				<div class="d-flex flex-wrap align-items-center mb-2">
 					<h4 class="m-0 me-2">No data available at the moment..</h4>
@@ -16,37 +16,37 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="@tsms.Matrix"
-										 NumberOfUniqueRoutes="@tsms.NumberOfUniqueRoutes"
-										 Algorithm="@tsms.Algorithm" />
+						<LocationsMatrix Data="tsms.Matrix"
+										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
+										 Algorithm="tsms.Algorithm" />
 
-						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="@tsms.LocationsBySelection.HasInsufficientLocations()">
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 
 						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
-							<RangeSelector Min="@tsms.MinSliderValue"
-										   Max="@tsms.MaxSliderValue"
-										   Step="@tsms.SliderStepValue"
-										   Value="@tsms.SliderValue"
+							<RangeSelector Min="tsms.MinSliderValue"
+										   Max="tsms.MaxSliderValue"
+										   Step="tsms.SliderStepValue"
+										   Value="tsms.SliderValue"
 										   ValueChanged="tsms.UpdateState"
-										   Disabled="@tsms.Loading" />
-							<RouteSymmetry Value="@tsms.RouteSymmetry" />
+										   Disabled="tsms.Loading" />
+							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="@tsms.MapChartData"
-									  TotalDistance="@tsms.TotalDistanceInKilometers"
+						<LocationsMap Data="tsms.MapChartData"
+									  TotalDistance="tsms.TotalDistanceInKilometers"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
-									  MarkerSymbol="@tsms.MapOptions.MarkerSymbol"
+									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
 									  LineColor="@tsms.MapOptions.LineColor"
 									  LineWidth="@tsms.MapOptions.LineWidth"
 									  LandColor="@tsms.MapOptions.LandColor"
 									  CountryColor="@tsms.MapOptions.CountryColor" />
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
-							<AlgorithmsDropDown Disabled="@tsms.Loading" />
+							<AlgorithmsDropDown Disabled="tsms.Loading" />
 						</div>
 					</div>
 				</div>

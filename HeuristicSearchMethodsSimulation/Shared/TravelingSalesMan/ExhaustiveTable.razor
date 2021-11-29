@@ -12,14 +12,14 @@
 				<Condition Evaluation="Collection?.Count > 0">
 					<Match>
 						<div class="traveling-salesman-exhaustive-table-container overflow-auto row @CssClass">
-							<Virtualize Items="@Collection" OverscanCount="10">
+							<Virtualize Items="Collection" OverscanCount="10">
 								<ItemContent>
 									<div class="col-12 col-lg-6 p-1" @key="context.Id">
 										<CycleWithDistanceButton TItem="ExhaustiveItem" 
 																 Text="@context.Text"
-																 DistanceInKilometers="@context.DistanceInKilometers"
-																 Selected="@(context.Id == SelectedId)"
-																 Disabled="@Disabled"
+																 DistanceInKilometers="context.DistanceInKilometers"
+																 Selected="context.Id == SelectedId"
+																 Disabled="Disabled"
 																 OnSelection="OnSelectionChange(context)" />
 									</div>
 								</ItemContent>

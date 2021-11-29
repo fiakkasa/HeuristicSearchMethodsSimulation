@@ -188,7 +188,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (!silent)
                 {
                     Loading = true;
-
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -225,7 +224,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (!silent)
                 {
                     Loading = false;
-
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -256,6 +254,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                 SelectedPartialRandomItem = default;
                 PartialRandomBuilderItem = default;
 
+                if (LocationsBySelection.Count > 0)
+                    await SetPartialRandomLocation(LocationsBySelection[0], true, cancellationToken).ConfigureAwait(true);
+
                 Loading = false;
                 OnStateChangeDelegate?.Invoke();
             }
@@ -265,15 +266,17 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, _cts.Token);
+        public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, false, _cts.Token);
 
-        private async Task SetPartialRandomLocation(LocationGeo item, CancellationToken cancellationToken)
+        private async Task SetPartialRandomLocation(LocationGeo item, bool silent, CancellationToken cancellationToken)
         {
             try
             {
-                Loading = true;
-
-                OnStateChangeDelegate?.Invoke();
+                if (!silent)
+                {
+                    Loading = true;
+                    OnStateChangeDelegate?.Invoke();
+                }
 
                 if (PartialRandomBuilderItem is null) PartialRandomBuilderItem = new();
 
@@ -326,9 +329,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                     PartialRandomBuilderItem.MapLinesData.AddRange(mapLineData);
                 }
 
-                Loading = false;
-
-                OnStateChangeDelegate?.Invoke();
+                if (!silent)
+                {
+                    Loading = false;
+                    OnStateChangeDelegate?.Invoke();
+                }
             }
             catch (Exception ex)
             {
@@ -345,7 +350,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (!silent)
                 {
                     Loading = true;
-
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -382,7 +386,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (!silent)
                 {
                     Loading = false;
-
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -639,7 +642,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             TotalDistanceInKilometers = default;
 
             if (locations.Count > 0)
-                await SetPartialRandomLocation(locations[0], cancellationToken).ConfigureAwait(true);
+                await SetPartialRandomLocation(locations[0], true, cancellationToken).ConfigureAwait(true);
         }
 
         private async Task UpdatePartialImprovingState(List<LocationGeo> locations, List<LocationRow> matrix, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
