@@ -1,21 +1,21 @@
 ﻿<Condition Evaluation="Title is { }">
-    <Match>
-        @Title
-    </Match>
+	<Match>
+		@Title
+	</Match>
 </Condition>
 <Condition Evaluation="Loading">
-    <NotMatch>
-        <PageLoader />
-    </NotMatch>
-    <Match>
-        <ProgressBar Show="Progress" />
-        @Content
-    </Match>
+	<NotMatch>
+		<PageLoader />
+	</NotMatch>
+	<Match>
+		<ProgressBar Show="Progress" CssClass="position-fixed top-0 start-0 vw-100" />
+		@Content
+	</Match>
 </Condition>
 
 @code {
-    [Parameter] public bool Progress { get; set; }
-    [Parameter] public bool Loading { get; set; }
-    [Parameter] public RenderFragment? Content { get; set; }
-    [Parameter] public RenderFragment? Title { get; set; }
+	[Parameter] public bool Progress { get; set; }
+	[Parameter] public bool Loading { get; set; }
+	[Parameter] public RenderFragment? Content { get; set; }
+	[Parameter] public RenderFragment? Title { get; set; }
 }

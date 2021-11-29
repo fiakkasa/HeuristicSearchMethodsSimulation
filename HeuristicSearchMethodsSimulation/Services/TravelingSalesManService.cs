@@ -63,7 +63,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         public bool IsInit { get; private set; }
         public bool Loading { get; private set; }
         public List<LocationGeo> Locations { get; } = new();
-        public bool HasLocations => Locations.Count > 0;
+        public bool HasLocations => !Locations.HasInsufficientLocations();
         public List<LocationGeo> LocationsBySelection { get; } = new();
         public List<LocationRow> Matrix { get; } = new();
         public List<long> NumberOfUniqueRoutesPerNumberOfLocations { get; } = new();
@@ -80,6 +80,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         public List<ITrace> MapMarkerData { get; } = new();
         public List<ITrace> MapLinesData { get; } = new();
         public MapOptions MapOptions { get; private set; } = new();
+
         public string? PreselectedCycleText { get; private set; }
         public bool MaxExhaustiveLocationsToCalculateReached => LocationsBySelection.Count > _maxExhaustiveLocationsToCalculate;
         public List<ExhaustiveItem> ExhaustiveItems { get; } = new();
@@ -178,36 +179,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        private static async Task<List<LocationRow>> ResetMatrix(List<LocationRow> matrix, CancellationToken cancellationToken) =>
-            await matrix
-                .Select((row, rowIndex) => row with
-                {
-                    Collection =
-                        row.Collection
-                            .Select((cell, cellIndex) => cell with
-                            {
-                                IsHighlightedDistance = false
-                            })
-                            .ToList()
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
-
-        private static async Task<List<LocationRow>> HighlightMatrixCyclePairs(List<LocationRow> matrix, List<LocationPair> cyclePairs, CancellationToken cancellationToken) =>
-            await matrix
-                .Select((row, rowIndex) => row with
-                {
-                    Collection =
-                        row.Collection
-                            .Select((cell, cellIndex) => cell with
-                            {
-                                IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
-                            })
-                            .ToList()
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
-
         public Task SetExhaustiveItem(ExhaustiveItem item) => SetExhaustiveItem(item, false, _cts.Token);
 
         private async Task SetExhaustiveItem(ExhaustiveItem item, bool silent, CancellationToken cancellationToken)
@@ -223,7 +194,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (item.Id == SelectedExhaustiveItem?.Id)
                 {
-                    var resetMatrix = await ResetMatrix(Matrix, cancellationToken).ConfigureAwait(true);
+                    var resetMatrix = await Matrix.ResetMatrix(cancellationToken).ConfigureAwait(true);
 
                     Matrix.Clear();
                     MapLinesData.Clear();
@@ -238,7 +209,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 {
                     var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
                     var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
-                    var matrix = await HighlightMatrixCyclePairs(Matrix, cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var matrix = await Matrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
                     Matrix.Clear();
                     MapLinesData.Clear();
@@ -273,7 +244,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 Loading = true;
                 OnStateChangeDelegate?.Invoke();
 
-                var matrix = await ResetMatrix(Matrix, cancellationToken).ConfigureAwait(true);
+                var matrix = await Matrix.ResetMatrix(cancellationToken).ConfigureAwait(true);
 
                 Matrix.Clear();
                 MapLinesData.Clear();
@@ -336,7 +307,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                     var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
                     var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
                     var text = collection.ToText(customLastElemText: "...");
-                    var matrix = await HighlightMatrixCyclePairs(Matrix, cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var matrix = await Matrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
                     Matrix.Clear();
                     MapLinesData.Clear();
@@ -380,7 +351,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (item.Id == SelectedPartialRandomItem?.Id)
                 {
-                    var resetMatrix = await ResetMatrix(Matrix, cancellationToken).ConfigureAwait(true);
+                    var resetMatrix = await Matrix.ResetMatrix(cancellationToken).ConfigureAwait(true);
 
                     Matrix.Clear();
                     MapLinesData.Clear();
@@ -395,7 +366,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 {
                     var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
                     var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
-                    var matrix = await HighlightMatrixCyclePairs(Matrix, cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var matrix = await Matrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
                     Matrix.Clear();
                     MapLinesData.Clear();
@@ -427,9 +398,12 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             OnStateChangeDelegate?.Invoke();
 
-            var resetMatrix = await ResetMatrix(Matrix, _cts.Token).ConfigureAwait(true);
+            var resetMatrix = await Matrix.ResetMatrix(_cts.Token).ConfigureAwait(true);
 
             Matrix.Clear();
+            TotalDistanceInKilometers = default;
+            MapChartData.Clear();
+            MapLinesData.Clear();
 
             await Task.WhenAll(new[]
                 {
@@ -679,6 +653,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (locations.Count == 0)
             {
                 Matrix.AddRange(matrix);
+                MapChartData.AddRange(MapMarkerData);
                 TotalDistanceInKilometers = default;
 
                 return;
@@ -687,15 +662,15 @@ namespace HeuristicSearchMethodsSimulation.Services
             try
             {
                 var collection =
-                    await Permute(locations)
-                        .Where(x => x.FirstOrDefault()?.Id == locations[0].Id)
+                    await locations
+                        .Permute(locations[0].Id)
                         .Select(collection => new { Collection = collection, DistanceInKilometers = collection.CalculateDistanceOfCycle() })
                         .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
                         .Select(x => x.First())
                         .OrderBy(x => x.DistanceInKilometers)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
-
+                var optimal = collection[0];
                 var optimalCollection = collection[0].Collection;
                 var optimalCycle = await optimalCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
                 var random = new Random().Next(0, collection.Count);
@@ -704,12 +679,16 @@ namespace HeuristicSearchMethodsSimulation.Services
                 var computedCycle = await computedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
                 var mapLinesData = await computedCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
                 var text = computedCollection.ToText();
-                var highlightedMatrix = await HighlightMatrixCyclePairs(matrix, computedCycle, cancellationToken).ConfigureAwait(true);
+                var highlightedMatrix = await matrix.HighlightMatrixCyclePairs(computedCycle, cancellationToken).ConfigureAwait(true);
                 var cyclesMatch =
                     optimalCollection.Count == Consts.MinNumberOfLocations
+                    || optimal.DistanceInKilometers.ToFormattedDistance() == computed.DistanceInKilometers.ToFormattedDistance()
                     || optimalCollection.SequenceEqual(computedCollection);
 
                 Matrix.AddRange(highlightedMatrix);
+                TotalDistanceInKilometers = computed.DistanceInKilometers;
+                MapChartData.AddRange(mapLinesData.Concat(MapMarkerData));
+                MapLinesData.AddRange(mapLinesData);
 
                 PartialImprovingItem.DistanceInKilometers = computed.DistanceInKilometers;
                 PartialImprovingItem.Text = text;
@@ -847,33 +826,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             try
             {
-                return await locations
-                    .Select(location =>
-                    {
-                        var rowCollection =
-                            locations
-                                .Select((otherLocation, index) =>
-                                    new LocationToLocation(
-                                        A: location,
-                                        B: otherLocation,
-                                        DirectionalKey: location.ToDirectionalKey(otherLocation),
-                                        ReverseDirectionalKey: location.ToReverseDirectionalKey(otherLocation),
-                                        Key: location.ToKey(otherLocation),
-                                        DistanceInKilometers: location.CalculateDistancePointToPointInKilometers(otherLocation),
-                                        Index: index,
-                                        IsHighlightedDistance: false
-                                    )
-                                )
-                                .ToList();
-
-                        return new LocationRow(
-                            Collection: rowCollection,
-                            Ylabel: $"{location.Label} ({location.ShortCode})",
-                            Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})")
-                        );
-                    })
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
+                return await locations.CalculateMatrix(cancellationToken).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -896,8 +849,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                     return new();
                 }
 
-                return await Permute(locations)
-                    .Where(x => x.FirstOrDefault()?.Id == locations[0].Id)
+                return await locations
+                    .Permute(locations[0].Id)
                     .Select(collection => new ExhaustiveItem(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
                     .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
                     .Select(x => x.First())
@@ -909,54 +862,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 _logger.LogError(ex, ex.Message);
 
                 return new();
-            }
-        }
-
-        private static IEnumerable<List<LocationGeo>> Permute(List<LocationGeo> set)
-        {
-            var count = set.Count;
-            var a = new List<int>();
-            var p = new List<int>();
-
-            var list = new List<LocationGeo>(set);
-
-            int i, j, tmp;
-
-            for (i = 0; i < count; i++)
-            {
-                a.Insert(i, i + 1);
-                p.Insert(i, 0);
-            }
-
-            yield return list;
-
-            i = 1;
-
-            while (i < count)
-            {
-                if (p[i] < i)
-                {
-                    j = i % 2 * p[i];
-
-                    tmp = a[j];
-                    a[j] = a[i];
-                    a[i] = tmp;
-
-                    var yieldRet = new List<LocationGeo>();
-
-                    for (int x = 0; x < count; x++)
-                        yieldRet.Insert(x, list[a[x] - 1]);
-
-                    yield return yieldRet;
-
-                    p[i]++;
-                    i = 1;
-                }
-                else
-                {
-                    p[i] = 0;
-                    i++;
-                }
             }
         }
 

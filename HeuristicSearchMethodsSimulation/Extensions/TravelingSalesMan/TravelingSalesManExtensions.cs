@@ -2,6 +2,7 @@
 using Plotly.Blazor;
 using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,6 +12,116 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManExtensions
     {
+        public static async Task<List<LocationRow>> CalculateMatrix(this List<LocationGeo> locations, CancellationToken cancellationToken = default) =>
+            await locations
+                .Select(location =>
+                {
+                    var rowCollection =
+                        locations
+                            .Select((otherLocation, index) =>
+                                new LocationToLocation(
+                                    A: location,
+                                    B: otherLocation,
+                                    DirectionalKey: location.ToDirectionalKey(otherLocation),
+                                    ReverseDirectionalKey: location.ToReverseDirectionalKey(otherLocation),
+                                    Key: location.ToKey(otherLocation),
+                                    DistanceInKilometers: location.CalculateDistancePointToPointInKilometers(otherLocation),
+                                    Index: index,
+                                    IsHighlightedDistance: false
+                                )
+                            )
+                            .ToList();
+
+                    return new LocationRow(
+                        Collection: rowCollection,
+                        Ylabel: $"{location.Label} ({location.ShortCode})",
+                        Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})")
+                    );
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
+
+        public static async Task<List<LocationRow>> ResetMatrix(this List<LocationRow> matrix, CancellationToken cancellationToken = default) =>
+            await matrix
+                .Select((row, rowIndex) => row with
+                {
+                    Collection =
+                        row.Collection
+                            .Select((cell, cellIndex) => cell with
+                            {
+                                IsHighlightedDistance = false
+                            })
+                            .ToList()
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
+
+        public static async Task<List<LocationRow>> HighlightMatrixCyclePairs(this List<LocationRow> matrix, List<LocationPair> cyclePairs, CancellationToken cancellationToken = default) =>
+            await matrix
+                .Select((row, rowIndex) => row with
+                {
+                    Collection =
+                        row.Collection
+                            .Select((cell, cellIndex) => cell with
+                            {
+                                IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
+                            })
+                            .ToList()
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
+
+        public static IEnumerable<List<LocationGeo>> Permute(this List<LocationGeo> set, Guid id) =>
+            set.Permute().Where(x => x.Count > 0 && x[0].Id == id);
+
+        public static IEnumerable<List<LocationGeo>> Permute(this List<LocationGeo> set)
+        {
+            var count = set.Count;
+            var a = new List<int>();
+            var p = new List<int>();
+
+            var list = new List<LocationGeo>(set);
+
+            int i, j, tmp;
+
+            for (i = 0; i < count; i++)
+            {
+                a.Insert(i, i + 1);
+                p.Insert(i, 0);
+            }
+
+            yield return list;
+
+            i = 1;
+
+            while (i < count)
+            {
+                if (p[i] < i)
+                {
+                    j = i % 2 * p[i];
+
+                    tmp = a[j];
+                    a[j] = a[i];
+                    a[i] = tmp;
+
+                    var yieldRet = new List<LocationGeo>();
+
+                    for (int x = 0; x < count; x++)
+                        yieldRet.Insert(x, list[a[x] - 1]);
+
+                    yield return yieldRet;
+
+                    p[i]++;
+                    i = 1;
+                }
+                else
+                {
+                    p[i] = 0;
+                    i++;
+                }
+            }
+        }
+
         public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
 
