@@ -431,6 +431,53 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
+        public void PartialImprovingNextIteration()
+        {
+            try
+            {
+                if (PartialImprovingItem is not { })
+                    return;
+
+                if(PartialImprovingItem.Iterations.Count == 0 || PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
+                {
+                    PartialImprovingItem.CyclesMatch = true;
+                    return;
+                }
+
+                var iteration = PartialImprovingItem.Iterations[PartialImprovingItem.Iteration];
+
+                Matrix.Clear();
+                MapChartData.Clear();
+                MapLinesData.Clear();
+
+                PartialImprovingItem.MapChartData.Clear();
+                PartialImprovingItem.MapLinesData.Clear();
+
+                Matrix.AddRange(iteration.Matrix);
+                TotalDistanceInKilometers = iteration.DistanceInKilometers;
+                MapChartData.AddRange(iteration.MapLinesData.Concat(PartialImprovingItem.MapMarkerData));
+                MapLinesData.AddRange(iteration.MapLinesData);
+
+                PartialImprovingItem.MapChartData.AddRange(iteration.MapLinesData.Concat(PartialImprovingItem.MapMarkerData));
+                PartialImprovingItem.MapLinesData.AddRange(iteration.MapLinesData);
+                PartialImprovingItem.DistanceInKilometers = iteration.DistanceInKilometers;
+                PartialImprovingItem.Log.Add(iteration.Text);
+                PartialImprovingItem.Iteration++;
+
+                if (PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
+                {
+                    PartialImprovingItem.CyclesMatch = true;
+                    PartialImprovingItem.Log.Add("Congrats in finding an optimal route!");
+                }
+
+                OnStateChangeDelegate?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
         private async Task Delay()
         {
             try
@@ -697,6 +744,28 @@ namespace HeuristicSearchMethodsSimulation.Services
                     optimalCollection.Count == Consts.MinNumberOfLocations
                     || optimal.DistanceInKilometers.ToFormattedDistance() == computed.DistanceInKilometers.ToFormattedDistance()
                     || optimalCollection.SequenceEqual(computedCollection);
+                var iterations =
+                    await collection
+                        .Take(random)
+                        .ToAsyncEnumerable()
+                        .SelectAwaitWithCancellation(async (x, ct) =>
+                        {
+                            var iterationCycle = await x.Collection.ToCyclePairs().ToListAsync(ct).ConfigureAwait(true);
+                            var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(ct).ConfigureAwait(true);
+                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, ct).ConfigureAwait(true);
+
+                            return new PartialImprovingIteration(
+                                x.Collection,
+                                iterationCycle,
+                                iterationMatrix,
+                                x.Collection.ToText(),
+                                x.DistanceInKilometers,
+                                iterationMapLinesData
+                            );
+                        })
+                        .OrderByDescending(x => x.DistanceInKilometers)
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
 
                 Matrix.AddRange(highlightedMatrix);
                 TotalDistanceInKilometers = computed.DistanceInKilometers;
@@ -707,6 +776,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 PartialImprovingItem.Text = text;
                 PartialImprovingItem.OptimalCollection.AddRange(optimalCollection);
                 PartialImprovingItem.OptimalCycle.AddRange(optimalCycle);
+                PartialImprovingItem.Iterations.AddRange(iterations);
                 PartialImprovingItem.ComputedCollection.AddRange(computedCollection);
                 PartialImprovingItem.ComputedCycle.AddRange(computedCycle);
                 PartialImprovingItem.MapChartData.AddRange(mapLinesData.Concat(MapMarkerData));

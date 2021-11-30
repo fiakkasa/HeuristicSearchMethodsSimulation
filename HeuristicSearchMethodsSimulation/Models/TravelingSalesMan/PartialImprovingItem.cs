@@ -11,6 +11,8 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<LocationPair> ComputedCycle { get; } = new();
         public List<LocationGeo> OptimalCollection { get; } = new();
         public List<LocationPair> OptimalCycle { get; } = new();
+        public int Iteration { get; set; }
+        public List<PartialImprovingIteration> Iterations { get; } = new();
         public bool CyclesMatch { get; set; }
         public List<string> Log { get; set; } = new();
         public List<ITrace> MapChartData { get; } = new();

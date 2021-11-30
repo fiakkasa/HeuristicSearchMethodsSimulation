@@ -64,6 +64,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         PartialImprovingItem? PartialImprovingItem { get; set; }
 
         Task ResetPartialImproving();
+        void PartialImprovingNextIteration();
         #endregion
     }
 }
