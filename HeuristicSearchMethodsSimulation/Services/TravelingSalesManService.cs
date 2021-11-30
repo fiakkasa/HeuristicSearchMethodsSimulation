@@ -295,14 +295,23 @@ namespace HeuristicSearchMethodsSimulation.Services
                         Guid.NewGuid()
                     );
 
+                    PartialRandomItems.Add(obj);
                     await SetPartialRandomItem(obj, true, cancellationToken).ConfigureAwait(true);
 
-                    PartialRandomBuilderItem = new();
+                    var locations = LocationsBySelection.Take(1).ToList();
 
-                    if (LocationsBySelection.Count > 0)
-                        PartialRandomBuilderItem.Collection[LocationsBySelection[0].Id] = LocationsBySelection[0];
+                    var builderObj = new PartialRandomBuilderItem();
 
-                    PartialRandomItems.Add(obj);
+                    if (locations.Count > 0)
+                    {
+                        builderObj.Collection[locations[0].Id] = locations[0];
+                        builderObj.Text = locations.ToText(customLastElemText: "...");
+                        builderObj.DistanceInKilometers = 0D;
+                        builderObj.MapChartData.AddRange(MapMarkerData);
+                        builderObj.MapMarkerData.AddRange(MapMarkerData);
+                    }
+
+                    PartialRandomBuilderItem = builderObj;
                 }
                 else
                 {
