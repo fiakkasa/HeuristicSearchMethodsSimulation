@@ -307,9 +307,10 @@ namespace HeuristicSearchMethodsSimulation.Services
                         builderObj.Collection[locations[0].Id] = locations[0];
                         builderObj.Text = locations.ToText(customLastElemText: "...");
                         builderObj.DistanceInKilometers = 0D;
-                        builderObj.MapChartData.AddRange(MapMarkerData);
-                        builderObj.MapMarkerData.AddRange(MapMarkerData);
                     }
+
+                    builderObj.MapChartData.AddRange(MapMarkerData);
+                    builderObj.MapMarkerData.AddRange(MapMarkerData);
 
                     PartialRandomBuilderItem = builderObj;
                 }
