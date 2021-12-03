@@ -237,10 +237,14 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 {
                     for (var j = i + 1; j < evaluatedCollection.Count; j++)
                     {
-                        var iterationCollection = new List<LocationGeo>(evaluatedCollection);
+                        var a = evaluatedCollection[i] with { };
+                        var b = evaluatedCollection[j] with { };
 
-                        var a = iterationCollection[i] = evaluatedCollection[j] with { };
-                        var b = iterationCollection[j] = evaluatedCollection[i] with { };
+                        var iterationCollection = new List<LocationGeo>(evaluatedCollection)
+                        {
+                            [i] = b,
+                            [j] = a
+                        };
 
                         var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
 
