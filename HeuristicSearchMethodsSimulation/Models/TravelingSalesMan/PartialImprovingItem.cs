@@ -9,8 +9,6 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public double? DistanceInKilometers { get; set; }
         public List<LocationGeo> ComputedCollection { get; } = new();
         public List<LocationPair> ComputedCycle { get; } = new();
-        public List<LocationGeo> OptimalCollection { get; } = new();
-        public List<LocationPair> OptimalCycle { get; } = new();
         public int Iteration { get; set; }
         public List<PartialImprovingIteration> Iterations { get; } = new();
         public bool CyclesMatch { get; set; }

@@ -215,6 +215,84 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .ToCyclePairs()
                 .ToMapLines();
 
+        public static async IAsyncEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
+            this List<LocationGeo> startingCollection,
+            List<LocationRow> matrix,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
+        {
+            var startingCycle = await startingCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var startingDistance = await startingCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+            var startingMapLinesData = await startingCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var startingMatrix = await matrix.HighlightMatrixCyclePairs(startingCycle, cancellationToken).ConfigureAwait(true);
+
+            yield return new PartialImprovingIteration(
+                startingCollection,
+                startingCycle,
+                startingMatrix,
+                startingCollection.ToText(),
+                startingDistance,
+                startingMapLinesData
+            );
+
+            if (startingCollection.HasInsufficientLocations()) yield break;
+
+            var minDistance = startingDistance;
+            var evaluatedCollection = startingCollection;
+            var counter = 0L;
+            const long maxIterations = 1_000;
+            var controlQueue = new Queue<double>();
+
+            do
+            {
+                for (var i = 1; i < evaluatedCollection.Count - 1; i++)
+                {
+                    for (var j = i + 1; j < evaluatedCollection.Count; j++)
+                    {
+                        var a = evaluatedCollection[i] with { };
+                        var b = evaluatedCollection[j] with { };
+
+                        var iterationCollection = new List<LocationGeo>(evaluatedCollection)
+                        {
+                            [i] = b,
+                            [j] = a
+                        };
+
+                        var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+
+                        if (iterationDistance < minDistance)
+                        {
+                            minDistance = iterationDistance;
+                            evaluatedCollection = iterationCollection;
+
+                            var iterationCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true);
+
+                            yield return new PartialImprovingIteration(
+                                iterationCollection,
+                                iterationCycle,
+                                iterationMatrix,
+                                $"Swap edge {a.ShortCode} with edge {b.ShortCode}",
+                                iterationDistance,
+                                iterationMapLinesData
+                            );
+                        }
+                    }
+                }
+
+                controlQueue.Enqueue(minDistance);
+                counter++;
+            }
+            while (
+                !(
+                    controlQueue.Count > 10
+                    && controlQueue.Skip(1).Take(10).Distinct().Count() == 1
+                )
+                && counter <= maxIterations
+            );
+        }
+
         public static async IAsyncEnumerable<PartialImprovingIteration> ComputeAllSwaps(
             this List<LocationGeo> startingCollection,
             double startingDistance,
@@ -227,7 +305,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             if (startingCollection.HasInsufficientLocations()) yield break;
 
             var minDistance = startingDistance;
-            var evaluatedCollection = startingCollection.Append(startingCollection[0] with { }).ToList();
+            var evaluatedCollection = startingCollection;
             var counter = 0L;
             const long maxIterations = 1_000;
 
