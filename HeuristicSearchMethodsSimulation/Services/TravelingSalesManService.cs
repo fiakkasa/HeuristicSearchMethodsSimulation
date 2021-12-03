@@ -438,7 +438,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (PartialImprovingItem is not { })
                     return;
 
-                if(PartialImprovingItem.Iterations.Count == 0 || PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
+                if (PartialImprovingItem.Iterations.Count == 0 || PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
                 {
                     PartialImprovingItem.CyclesMatch = true;
                     return;
@@ -467,7 +467,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
                 {
                     PartialImprovingItem.CyclesMatch = true;
-                    PartialImprovingItem.Log.Add("Congrats in finding an optimal route!");
+                    PartialImprovingItem.Log.Add("Congrats in finding a more optimal route!");
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -740,32 +740,21 @@ namespace HeuristicSearchMethodsSimulation.Services
                 var mapLinesData = await computedCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
                 var text = computedCollection.ToText();
                 var highlightedMatrix = await matrix.HighlightMatrixCyclePairs(computedCycle, cancellationToken).ConfigureAwait(true);
-                var cyclesMatch =
-                    optimalCollection.Count == Consts.MinNumberOfLocations
-                    || optimal.DistanceInKilometers.ToFormattedDistance() == computed.DistanceInKilometers.ToFormattedDistance()
-                    || optimalCollection.SequenceEqual(computedCollection);
                 var iterations =
-                    await collection
-                        .Take(random)
-                        .ToAsyncEnumerable()
-                        .SelectAwaitWithCancellation(async (x, ct) =>
-                        {
-                            var iterationCycle = await x.Collection.ToCyclePairs().ToListAsync(ct).ConfigureAwait(true);
-                            var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(ct).ConfigureAwait(true);
-                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, ct).ConfigureAwait(true);
-
-                            return new PartialImprovingIteration(
-                                x.Collection,
-                                iterationCycle,
-                                iterationMatrix,
-                                x.Collection.ToText(),
-                                x.DistanceInKilometers,
-                                iterationMapLinesData
-                            );
-                        })
-                        .OrderByDescending(x => x.DistanceInKilometers)
+                    optimalCollection.Count <= Consts.MinNumberOfLocations
+                    || optimal.DistanceInKilometers == computed.DistanceInKilometers
+                    || optimalCollection.SequenceEqual(computedCollection)
+                        ? new List<PartialImprovingIteration>()
+                        : await computedCollection.ComputeAllSwaps(
+                            computed.DistanceInKilometers,
+                            optimalCollection,
+                            optimal.DistanceInKilometers,
+                            matrix,
+                            cancellationToken
+                        )
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
+                var cyclesMatch = iterations.Count == 0;
 
                 Matrix.AddRange(highlightedMatrix);
                 TotalDistanceInKilometers = computed.DistanceInKilometers;
@@ -783,7 +772,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                 PartialImprovingItem.MapMarkerData.AddRange(MapMarkerData);
                 PartialImprovingItem.MapLinesData.AddRange(mapLinesData);
                 PartialImprovingItem.CyclesMatch = cyclesMatch;
-                PartialImprovingItem.Log.Add(cyclesMatch ? "Congrats in finding an optimal route!" : "Randomly traverse initial route");
+                PartialImprovingItem.Log.Add(
+                    cyclesMatch
+                        ? "Congrats in finding an optimal route on your first attempt!"
+                        : "Randomly traverse initial route"
+                );
             }
             catch (Exception ex)
             {

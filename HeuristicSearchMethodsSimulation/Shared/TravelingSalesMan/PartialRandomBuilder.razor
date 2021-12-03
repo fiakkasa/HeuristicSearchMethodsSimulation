@@ -29,8 +29,8 @@
 					<button type="button"
 							class="btn btn-warning btn-sm flex-shrink-0"
 							disabled="@Disabled"
-							@onclick="OnClear.InvokeAsync">
-						Clear
+							@onclick="OnReset.InvokeAsync">
+						Reset
 					</button>
 				</Match>
 			</Condition>
@@ -44,7 +44,7 @@
 	[Parameter] public List<LocationGeo>? Collection { get; set; }
 	[Parameter] public Dictionary<Guid, LocationGeo>? Selected { get; set; }
 	[Parameter] public EventCallback<LocationGeo> OnSelection { get; set; }
-	[Parameter] public EventCallback<bool> OnClear { get; set; }
+	[Parameter] public EventCallback<bool> OnReset { get; set; }
 
 	private Func<Task> OnSelectionChange(LocationGeo item) =>
 		() => OnSelection.InvokeAsync(item);

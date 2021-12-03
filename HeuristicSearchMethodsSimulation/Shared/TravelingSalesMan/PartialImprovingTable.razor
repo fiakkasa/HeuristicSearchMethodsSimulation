@@ -11,13 +11,24 @@
 	</Condition>
 	<Condition Evaluation="Collection?.Count > 0">
 		<Match>
-			<Iterations T="(int step, string message)" Items="Collection?.Select((x, i) => (i, x))">
-				<div class="step col-12 p-1">
-					<div class="p-1 px-2 @(Collection?.Count == context.step ? "text-black" : "text-muted")">
-						Step @(context.step): @context.message
+			<Condition Evaluation="Collection?.Count == 1 && CycleIsComplete">
+				<Match>
+					<div class="step col-12 p-1">
+						<div class="p-1 px-2 text-black">
+								@Collection?[0]
+						</div>
 					</div>
-				</div>
-			</Iterations>
+				</Match>
+				<NotMatch>
+					<Iterations T="(int step, string message)" Items="Collection?.Select((x, i) => (i, x))">
+						<div class="step col-12 p-1">
+							<div class="p-1 px-2 @(Collection?.Count == context.step + 1 ? "text-black" : "text-muted")">
+								Step @(context.step): @context.message
+							</div>
+						</div>
+					</Iterations>
+				</NotMatch>
+			</Condition>
 		</Match>
 	</Condition>
 	<Condition Evaluation="ShowButtons">

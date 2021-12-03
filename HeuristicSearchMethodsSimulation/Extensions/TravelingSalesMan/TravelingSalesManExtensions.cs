@@ -5,6 +5,7 @@ using Plotly.Blazor.Traces.ScatterGeoLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -64,7 +65,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         row.Collection
                             .Select((cell, cellIndex) => cell with
                             {
-                                IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
+                                IsHighlightedDistance = cyclePairs.Any(pair => cell.A.Id != cell.B.Id && cell.A.Id == pair.A.Id && cell.B.Id == pair.B.Id)
                             })
                             .ToList()
                 })
@@ -213,5 +214,60 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             collection
                 .ToCyclePairs()
                 .ToMapLines();
+
+        public static async IAsyncEnumerable<PartialImprovingIteration> ComputeAllSwaps(
+            this List<LocationGeo> startingCollection,
+            double startingDistance,
+            List<LocationGeo> optimalCollection,
+            double optimalDistance,
+            List<LocationRow> matrix,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
+        {
+            if (startingCollection.HasInsufficientLocations()) yield break;
+
+            var minDistance = startingDistance;
+            var evaluatedCollection = startingCollection.Append(startingCollection[0] with { }).ToList();
+            var counter = 0L;
+            const long maxIterations = 1_000;
+
+            do
+            {
+                for (var i = 1; i < evaluatedCollection.Count - 1; i++)
+                {
+                    for (var j = i + 1; j < evaluatedCollection.Count; j++)
+                    {
+                        var iterationCollection = new List<LocationGeo>(evaluatedCollection);
+
+                        var a = iterationCollection[i] = evaluatedCollection[j] with { };
+                        var b = iterationCollection[j] = evaluatedCollection[i] with { };
+
+                        var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+
+                        if (iterationDistance < minDistance)
+                        {
+                            minDistance = iterationDistance;
+                            evaluatedCollection = iterationCollection;
+
+                            var iterationCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true);
+
+                            yield return new PartialImprovingIteration(
+                                iterationCollection,
+                                iterationCycle,
+                                iterationMatrix,
+                                $"Swap edge {a.ShortCode} with edge {b.ShortCode}",
+                                iterationDistance,
+                                iterationMapLinesData
+                            );
+                        }
+                    }
+                }
+
+                counter++;
+            }
+            while (minDistance > optimalDistance && counter <= maxIterations);
+        }
     }
 }
