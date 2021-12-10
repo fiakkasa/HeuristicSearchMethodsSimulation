@@ -594,30 +594,14 @@ namespace HeuristicSearchMethodsSimulation.Services
                 await UpdateExhaustiveState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdatePartialRandomState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdatePartialImprovingState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
-
-                UpdateOtherStates(matrix, algo);
+                UpdateGuidedDirectState(matrix, algo);
+                UpdateEvoluationaryState(matrix, algo);
                 #endregion
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
             }
-        }
-
-        private void UpdateOtherStates(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
-        {
-            if (algo switch
-            {
-                TravelingSalesManAlgorithms.Guided_Direct => false,
-                TravelingSalesManAlgorithms.Evolutionary => false,
-                _ => true
-            })
-            {
-                return;
-            }
-
-            Matrix.AddRange(matrix);
-            TotalDistanceInKilometers = 0D;
         }
 
         private void UpdateNoneState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
@@ -773,6 +757,22 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 _logger.LogError(ex, ex.Message);
             }
+        }
+
+        private void UpdateGuidedDirectState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        {
+            if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
+
+            Matrix.AddRange(matrix);
+            TotalDistanceInKilometers = default;
+        }
+
+        private void UpdateEvoluationaryState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        {
+            if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
+
+            Matrix.AddRange(matrix);
+            TotalDistanceInKilometers = 0D;
         }
 
         private async Task<List<ITrace>> CalculateMapMarkers(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)

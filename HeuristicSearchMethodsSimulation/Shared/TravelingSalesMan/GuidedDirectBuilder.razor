@@ -1,0 +1,51 @@
+﻿<Condition Evaluation="Collection.HasInsufficientLocations()">
+	<NotMatch>
+		<div class="traveling-salesman-partial-random-builder-container d-flex @CssClass">
+			<div class="d-flex flex-wrap flex-fill justify-content-center me-1">
+				<Iterations T="LocationGeo" Items="Collection">
+					<Condition Evaluation="Selected?.ContainsKey(context.Id) == true">
+						<Match>
+							<button type="button"
+									class="btn btn-sm m-1 rounded-pill btn-info"
+									disabled="@true">
+								<span>@context.Label</span>
+								<span>(@context.ShortCode)</span>
+							</button>
+						</Match>
+						<NotMatch>
+							<button type="button"
+									class="btn btn-sm m-1 rounded-pill btn-outline-info"
+									disabled="@Disabled"
+									@onclick="OnSelectionChange(context)">
+								<span>@context.Label</span>
+								<span>(@context.ShortCode)</span>
+							</button>
+						</NotMatch>
+					</Condition>
+				</Iterations>
+			</div>
+			<Condition Evaluation="Selected?.Count > 1">
+				<Match>
+					<button type="button"
+							class="btn btn-warning btn-sm flex-shrink-0"
+							disabled="@Disabled"
+							@onclick="OnReset.InvokeAsync">
+						Reset
+					</button>
+				</Match>
+			</Condition>
+		</div>
+	</NotMatch>
+</Condition>
+
+@code {
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public bool Disabled { get; set; }
+	[Parameter] public List<LocationGeo>? Collection { get; set; }
+	[Parameter] public Dictionary<Guid, LocationGeo>? Selected { get; set; }
+	[Parameter] public EventCallback<LocationGeo> OnSelection { get; set; }
+	[Parameter] public EventCallback<bool> OnReset { get; set; }
+
+	private Func<Task> OnSelectionChange(LocationGeo item) =>
+		() => OnSelection.InvokeAsync(item);
+}
