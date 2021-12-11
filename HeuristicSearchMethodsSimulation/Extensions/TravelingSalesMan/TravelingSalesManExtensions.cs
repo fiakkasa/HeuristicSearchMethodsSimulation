@@ -1,4 +1,5 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
+using Microsoft.CodeAnalysis;
 using Plotly.Blazor;
 using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Location;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
@@ -71,57 +73,6 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(true);
-
-        public static IEnumerable<List<LocationGeo>> Permute(this List<LocationGeo> set, Guid id) =>
-            set.Permute().Where(x => x.Count > 0 && x[0].Id == id);
-
-        public static IEnumerable<List<LocationGeo>> Permute(this List<LocationGeo> set)
-        {
-            var count = set.Count;
-            var a = new List<int>();
-            var p = new List<int>();
-
-            var list = new List<LocationGeo>(set);
-
-            int i, j, tmp;
-
-            for (i = 0; i < count; i++)
-            {
-                a.Insert(i, i + 1);
-                p.Insert(i, 0);
-            }
-
-            yield return list;
-
-            i = 1;
-
-            while (i < count)
-            {
-                if (p[i] < i)
-                {
-                    j = i % 2 * p[i];
-
-                    tmp = a[j];
-                    a[j] = a[i];
-                    a[i] = tmp;
-
-                    var yieldRet = new List<LocationGeo>();
-
-                    for (int x = 0; x < count; x++)
-                        yieldRet.Insert(x, list[a[x] - 1]);
-
-                    yield return yieldRet;
-
-                    p[i]++;
-                    i = 1;
-                }
-                else
-                {
-                    p[i] = 0;
-                    i++;
-                }
-            }
-        }
 
         public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
@@ -215,6 +166,59 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .ToCyclePairs()
                 .ToMapLines();
 
+        public static IEnumerable<List<LocationGeo>> CalculatePermutations(this List<LocationGeo> collection, Guid id)
+        {
+            return Permute(collection).Where(x => x.Count > 0 && x[0].Id == id);
+
+            static IEnumerable<List<LocationGeo>> Permute(List<LocationGeo> set)
+            {
+                var count = set.Count;
+                var a = new List<int>();
+                var p = new List<int>();
+
+                var list = new List<LocationGeo>(set);
+
+                int i, j, tmp;
+
+                for (i = 0; i < count; i++)
+                {
+                    a.Insert(i, i + 1);
+                    p.Insert(i, 0);
+                }
+
+                yield return list;
+
+                i = 1;
+
+                while (i < count)
+                {
+                    if (p[i] < i)
+                    {
+                        j = i % 2 * p[i];
+
+                        tmp = a[j];
+                        a[j] = a[i];
+                        a[i] = tmp;
+
+                        var yieldRet = new List<LocationGeo>();
+
+                        for (int x = 0; x < count; x++)
+                            yieldRet.Insert(x, list[a[x] - 1]);
+
+                        yield return yieldRet;
+
+                        p[i]++;
+                        i = 1;
+                    }
+                    else
+                    {
+                        p[i] = 0;
+                        i++;
+                    }
+                }
+            }
+        }
+
         public static async IAsyncEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
             this List<LocationGeo> startingCollection,
             List<LocationRow> matrix,
@@ -293,63 +297,169 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             );
         }
 
-        public static async IAsyncEnumerable<PartialImprovingIteration> ComputeAllSwaps(
+        public static async Task<(string Route, double DistanceInKilometers)> ComputePartialImprovingSolution(
             this List<LocationGeo> startingCollection,
-            double startingDistance,
-            List<LocationGeo> optimalCollection,
-            double optimalDistance,
+            CancellationToken cancellationToken
+        )
+        {
+            return await Compute(startingCollection, cancellationToken).LastOrDefaultAsync(cancellationToken).ConfigureAwait(true);
+
+            static async IAsyncEnumerable<(string Route, double DistanceInKilometers)> Compute(
+                List<LocationGeo> startingCollection,
+                [EnumeratorCancellation] CancellationToken cancellationToken
+            )
+            {
+                var startingCycle = await startingCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var startingDistance = await startingCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+
+                yield return (Route: startingCollection.ToText(), DistanceInKilometers: startingDistance);
+
+                if (startingCollection.HasInsufficientLocations()) yield break;
+
+                var minDistance = startingDistance;
+                var evaluatedCollection = startingCollection;
+                var counter = 0L;
+                const long maxIterations = 1_000;
+                var controlQueue = new Queue<double>();
+
+                do
+                {
+                    for (var i = 1; i < evaluatedCollection.Count - 1; i++)
+                    {
+                        for (var j = i + 1; j < evaluatedCollection.Count; j++)
+                        {
+                            var a = evaluatedCollection[i] with { };
+                            var b = evaluatedCollection[j] with { };
+
+                            var iterationCollection = new List<LocationGeo>(evaluatedCollection)
+                            {
+                                [i] = b,
+                                [j] = a
+                            };
+
+                            var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+
+                            if (iterationDistance < minDistance)
+                            {
+                                minDistance = iterationDistance;
+                                evaluatedCollection = iterationCollection;
+
+                                yield return (Route: evaluatedCollection.ToText(), DistanceInKilometers: iterationDistance);
+                            }
+                        }
+                    }
+
+                    controlQueue.Enqueue(minDistance);
+                    counter++;
+                }
+                while (
+                    !(
+                        controlQueue.Count > 10
+                        && controlQueue.Skip(1).Take(10).Distinct().Count() == 1
+                    )
+                    && counter <= maxIterations
+                );
+            }
+        }
+
+        public static async IAsyncEnumerable<GuidedDirectIteration> ComputedGuidedDirectIterationsFromGuidedDirectCollection(
+            this List<LocationGeo> collection,
             List<LocationRow> matrix,
+            List<ITrace> markers,
             [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
-            if (startingCollection.HasInsufficientLocations()) yield break;
+            if (collection.HasInsufficientLocations()) yield break;
 
-            var minDistance = startingDistance;
-            var evaluatedCollection = startingCollection;
-            var counter = 0L;
-            const long maxIterations = 1_000;
+            var iterationCollection = new List<LocationGeo>();
 
-            do
+            for (int i = 0; i < collection.Count; i++)
             {
-                for (var i = 1; i < evaluatedCollection.Count - 1; i++)
+                var item = collection[i] with { };
+                iterationCollection.Add(item);
+
+                var iterationCyclePairs = await iterationCollection.ToPartialCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCyclePairs, cancellationToken).ConfigureAwait(true);
+                var iterationDistance = await iterationCyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                var iterationMapLineData = await iterationCyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                yield return new GuidedDirectIteration(
+                    i,
+                    iterationCollection.ToText(customLastElemText: "..."),
+                    iterationDistance,
+                    collection[i] with { },
+                    iterationCyclePairs,
+                    iterationMatrix,
+                    iterationMapLineData.Concat(markers).ToList(),
+                    markers,
+                    iterationMapLineData
+                )
                 {
-                    for (var j = i + 1; j < evaluatedCollection.Count; j++)
+                    Log = i == 0 ? "Inspect the fittest (more economical) proposed solutions" : string.Empty
+                };
+            }
+
+            var computedCycle = await collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var computedMatrix = await matrix.HighlightMatrixCyclePairs(computedCycle, cancellationToken).ConfigureAwait(true);
+            var computedDistance = await computedCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+            var computedMapLinesData = await computedCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+
+            yield return new GuidedDirectIteration(
+                collection.Count,
+                collection.ToText(),
+                computedDistance,
+                collection[0] with { },
+                computedCycle,
+                computedMatrix,
+                computedMapLinesData.Concat(markers).ToList(),
+                markers,
+                computedMapLinesData
+            );
+        }
+
+        public static async Task<List<LocationGeo>> ComputeGuidedDirectCollection(this List<LocationGeo> collection, CancellationToken cancellationToken)
+        {
+            return await Compute(collection).ToListAsync(cancellationToken).ConfigureAwait(true);
+
+            static IEnumerable<LocationGeo> Compute(List<LocationGeo> collection)
+            {
+                if (collection.HasInsufficientLocations()) yield break;
+
+                var visited = new Dictionary<Guid, LocationGeo>();
+                var current = collection[0];
+
+                visited.Add(current.Id, current with { });
+
+                yield return current;
+
+                for (int j = 1; j < collection.Count; j++)
+                {
+                    var minDistance = double.MaxValue;
+
+                    for (int i = 1; i < collection.Count; i++)
                     {
-                        var a = evaluatedCollection[i] with { };
-                        var b = evaluatedCollection[j] with { };
+                        var obj = collection[i];
 
-                        var iterationCollection = new List<LocationGeo>(evaluatedCollection)
+                        if (visited.ContainsKey(obj.Id))
+                            continue;
+
+                        var distance = current.CalculateDistancePointToPointInKilometers(obj);
+
+                        if (distance < minDistance)
                         {
-                            [i] = b,
-                            [j] = a
-                        };
-
-                        var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-
-                        if (iterationDistance < minDistance)
-                        {
-                            minDistance = iterationDistance;
-                            evaluatedCollection = iterationCollection;
-
-                            var iterationCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                            var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
-                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true);
-
-                            yield return new PartialImprovingIteration(
-                                iterationCollection,
-                                iterationCycle,
-                                iterationMatrix,
-                                $"Swap edge {a.ShortCode} with edge {b.ShortCode}",
-                                iterationDistance,
-                                iterationMapLinesData
-                            );
+                            minDistance = distance;
+                            current = obj with { };
                         }
                     }
-                }
 
-                counter++;
+                    if (visited.ContainsKey(current.Id))
+                        continue;
+
+                    visited.Add(current.Id, current with { });
+
+                    yield return current;
+                }
             }
-            while (minDistance > optimalDistance && counter <= maxIterations);
         }
     }
 }

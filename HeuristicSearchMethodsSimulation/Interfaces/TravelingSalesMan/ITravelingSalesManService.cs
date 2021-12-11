@@ -62,9 +62,12 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 
         #region Partial Improving
         PartialImprovingItem? PartialImprovingItem { get; set; }
+        GuidedDirectItem? GuidedDirectItem { get; set; }
 
         Task ResetPartialImproving();
         void PartialImprovingNextIteration();
+        void SetGuidedDirectSelection(LocationGeo location);
+        Task ResetGuidedDirect();
         #endregion
     }
 }

@@ -16,12 +16,15 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.Matrix"
+						<LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.Matrix"
 										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
 										 Algorithm="tsms.Algorithm" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
-
+							<GuidedDirectTable CssClass="mt-2" 
+											   Index="tsms.GuidedDirectItem?.Index" 
+											   Collection="tsms.GuidedDirectItem?.Iterations"
+											   Report="tsms.GuidedDirectItem?.Report" />
 						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
@@ -35,8 +38,9 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="tsms.MapChartData"
-									  TotalDistance="tsms.TotalDistanceInKilometers"
+						<LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.MapChartData"
+									  TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
+									  Text="@tsms.GuidedDirectItem?.Current?.Text"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
 									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
@@ -47,7 +51,10 @@
 
 						<GuidedDirectBuilder CssClass="mt-3"
 											 Disabled="tsms.Progress"
-											 Collection="tsms.LocationsBySelection" />
+											 Selected="tsms.GuidedDirectItem?.Visited"
+											 Collection="tsms.LocationsBySelection"
+											 OnSelection="tsms.SetGuidedDirectSelection"
+											 OnReset="tsms.ResetGuidedDirect" />
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
 							<AlgorithmsDropDown Disabled="tsms.Progress" />

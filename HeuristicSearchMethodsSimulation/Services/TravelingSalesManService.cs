@@ -89,6 +89,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         public PartialRandomItem? SelectedPartialRandomItem { get; private set; }
         public PartialRandomBuilderItem? PartialRandomBuilderItem { get; set; }
         public PartialImprovingItem? PartialImprovingItem { get; set; }
+        public GuidedDirectItem? GuidedDirectItem { get; set; }
 
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
@@ -478,6 +479,73 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
+        public async Task ResetGuidedDirect()
+        {
+            Progress = true;
+
+            OnStateChangeDelegate?.Invoke();
+
+            var resetMatrix = await Matrix.ResetMatrix(_cts.Token).ConfigureAwait(true);
+
+            Matrix.Clear();
+            TotalDistanceInKilometers = default;
+            MapChartData.Clear();
+            MapLinesData.Clear();
+
+            await Task.WhenAll(new[]
+                {
+                    UpdateGuidedDirectState(LocationsBySelection, resetMatrix, TravelingSalesManAlgorithms.Guided_Direct, _cts.Token),
+                    Delay()
+                })
+                .ContinueWith(_ =>
+                {
+                    Progress = false;
+                    OnStateChangeDelegate?.Invoke();
+                })
+                .ConfigureAwait(true);
+        }
+
+        public void SetGuidedDirectSelection(LocationGeo location)
+        {
+            try
+            {
+                if (
+                    GuidedDirectItem is not { Iterations.Count: > 0, Current: { } prev } gdi
+                    || gdi.Index >= gdi.Iterations.Count
+                    || !gdi.Iterations.Any(x => x.Node.Id == location.Id))
+                {
+                    return;
+                }
+
+                gdi.Index++;
+                gdi.Visited[gdi.Current.Node.Id] = gdi.Current;
+
+                var successMessages = new[]
+                {
+                    "Great job",
+                    "Amazing",
+                    "Well done"
+                };
+
+                gdi.Current.Log =
+                    location.Id == gdi.Current.Node.Id
+                        ? $"{successMessages[new Random().Next(0, successMessages.Length)]}! {location.ShortCode} is the shortest route to {prev.Node.ShortCode}."
+                        : $"Selected {location.ShortCode} is not the best candidate, {gdi.Current.Node.ShortCode} will be selected instead.";
+
+                if (gdi.Index == gdi.Solution.Count - 1)
+                {
+                    gdi.Index++;
+                    gdi.Current.Log = "Tada!";
+                }
+
+                OnStateChangeDelegate?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
         private async Task Delay()
         {
             try
@@ -594,8 +662,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                 await UpdateExhaustiveState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdatePartialRandomState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
                 await UpdatePartialImprovingState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
-                UpdateGuidedDirectState(matrix, algo);
-                UpdateEvoluationaryState(matrix, algo);
+                await UpdateGuidedDirectState(locationsBySelection, matrix, algo, cancellationToken).ConfigureAwait(true);
+                UpdateEvolutionaryState(matrix, algo);
                 #endregion
             }
             catch (Exception ex)
@@ -661,7 +729,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Exhaustive) return;
 
-            var exhaustiveItems = await CalculateExhaustiveItems(locations, algo, cancellationToken).ConfigureAwait(true);
+            var exhaustiveItems = await CalculateExhaustiveItems(locations, cancellationToken).ConfigureAwait(true);
 
             Matrix.AddRange(matrix);
             TotalDistanceInKilometers = default;
@@ -759,17 +827,76 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private void UpdateGuidedDirectState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        private async Task UpdateGuidedDirectState(
+            List<LocationGeo> locations,
+            List<LocationRow> matrix,
+            TravelingSalesManAlgorithms algo,
+            CancellationToken cancellationToken
+        )
         {
+            GuidedDirectItem = default;
+
             if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
+
+            if (locations.Count == 0)
+            {
+                Matrix.AddRange(matrix);
+                MapChartData.AddRange(MapMarkerData);
+                TotalDistanceInKilometers = default;
+
+                return;
+            }
+
+            GuidedDirectItem = new();
+
+            var computedCollection =
+                await locations
+                    .ComputeGuidedDirectCollection(cancellationToken)
+                    .ConfigureAwait(true);
+            var iterations =
+                await computedCollection
+                    .ComputedGuidedDirectIterationsFromGuidedDirectCollection(matrix, MapMarkerData, cancellationToken)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(true);
+
+            var preselectedRoute = LocationsBySelection.ToText();
+            var preselectedTotalDistance = await LocationsBySelection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+            var exhaustiveItems =
+                await (await CalculateExhaustiveItems(LocationsBySelection, cancellationToken).ConfigureAwait(true))
+                    .OrderBy(x => x.DistanceInKilometers)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(true);
+            var exhaustiveMinItem = exhaustiveItems.FirstOrDefault();
+            var exhaustiveMaxItem = exhaustiveItems.LastOrDefault();
+            var exhaustiveRandomItem = exhaustiveItems.Skip(new Random().Next(exhaustiveItems.Count / 3, (exhaustiveItems.Count / 3) * 2)).FirstOrDefault();
+            var (partialImprovingRoute, partialImprovingTotalDistance) = await LocationsBySelection.ComputePartialImprovingSolution(cancellationToken).ConfigureAwait(true);
+
+            var report = new List<List<string>>()
+            {
+                new() { "Algorithm", "Route", "Total Distance"},
+                new() { "Preselected", preselectedRoute, preselectedTotalDistance.ToFormattedDistance() },
+                new() { "Partial Improving", partialImprovingRoute, partialImprovingTotalDistance.ToFormattedDistance() }
+            };
+
+            if (exhaustiveMinItem is { })
+                report.Insert(2, new List<string> { "Exhaustive (Min)", exhaustiveMinItem.Text, exhaustiveMinItem.DistanceInKilometers.ToFormattedDistance() });
+            if (exhaustiveMaxItem is { })
+                report.Insert(2, new List<string> { "Exhaustive (Max)", exhaustiveMaxItem.Text, exhaustiveMaxItem.DistanceInKilometers.ToFormattedDistance() });
+            if (exhaustiveRandomItem is { })
+                report.Insert(2, new List<string> { "Exhaustive (Random)", exhaustiveRandomItem.Text, exhaustiveRandomItem.DistanceInKilometers.ToFormattedDistance() });
 
             Matrix.AddRange(matrix);
-            TotalDistanceInKilometers = default;
+            MapChartData.AddRange(MapMarkerData);
+
+            GuidedDirectItem.Report = report;
+            GuidedDirectItem.Solution = computedCollection;
+            GuidedDirectItem.Visited.Add(iterations[0].Node.Id, iterations[0]);
+            GuidedDirectItem.Iterations.AddRange(iterations);
         }
 
-        private void UpdateEvoluationaryState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
+        private void UpdateEvolutionaryState(List<LocationRow> matrix, TravelingSalesManAlgorithms algo)
         {
-            if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
+            if (algo != TravelingSalesManAlgorithms.Evolutionary) return;
 
             Matrix.AddRange(matrix);
             TotalDistanceInKilometers = 0D;
@@ -903,21 +1030,20 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private async Task<List<ExhaustiveItem>> CalculateExhaustiveItems(List<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
+        private async Task<List<ExhaustiveItem>> CalculateExhaustiveItems(List<LocationGeo> locations, CancellationToken cancellationToken)
         {
             try
             {
                 if (
                     locations.HasInsufficientLocations() ||
-                    locations.Count > _maxExhaustiveLocationsToCalculate ||
-                    algo != TravelingSalesManAlgorithms.Exhaustive
+                    locations.Count > _maxExhaustiveLocationsToCalculate
                 )
                 {
                     return new();
                 }
 
                 return await locations
-                    .Permute(locations[0].Id)
+                    .CalculatePermutations(locations[0].Id)
                     .Select(collection => new ExhaustiveItem(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
                     .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
                     .Select(x => x.First())

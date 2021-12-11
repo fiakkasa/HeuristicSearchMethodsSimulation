@@ -1,0 +1,56 @@
+﻿<Condition Evaluation="Collection?.Count > 0">
+	<Match>
+		<div class="traveling-salesman-guided-direct-table-container row @CssClass">
+			<Iterations T="GuidedDirectIteration" Items="Collection?.Take((Index ?? 0) + 1)">
+				<div class="step col-12 p-1">
+					<div class="p-1 px-2 @(Index == context.Index? "text-black" : "text-muted")">
+						Step @(context.Index): @context.Log
+					</div>
+				</div>
+			</Iterations>
+		</div>
+		<Condition Evaluation="Report?.Count > 1">
+			<Match>
+				<div class="report-container col-12 p-1">
+					<div class="text-center">
+						<button type="button" class="btn btn-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
+					</div>
+					<Condition Evaluation="ShowReport">
+						<Match>
+							<div class="report mt-2 table-responsive">
+								<table class="table table-sm table-striped text-center m-0">
+									<thead>
+										<tr>
+											<Iterations T="string" Items="Report![0]">
+												<th class="small">@context</th>
+											</Iterations>
+										</tr>
+									</thead>
+									<tbody>
+										<Iterations T="IEnumerable<string>" Items="Report!.Skip(1)">
+											<tr>
+												<Iterations T="string" Items="context" Context="childContext">
+													<td>
+														@childContext
+													</td>
+												</Iterations>
+											</tr>
+										</Iterations>
+									</tbody>
+								</table>
+							</div>
+						</Match>
+					</Condition>
+				</div>
+			</Match>
+		</Condition>
+	</Match>
+</Condition>
+
+@code {
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public int? Index { get; set; }
+	[Parameter] public List<GuidedDirectIteration>? Collection { get; set; }
+	private bool ShowReport { get; set; }
+	[Parameter] public List<List<string>>? Report { get; set; }
+}
