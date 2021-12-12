@@ -16,17 +16,16 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.Matrix"
-										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
-										 Algorithm="tsms.Algorithm" />
+						<LocationsMatrix Data="tsms.ExhaustiveItem?.Matrix"
+										 NumberOfUniqueRoutes="tsms.ExhaustiveItem?.NumberOfUniqueRoutes" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 							<ExhaustiveTable CssClass="mt-2"
-											 Collection="tsms.ExhaustiveItems"
-											 SelectedId="tsms.SelectedExhaustiveItem?.Id"
+											 Collection="tsms.ExhaustiveItem?.Iterations"
+											 SelectedId="tsms.ExhaustiveItem?.SelectedIteration?.Id"
 											 Loading="tsms.Progress"
 											 Disabled="tsms.Progress"
-											 DisplayExcessRecordsMessage="tsms.MaxExhaustiveLocationsToCalculateReached"
+											 DisplayExcessRecordsMessage="tsms.ExhaustiveItem?.MaxExhaustiveLocationsToCalculateReached"
 											 OnSelection="tsms.SetExhaustiveItem" />
 						</ContentWithInsufficientLocationsMessage>
 					</div>
@@ -41,8 +40,8 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="tsms.MapChartData"
-									  TotalDistance="tsms.TotalDistanceInKilometers"
+						<LocationsMap Data="tsms.ExhaustiveItem?.MapChartData"
+									  TotalDistance="tsms.ExhaustiveItem?.SelectedIteration?.DistanceInKilometers"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
 									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"

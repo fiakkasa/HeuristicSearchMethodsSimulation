@@ -16,9 +16,8 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.Matrix"
-										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
-										 Algorithm="tsms.Algorithm" />
+						<LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.GuidedDirectItem?.Matrix"
+										 NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 							<GuidedDirectTable CssClass="mt-2" 
@@ -38,7 +37,7 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.MapChartData"
+						<LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.GuidedDirectItem?.MapChartData"
 									  TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
 									  Text="@tsms.GuidedDirectItem?.Current?.Text"
 									  CssClass="mt-3"

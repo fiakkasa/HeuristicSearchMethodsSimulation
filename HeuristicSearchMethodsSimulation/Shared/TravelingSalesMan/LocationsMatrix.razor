@@ -43,7 +43,7 @@
 @code {
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public List<LocationRow>? Data { get; set; }
-    [Parameter] public long NumberOfUniqueRoutes { get; set; } = 0L;
+    [Parameter] public long? NumberOfUniqueRoutes { get; set; }
     [Parameter] public TravelingSalesManAlgorithms? Algorithm { get; set; }
 
     private IEnumerable<string> HeaderIndices => Data switch 

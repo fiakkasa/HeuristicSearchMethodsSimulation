@@ -16,14 +16,13 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.Matrix"
-										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
-										 Algorithm="tsms.Algorithm" />
+						<LocationsMatrix Data="tsms.PartialRandomItem?.Matrix"
+										 NumberOfUniqueRoutes="tsms.PartialRandomItem?.NumberOfUniqueRoutes" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 							<PartialRandomTable CssClass="mt-2"
-												Collection="tsms.PartialRandomItems"
-												SelectedId="tsms.SelectedPartialRandomItem?.Id"
+												Collection="tsms.PartialRandomItem?.Iterations"
+												SelectedId="tsms.PartialRandomItem?.SelectedIteration?.Id"
 												Loading="tsms.Progress"
 												Disabled="tsms.Progress"
 												OnSelection="tsms.SetPartialRandomItem" />
@@ -40,10 +39,10 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<Condition Evaluation="tsms.SelectedPartialRandomItem is {}">
+						<Condition Evaluation="tsms.PartialRandomItem?.SelectedIteration is {}">
 							<Match>
-								<LocationsMap Data="tsms.MapChartData"
-											  TotalDistance="tsms.TotalDistanceInKilometers"
+								<LocationsMap Data="tsms.PartialRandomItem?.MapChartData"
+											  TotalDistance="tsms.PartialRandomItem?.SelectedIteration?.DistanceInKilometers"
 											  CssClass="mt-3"
 											  MarkerColor="@tsms.MapOptions.MarkerColor"
 											  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
@@ -53,9 +52,9 @@
 											  CountryColor="@tsms.MapOptions.CountryColor" />
 							</Match>
 							<NotMatch>
-								<LocationsMap Data="tsms.PartialRandomBuilderItem?.MapChartData ?? tsms.MapMarkerData"
-											  TotalDistance="tsms.PartialRandomBuilderItem?.DistanceInKilometers"
-											  Text="@tsms.PartialRandomBuilderItem?.Text"
+								<LocationsMap Data="tsms.PartialRandomItem?.Builder?.MapChartData ?? tsms.PartialRandomItem?.MapMarkerData"
+											  TotalDistance="tsms.PartialRandomItem?.Builder?.DistanceInKilometers"
+											  Text="@tsms.PartialRandomItem?.Builder?.Text"
 											  CssClass="mt-3"
 											  MarkerColor="@tsms.MapOptions.MarkerColor"
 											  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
@@ -70,7 +69,7 @@
 						<PartialRandomBuilder CssClass="mt-3"
 											  Disabled="tsms.Progress"
 											  Collection="tsms.LocationsBySelection"
-											  Selected="tsms.PartialRandomBuilderItem?.Collection"
+											  Selected="tsms.PartialRandomItem?.Builder?.Collection"
 											  OnSelection="tsms.SetPartialRandomLocation"
 											  OnReset="tsms.ClearPartialRandomBuilder" />
 

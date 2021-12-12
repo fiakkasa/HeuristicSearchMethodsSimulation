@@ -11,6 +11,5 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public double? DistanceInKilometers { get; set; }
         public List<ITrace> MapChartData { get; } = new();
         public List<ITrace> MapMarkerData { get; } = new();
-        public List<ITrace> MapLinesData { get; } = new();
     }
 }

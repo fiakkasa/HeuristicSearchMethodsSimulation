@@ -16,16 +16,15 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.Matrix"
-										 NumberOfUniqueRoutes="tsms.LocationsBySelection.HasInsufficientLocations() ?  0 : 1"
-										 Algorithm="tsms.Algorithm" />
+						<LocationsMatrix Data="tsms.PreselectedItem?.Matrix"
+										 NumberOfUniqueRoutes="tsms.PreselectedItem?.NumberOfUniqueRoutes" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 							<div class="overflow-auto row mt-2">
 								<div class="col-12 col-lg-6 p-1">
 									<CycleWithDistanceButton TItem="bool"
-															 Text="@tsms.PreselectedCycleText"
-															 DistanceInKilometers="tsms.TotalDistanceInKilometers"
+															 Text="@tsms.PreselectedItem?.Text"
+															 DistanceInKilometers="tsms.PreselectedItem?.DistanceInKilometers"
 															 Selected="true"
 															 Disabled="tsms.Progress"
 															 Toggleable="false" />
@@ -44,8 +43,8 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="tsms.MapChartData"
-									  TotalDistance="tsms.TotalDistanceInKilometers"
+						<LocationsMap Data="tsms.PreselectedItem?.MapChartData"
+									  TotalDistance="tsms.PreselectedItem?.DistanceInKilometers"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
 									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"

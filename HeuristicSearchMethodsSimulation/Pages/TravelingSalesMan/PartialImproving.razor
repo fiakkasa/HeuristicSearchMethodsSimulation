@@ -16,14 +16,14 @@
 			<Match>
 				<div class="row">
 					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.Matrix"
-										 NumberOfUniqueRoutes="tsms.NumberOfUniqueRoutes"
+						<LocationsMatrix Data="tsms.PartialImprovingItem?.Matrix"
+										 NumberOfUniqueRoutes="tsms.PartialImprovingItem?.NumberOfUniqueRoutes"
 										 Algorithm="tsms.Algorithm" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
 							<PartialImprovingTable CssClass="mt-2"
 												   Disabled="tsms.Progress"
-												   CycleIsComplete="tsms.PartialImprovingItem?.CyclesMatch == true"
+												   CycleIsComplete="tsms.PartialImprovingItem?.CyclesMatch"
 												   ShowButtons="tsms.PartialImprovingItem?.ComputedCollection.Count > Consts.MinNumberOfLocations"
 												   Text="@tsms.PartialImprovingItem?.Text"
 												   TotalDistance="tsms.PartialImprovingItem?.DistanceInKilometers"
@@ -43,7 +43,7 @@
 							<RouteSymmetry Value="tsms.RouteSymmetry" />
 						</div>
 
-						<LocationsMap Data="tsms.PartialImprovingItem?.MapChartData ?? tsms.MapMarkerData"
+						<LocationsMap Data="tsms.PartialImprovingItem?.MapChartData"
 									  TotalDistance="tsms.PartialImprovingItem?.DistanceInKilometers"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"

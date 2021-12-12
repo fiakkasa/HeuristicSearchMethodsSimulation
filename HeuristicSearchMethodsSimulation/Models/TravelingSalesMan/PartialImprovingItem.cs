@@ -5,6 +5,11 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     public record PartialImprovingItem
     {
+        public List<LocationRow> Matrix { get; } = new();
+        public List<LocationRow> ResetMatrix { get; } = new();
+        public List<ITrace> MapChartData { get; } = new();
+        public List<ITrace> MapMarkerData { get; } = new();
+        public long? NumberOfUniqueRoutes { get; set; }
         public string? Text { get; set; }
         public double? DistanceInKilometers { get; set; }
         public List<LocationGeo> ComputedCollection { get; } = new();
@@ -13,8 +18,5 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<PartialImprovingIteration> Iterations { get; } = new();
         public bool CyclesMatch { get; set; }
         public List<string> Log { get; set; } = new();
-        public List<ITrace> MapChartData { get; } = new();
-        public List<ITrace> MapMarkerData { get; } = new();
-        public List<ITrace> MapLinesData { get; } = new();
     }
 }
