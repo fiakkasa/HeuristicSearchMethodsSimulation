@@ -1,0 +1,108 @@
+﻿@page "/ControlPanel"
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+@using IdentityRole = HeuristicSearchMethodsSimulation.Models.IdentityRole;
+@using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@attribute [Authorize(Roles = Consts.AdminRole)]
+
+<ContentWithLoader>
+	<Title>
+		<div class="header-text lead pb-1">
+			Control Panel
+		</div>
+	</Title>
+	<Content>
+		<div class="table-responsive">
+			<h6>Access Control</h6>
+			<div>
+				<input class="form-control form-control-sm" type="search" placeholder="Search..." @bind="_searchToken" />
+			</div>
+			<table class="table table-sm table-striped">
+				<thead>
+					<tr class="small">
+						<th>Username</th>
+						<Iterations Items="RoleManager.Roles">
+							<th>@context.Name.Replace('_', ' ')</th>
+						</Iterations>
+					</tr>
+				</thead>
+				<tbody>
+					<Iterations Items="Users">
+						<tr>
+							<td class="align-middle">
+								<div class="d-flex align-items-center">
+									<div class="flex-fill">
+										@context.UserName
+									</div>
+									<Condition Evaluation="@_inProgress.ContainsKey(context.Id)">
+										<Match>
+											<div class="flex-shrink-0 spinner-border text-secondary" style="width: 1rem; height: 1rem;" role="status"></div>
+										</Match>
+									</Condition>
+								</div>
+							</td>
+							<Iterations Items="RoleManager.Roles" Context="childContext">
+								<td class="align-middle text-center">
+									<Condition Evaluation="@context.Roles.Any(x => x == childContext.Id)">
+										<Match>
+											<button type="button" class="btn btn-sm" disabled="@_inProgress.ContainsKey(context.Id)" @onclick="() => AddToRole(context, childContext.Name)">
+												<span class="text-success">✔</span>
+											</button>
+										</Match>
+										<NotMatch>
+											<button type="button" class="btn btn-sm" disabled="@_inProgress.ContainsKey(context.Id)" @onclick="() => RemoveFromRole(context, childContext.Name)">
+												<span class="text-danger">❌</span>
+											</button>
+										</NotMatch>
+									</Condition>
+								</td>
+							</Iterations>
+						</tr>
+					</Iterations>
+				</tbody>
+			</table>
+		</div>
+	</Content>
+</ContentWithLoader>
+
+@code {
+	private Dictionary<Guid, Guid> _inProgress = new();
+	private string _searchToken = string.Empty;
+	private IOrderedQueryable<IdentityUser> Users =>
+		_searchToken.Trim().Length > 0
+			? UserManager.Users
+				.Where(x => x.UserName.Contains(_searchToken))
+				.OrderByDescending(x => x.EmailConfirmed)
+				.ThenByDescending(x => x.CreatedOn)
+			: UserManager.Users
+				.OrderByDescending(x => x.EmailConfirmed)
+				.ThenByDescending(x => x.CreatedOn);
+
+	private async Task AddToRole(IdentityUser user, string role)
+	{
+		if (_inProgress.ContainsKey(user.Id)) return;
+
+		_inProgress[user.Id] = user.Id;
+		StateHasChanged();
+
+		await UserManager.RemoveFromRoleAsync(user, role);
+
+		_inProgress.Remove(user.Id);
+		StateHasChanged();
+	}
+
+	private async Task RemoveFromRole(IdentityUser user, string role)
+	{
+		if (_inProgress.ContainsKey(user.Id)) return;
+
+		_inProgress[user.Id] = user.Id;
+		StateHasChanged();
+
+		await UserManager.AddToRoleAsync(user, role);
+
+		_inProgress.Remove(user.Id);
+		StateHasChanged();
+	}
+}

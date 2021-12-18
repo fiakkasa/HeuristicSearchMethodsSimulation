@@ -1,4 +1,9 @@
-﻿namespace HeuristicSearchMethodsSimulation.Models
+﻿using HeuristicSearchMethodsSimulation.Enums;
+
+namespace HeuristicSearchMethodsSimulation.Models
 {
-    public record MenuItem(string Url, string Title, string ImageUrl, bool Disabled = true);
+    public record MenuItem(string Url, string Title, string ImageUrl, HeuristicMethods Method)
+    {
+        public bool Disabled { get; set; }
+    }
 }

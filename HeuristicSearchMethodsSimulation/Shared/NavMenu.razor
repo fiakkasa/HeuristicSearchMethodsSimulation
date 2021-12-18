@@ -1,11 +1,25 @@
-﻿<div class="items-container d-flex flex-wrap justify-content-center container @CssClass">
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Security.Claims
+
+<AuthorizeView>
+	<Authorized>
+		<Condition Evaluation="context.User?.Claims.Any(x => x.Type == ClaimTypes.Role) == false">
+			<Match>
+				<h4 class="text-warning text-center">Please contact the administrator to provide the requisite access.</h4>
+			</Match>
+		</Condition>
+	</Authorized>
+</AuthorizeView>
+
+
+<div class="items-container d-flex flex-wrap justify-content-center container @CssClass">
 	<Iterations Items="Items" Context="Item" T="MenuItem">
 		<a class="card-wrapper d-block m-2 btn p-0 @(Item.Disabled ? " disabled": string.Empty)" href="@Item.Url" disabled="@Item.Disabled">
 			<div class="card">
 				<img src="@Item.ImageUrl" class="card-img-top img-fluid" alt="@Item.Title">
 				<div class="card-body">
 					<h5 class="card-title d-flex flex-wrap align-items-center justify-content-center">
-						<Condition Evaluation="Item.Disabled">
+						<Condition Evaluation="Item.Url == Consts.ComingSoonUrl">
 							<Match>
 								<img class="coming-soon-badge me-1" src="images/coming-soon-badge.png" />
 							</Match>
@@ -21,13 +35,33 @@
 
 @code {
 	[Parameter] public string? CssClass { get; set; }
+	private List<MenuItem> Items { get; } = new();
 
-	private List<MenuItem> Items { get; } = new() {
-		new(Title: "Traveling Sales Man", Url: "TravelingSalesMan", ImageUrl: "images/traveling-salesman.png", Disabled: false),
-		new(Title: "Knapsack", Url: "ComingSoon", ImageUrl: "images/knapsack.png"),
-		new(Title: "Battleship", Url: "ComingSoon", ImageUrl: "images/battleship.png"),
-		new(Title: "Max Cut", Url: "ComingSoon", ImageUrl: "images/max-cut.png"),
-		new(Title: "Min Color", Url: "ComingSoon", ImageUrl: "images/min-color.png"),
-		new(Title: "Mastermind", Url: "ComingSoon", ImageUrl: "images/mastermind.png"),
-	};
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		Items.AddRange(
+			new List<MenuItem>
+				{
+				new(Title: "Traveling Sales Man", Url: "TravelingSalesMan", ImageUrl: "images/traveling-salesman.png", Method: HeuristicMethods.Traveling_Sales_Man),
+				new(Title: "Knapsack", Url: Consts.ComingSoonUrl, ImageUrl: "images/knapsack.png", Method: HeuristicMethods.Knapsack),
+				new(Title: "Battleship", Url: Consts.ComingSoonUrl, ImageUrl: "images/battleship.png", Method: HeuristicMethods.Battleship),
+				new(Title: "Max Cut", Url: Consts.ComingSoonUrl, ImageUrl: "images/max-cut.png", Method: HeuristicMethods.Max_Cut),
+				new(Title: "Min Color", Url: Consts.ComingSoonUrl, ImageUrl: "images/min-color.png", Method: HeuristicMethods.Min_Color),
+				new(Title: "Mastermind", Url: Consts.ComingSoonUrl, ImageUrl: "images/mastermind.png", Method: HeuristicMethods.Mastermind),
+				}
+			.Select(item =>
+			{
+				var participantRole = $"{item.Method}{Consts.ParticipantRolePostfix}";
+				item.Disabled = !(
+					user.IsInRole(Consts.AdminRole)
+					|| user.IsInRole(Consts.ParticipantRole)
+					|| user.IsInRole(participantRole)
+				);
+				return item;
+			})
+		);
+	}
 }

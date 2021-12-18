@@ -10,6 +10,11 @@
 				@appOptionsAccessor.Value.Title
 			</NavLink>
 			<div class="flex-fill d-none d-md-block"></div>
+			<AuthorizeView Roles="@Consts.AdminRole">
+				<Authorized>
+					 <a class="nav-link btn btn-link m-0 text-dark" href="/ControlPanel">Control Panel</a>
+				</Authorized>
+			</AuthorizeView>
 			<div class="d-flex flex-grow-0 flex-wrap">
 				<LoginDisplay />
 			</div>
