@@ -17,7 +17,7 @@
 		<div class="table-responsive">
 			<h6>Access Control</h6>
 			<div>
-				<input class="form-control form-control-sm" type="search" placeholder="Search..." @bind="_searchToken" />
+				<input class="form-control form-control-sm" type="text" placeholder="Search..." @bind="_searchToken" />
 			</div>
 			<table class="table table-sm table-striped">
 				<thead>
@@ -38,7 +38,7 @@
 									</div>
 									<Condition Evaluation="@_inProgress.ContainsKey(context.Id)">
 										<Match>
-											<div class="flex-shrink-0 spinner-border text-secondary" style="width: 1rem; height: 1rem;" role="status"></div>
+											<div class="flex-shrink-0 spinner-border text-secondary" role="status"></div>
 										</Match>
 									</Condition>
 								</div>
