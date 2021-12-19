@@ -1,108 +1,101 @@
 ﻿@page "/ControlPanel"
-@using Microsoft.AspNetCore.Authorization;
-@using Microsoft.AspNetCore.Identity;
-@using IdentityRole = HeuristicSearchMethodsSimulation.Models.IdentityRole;
-@using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
-@inject UserManager<IdentityUser> UserManager
-@inject RoleManager<IdentityRole> RoleManager
+@inject RoleManager<IdentityRole> rm
+@inject IAccessControlService acs
+@implements IDisposable
 @attribute [Authorize(Roles = Consts.AdminRole)]
 
-<ContentWithLoader>
+<ContentWithLoader Loading="acs.Loading">
 	<Title>
 		<div class="header-text lead pb-1">
 			Control Panel
 		</div>
 	</Title>
 	<Content>
-		<div class="table-responsive">
+
+		<div class="access-control-container">
 			<h6>Access Control</h6>
-			<div>
-				<input class="form-control form-control-sm" type="text" placeholder="Search..." @bind="_searchToken" />
+			<div class="mb-1">
+				<input type="search"
+					   class="form-control form-control-sm"
+					   placeholder="Search..."
+					   value="@acs.SearchToken"
+					   disabled="@acs.OperationInProgress.Any()"
+					   @oninput="e => acs.Search(e.Value?.ToString())" />
 			</div>
-			<table class="table table-sm table-striped">
-				<thead>
-					<tr class="small">
-						<th>Username</th>
-						<Iterations Items="RoleManager.Roles">
-							<th>@context.Name.Replace('_', ' ')</th>
-						</Iterations>
-					</tr>
-				</thead>
-				<tbody>
-					<Iterations Items="Users">
-						<tr>
-							<td class="align-middle">
-								<div class="d-flex align-items-center">
-									<div class="flex-fill">
-										@context.UserName
-									</div>
-									<Condition Evaluation="@_inProgress.ContainsKey(context.Id)">
-										<Match>
-											<div class="flex-shrink-0 spinner-border text-secondary" role="status"></div>
-										</Match>
-									</Condition>
-								</div>
-							</td>
-							<Iterations Items="RoleManager.Roles" Context="childContext">
-								<td class="align-middle text-center">
-									<Condition Evaluation="@context.Roles.Any(x => x == childContext.Id)">
-										<Match>
-											<button type="button" class="btn btn-sm" disabled="@_inProgress.ContainsKey(context.Id)" @onclick="() => AddToRole(context, childContext.Name)">
-												<span class="text-success">✔</span>
-											</button>
-										</Match>
-										<NotMatch>
-											<button type="button" class="btn btn-sm" disabled="@_inProgress.ContainsKey(context.Id)" @onclick="() => RemoveFromRole(context, childContext.Name)">
-												<span class="text-danger">❌</span>
-											</button>
-										</NotMatch>
-									</Condition>
-								</td>
+			<div class="access-control-table-container table-responsive">
+				<table class="access-control-table table table-sm table-striped m-0">
+					<thead class="bg-white sticky-top">
+						<tr class="small">
+							<th>Username</th>
+							<Iterations Items="rm.Roles">
+								<th>@context.Name.Replace('_', ' ')</th>
 							</Iterations>
 						</tr>
-					</Iterations>
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						<Condition Evaluation="acs.Count> 0">
+							<Match>
+								<Virtualize TItem="UserWithDictRoles" Items="acs.Users" OverscanCount="50">
+									<tr>
+										<td class="align-middle">
+											<div class="d-flex align-items-center">
+												<div class="flex-fill text-nowrap">
+													@context.User.UserName
+												</div>
+												<Condition Evaluation="@acs.OperationInProgress.ContainsKey(context.User.Id)">
+													<Match>
+														<div class="ms-2 flex-shrink-0 spinner-border text-secondary" role="status"></div>
+													</Match>
+												</Condition>
+											</div>
+										</td>
+										<Iterations Items="rm.Roles" Context="childContext">
+											<td class="align-middle text-center">
+												<Condition Evaluation="@context.Roles.ContainsKey(childContext.Id)">
+													<Match>
+														<button type="button"
+																class="btn btn-sm"
+																disabled="@acs.OperationInProgress.ContainsKey(context.User.Id)"
+																@onclick="() => acs.AddToRole(context.User, childContext.Name)">
+															<span class="text-success">✔</span>
+														</button>
+													</Match>
+													<NotMatch>
+														<button type="button"
+																class="btn btn-sm"
+																disabled="@acs.OperationInProgress.ContainsKey(context.User.Id)"
+																@onclick="() => acs.RemoveFromRole(context.User, childContext.Name)">
+															<span class="text-danger">❌</span>
+														</button>
+													</NotMatch>
+												</Condition>
+											</td>
+										</Iterations>
+									</tr>
+								</Virtualize>
+							</Match>
+						</Condition>
+					</tbody>
+				</table>
+				<Condition Evaluation="acs.Count == 0">
+					<Match>
+						<h6 class="text-muted text-center m-0 p-1">No data..</h6>
+					</Match>
+				</Condition>
+			</div>
 		</div>
 	</Content>
 </ContentWithLoader>
 
 @code {
-	private Dictionary<Guid, Guid> _inProgress = new();
-	private string _searchToken = string.Empty;
-	private IOrderedQueryable<IdentityUser> Users =>
-		_searchToken.Trim().Length > 0
-			? UserManager.Users
-				.Where(x => x.UserName.Contains(_searchToken))
-				.OrderByDescending(x => x.EmailConfirmed)
-				.ThenByDescending(x => x.CreatedOn)
-			: UserManager.Users
-				.OrderByDescending(x => x.EmailConfirmed)
-				.ThenByDescending(x => x.CreatedOn);
-
-	private async Task AddToRole(IdentityUser user, string role)
+	protected override async Task OnInitializedAsync()
 	{
-		if (_inProgress.ContainsKey(user.Id)) return;
-
-		_inProgress[user.Id] = user.Id;
-		StateHasChanged();
-
-		await UserManager.RemoveFromRoleAsync(user, role);
-
-		_inProgress.Remove(user.Id);
-		StateHasChanged();
+		acs.OnStateChange += async () => await InvokeAsync(StateHasChanged);
+		await acs.Init();
 	}
 
-	private async Task RemoveFromRole(IdentityUser user, string role)
+	public void Dispose()
 	{
-		if (_inProgress.ContainsKey(user.Id)) return;
-
-		_inProgress[user.Id] = user.Id;
-		StateHasChanged();
-
-		await UserManager.AddToRoleAsync(user, role);
-
-		_inProgress.Remove(user.Id);
-		StateHasChanged();
+		acs.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
 	}
 }

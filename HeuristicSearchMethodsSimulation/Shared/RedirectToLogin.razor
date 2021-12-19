@@ -1,11 +1,15 @@
 ﻿@inject NavigationManager nav
 
-@code{
-    protected override async Task OnInitializedAsync()
-    {
-        nav.NavigateTo(
-            await Task.FromResult($"{nav.BaseUri}Identity/Account/Login"),
-            forceLoad: true
-        );
-    }
+<div class="p-3">
+	<h4>Redirecting..</h4>
+</div>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		nav.NavigateTo(
+			await Task.FromResult($"{nav.BaseUri}Identity/Account/Login"),
+			forceLoad: true
+		);
+	}
 }

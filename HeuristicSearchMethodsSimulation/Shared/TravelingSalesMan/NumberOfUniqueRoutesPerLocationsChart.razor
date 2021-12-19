@@ -5,8 +5,8 @@
 @using Plotly.Blazor.LayoutLib.XAxisLib
 @using Plotly.Blazor.Traces.ScatterLib
 @using Plotly.Blazor.Traces.ScatterLib.MarkerLib
-@implements IDisposable
 @inject ILogger<NumberOfUniqueRoutesPerLocationsChart> logger
+@implements IDisposable
 
 <div class="traveling-salesman-unique-locations-chart-container overflow-auto @CssClass @VisibilityClass">
     <PlotlyChart Config="_chartConfig"

@@ -21,6 +21,8 @@
 		</div>
 	</nav>
 	<div class="flex-fill overflow-auto position-relative">
-		@Body
+		<ErrorBoundary>
+			@Body
+		</ErrorBoundary>
 	</div>
 </div>

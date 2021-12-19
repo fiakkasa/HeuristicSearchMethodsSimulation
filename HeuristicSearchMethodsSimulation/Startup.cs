@@ -1,4 +1,5 @@
 using HeuristicSearchMethodsSimulation.Areas.Identity;
+using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan;
 using HeuristicSearchMethodsSimulation.Models;
 using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
@@ -19,90 +20,91 @@ using IdentityUser = HeuristicSearchMethodsSimulation.Models.IdentityUser;
 
 namespace HeuristicSearchMethodsSimulation
 {
-    public class Startup
-    {
-        public IConfiguration Configuration { get; }
+	public class Startup
+	{
+		public IConfiguration Configuration { get; }
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+		public Startup(IConfiguration configuration)
+		{
+			Configuration = configuration;
+		}
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
-        {
-            var mongoConnectionUri = Configuration.GetConnectionString(Consts.MongoConnectionKey);
-            var mongoOptionsSection = Configuration.GetSection(nameof(MongoOptions));
+		// This method gets called by the runtime. Use this method to add services to the container.
+		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+		public void ConfigureServices(IServiceCollection services)
+		{
+			var mongoConnectionUri = Configuration.GetConnectionString(Consts.MongoConnectionKey);
+			var mongoOptionsSection = Configuration.GetSection(nameof(MongoOptions));
 
-            #region Health
-            services.AddHealthChecks();
-            #endregion
+			#region Health
+			services.AddHealthChecks();
+			#endregion
 
-            #region AutoMapper
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
-            #endregion
+			#region AutoMapper
+			services.AddAutoMapper(Assembly.GetExecutingAssembly());
+			#endregion
 
-            #region Options
-            services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
-            services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
-            services.Configure<MongoOptions>(mongoOptionsSection);
-            services.Configure<TravelingSalesManOptions>(Configuration.GetSection(nameof(TravelingSalesManOptions)));
-            #endregion
+			#region Options
+			services.Configure<AuthMessageSenderOptions>(Configuration.GetSection(nameof(AuthMessageSenderOptions)));
+			services.Configure<AppOptions>(Configuration.GetSection(nameof(AppOptions)));
+			services.Configure<MongoOptions>(mongoOptionsSection);
+			services.Configure<TravelingSalesManOptions>(Configuration.GetSection(nameof(TravelingSalesManOptions)));
+			#endregion
 
-            #region Identity
-            services
-                .AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddDefaultUI()
-                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>().Databases.Identity)
-                .AddDefaultTokenProviders();
-            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-            services.AddScoped<IEmailSender, EmailSenderService>();
-            #endregion
+			#region Identity
+			services
+				.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+				.AddDefaultUI()
+				.AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>().Databases.Identity)
+				.AddDefaultTokenProviders();
+			services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+			services.AddScoped<IEmailSender, EmailSenderService>();
+			#endregion
 
-            #region Database
-            services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
-            #endregion
+			#region Database
+			services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
+			#endregion
 
-            #region Blazor
-            services.AddRazorPages();
-            services.AddServerSideBlazor(options => options.MaxBufferedUnacknowledgedRenderBatches = 20);
-            #endregion
+			#region Blazor
+			services.AddRazorPages();
+			services.AddServerSideBlazor(options => options.MaxBufferedUnacknowledgedRenderBatches = 20);
+			#endregion
 
-            #region Services
-            services.AddScoped<ITravelingSalesManService, TravelingSalesManService>();
-            #endregion
-        }
+			#region Services
+			services.AddScoped<IAccessControlService, AccessControlService>();
+			services.AddScoped<ITravelingSalesManService, TravelingSalesManService>();
+			#endregion
+		}
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
+		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		{
+			if (env.IsDevelopment())
+			{
+				app.UseDeveloperExceptionPage();
+			}
+			else
+			{
+				app.UseExceptionHandler("/Error");
+				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+				app.UseHsts();
+			}
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+			app.UseHttpsRedirection();
+			app.UseStaticFiles();
 
-            app.UseRouting();
+			app.UseRouting();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+			app.UseAuthentication();
+			app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-                endpoints.MapHealthChecks(Consts.HealthEndPoint);
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
-            });
-        }
-    }
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+				endpoints.MapHealthChecks(Consts.HealthEndPoint);
+				endpoints.MapBlazorHub();
+				endpoints.MapFallbackToPage("/_Host");
+			});
+		}
+	}
 }

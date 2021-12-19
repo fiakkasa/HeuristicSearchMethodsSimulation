@@ -6,8 +6,8 @@
 @using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
 @using Plotly.Blazor.Traces.ScatterGeoLib
 @using Plotly.Blazor.Traces.ScatterGeoLib.MarkerLib;
-@implements IDisposable
 @inject ILogger<LocationsMap> logger
+@implements IDisposable
 
 <div class="traveling-salesman-map-container overflow-auto @CssClass">
 	<PlotlyChart Config="_chartConfig"

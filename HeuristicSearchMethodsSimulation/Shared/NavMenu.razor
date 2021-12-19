@@ -1,4 +1,4 @@
-﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+﻿@inject AuthenticationStateProvider asp
 @using System.Security.Claims
 
 <AuthorizeView>
@@ -39,8 +39,7 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
+		var user = (await asp.GetAuthenticationStateAsync()).User;
 
 		Items.AddRange(
 			new List<MenuItem>
