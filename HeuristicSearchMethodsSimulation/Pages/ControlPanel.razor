@@ -1,10 +1,9 @@
 ﻿@page "/ControlPanel"
-@inject RoleManager<IdentityRole> rm
 @inject IAccessControlService acs
 @implements IDisposable
 @attribute [Authorize(Roles = Consts.AdminRole)]
 
-<ContentWithLoader Loading="acs.Loading">
+<ContentWithLoader Loading="acs.Loading" Progress="Progress">
 	<Title>
 		<div class="header-text lead pb-1">
 			Control Panel
@@ -14,20 +13,30 @@
 
 		<div class="access-control-container">
 			<h6>Access Control</h6>
-			<div class="mb-1">
-				<input type="search"
-					   class="form-control form-control-sm"
+			<div class="mb-1 d-flex">
+				<input type="text"
+					   class="form-control form-control-sm flex-fill"
 					   placeholder="Search..."
-					   value="@acs.SearchToken"
-					   disabled="@acs.OperationInProgress.Any()"
+					   disabled="@(acs.Count == 0 || acs.OperationInProgress.Any())"
+					   @bind="_searchToken"
 					   @oninput="e => acs.Search(e.Value?.ToString())" />
+				<Condition Evaluation="acs.Count > 0 && acs.SearchToken is { Length: > 0 }">
+					<Match>
+						<button type="button"
+								class="btn btn-warning btn-sm flex-shrink-0 ms-1"
+								disabled="@Progress"
+								@onclick="ClearSearch">
+							Clear
+						</button>
+					</Match>
+				</Condition>
 			</div>
 			<div class="access-control-table-container table-responsive">
 				<table class="access-control-table table table-sm table-striped m-0">
 					<thead class="bg-white sticky-top">
 						<tr class="small">
 							<th>Username</th>
-							<Iterations Items="rm.Roles">
+							<Iterations Items="acs.Roles">
 								<th class="text-center">@context.Name.Replace('_', ' ')</th>
 							</Iterations>
 						</tr>
@@ -49,7 +58,7 @@
 												</Condition>
 											</div>
 										</td>
-										<Iterations Items="rm.Roles" Context="childContext">
+										<Iterations Items="acs.Roles" Context="childContext">
 											<td class="align-middle text-center">
 												<Condition Evaluation="@context.Roles.ContainsKey(childContext.Id)">
 													<Match>
@@ -79,7 +88,7 @@
 				</table>
 				<Condition Evaluation="acs.Count == 0">
 					<Match>
-						<h6 class="text-muted text-center m-0 p-1">No data..</h6>
+						<h6 class="text-muted text-center m-0 p-2">No data..</h6>
 					</Match>
 				</Condition>
 			</div>
@@ -88,9 +97,20 @@
 </ContentWithLoader>
 
 @code {
+	public string? _searchToken;
+
+	public bool Progress => acs.Searching || acs.OperationInProgress.Any();
+
+	private async Task ClearSearch()
+	{
+		_searchToken = default;
+		await acs.ClearSearch();
+	}
+
 	protected override async Task OnInitializedAsync()
 	{
 		acs.OnStateChange += async () => await InvokeAsync(StateHasChanged);
+		_searchToken = acs.SearchToken;
 		await acs.Init();
 	}
 

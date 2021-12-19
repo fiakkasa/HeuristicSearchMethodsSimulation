@@ -12,11 +12,14 @@ namespace HeuristicSearchMethodsSimulation.Interfaces
 		Dictionary<Guid, Guid> OperationInProgress { get; }
 		List<UserWithDictRoles> Users { get; }
 		string? SearchToken { get; }
+        bool Searching { get; }
+        List<IdentityRole> Roles { get; }
 
-		event Action? OnStateChange;
+        event Action? OnStateChange;
 
 		Task AddToRole(IdentityUser user, string role);
-		Task Init();
+        Task ClearSearch();
+        Task Init();
 		Task RemoveFromRole(IdentityUser user, string role);
 		void Search(string? searchToken = null);
 	}
