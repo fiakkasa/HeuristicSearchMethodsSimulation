@@ -95,11 +95,9 @@ namespace HeuristicSearchMethodsSimulation.Services
 						searchToken?.Trim().ToLowerInvariant() is { Length: > 0 } token
 							? _userManager.Users
 								.Where(x => x.UserName.ToLowerInvariant().Contains(token))
-								.OrderByDescending(x => x.EmailConfirmed)
-								.ThenByDescending(x => x.CreatedOn)
+								.OrderByDescending(x => x.CreatedOn)
 							: _userManager.Users
-								.OrderByDescending(x => x.EmailConfirmed)
-								.ThenByDescending(x => x.CreatedOn)
+								.OrderByDescending(x => x.CreatedOn)
 					)
 					.ToAsyncEnumerable()
 					.Select(user => new UserWithDictRoles(user, user.Roles.Distinct().ToDictionary(x => x, x => x)))
