@@ -277,7 +277,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 if (PartialRandomItem.Builder is not { }) PartialRandomItem.Builder = new();
 
-                PartialRandomItem.Builder.Collection[item.Id] = item;
+                PartialRandomItem.Builder.Collection[item.Id] = item with { };
 
                 var collection = await PartialRandomItem.Builder.Collection.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
 
@@ -301,7 +301,7 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                     if (locations.Count > 0)
                     {
-                        builder.Collection[locations[0].Id] = locations[0];
+                        builder.Collection[locations[0].Id] = locations[0] with { };
                         builder.Text = locations.ToText(customLastElemText: "...");
                         builder.DistanceInKilometers = 0D;
                     }
@@ -330,6 +330,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                     PartialRandomItem.Builder.DistanceInKilometers = totalDistance;
                     PartialRandomItem.Builder.MapChartData.AddRange(mapLineData.Concat(PartialRandomItem.MapMarkerData));
                     PartialRandomItem.Builder.MapMarkerData.AddRange(PartialRandomItem.MapMarkerData);
+
+                    if (PartialRandomItem.Builder.Collection.Count == LocationsBySelection.Count - 1)
+                    {
+                        var autoItem = LocationsBySelection.ExceptBy(collection.Select(x => x.Id), x => x.Id).First();
+                        await SetPartialRandomLocation(autoItem, true, cancellationToken).ConfigureAwait(true);
+                    }
                 }
 
                 if (!silent)
@@ -518,7 +524,12 @@ namespace HeuristicSearchMethodsSimulation.Services
                         ? $"{successMessages[new Random().Next(0, successMessages.Length)]}! {location.ShortCode} is the shortest route to {prev.Node.ShortCode}."
                         : $"Selected {location.ShortCode} is not the best candidate, {gdi.Current.Node.ShortCode} will be selected instead.";
 
-                if (gdi.Index == gdi.Solution.Count - 1)
+                if (gdi.Index == gdi.Solution.Count - 2)
+                {
+                    var autoItem = LocationsBySelection.ExceptBy(gdi.Visited.Values.Select(x => x.Node.Id), x => x.Id).First();
+                    SetGuidedDirectSelection(autoItem);
+                }
+                else if (gdi.Index == gdi.Solution.Count - 1)
                 {
                     gdi.Index++;
                     gdi.Current.Log = "Tada!";

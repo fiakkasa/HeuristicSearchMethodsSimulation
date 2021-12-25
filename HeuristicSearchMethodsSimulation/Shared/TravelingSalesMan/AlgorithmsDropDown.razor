@@ -27,6 +27,7 @@
         _list ??=
         Enum.GetValues(typeof(TravelingSalesManAlgorithms))
             .Cast<TravelingSalesManAlgorithms>()
+            .Where(x => x != TravelingSalesManAlgorithms.Preselected)
             .Select(x =>
                 KeyValuePair.Create(
                     x == TravelingSalesManAlgorithms.None
