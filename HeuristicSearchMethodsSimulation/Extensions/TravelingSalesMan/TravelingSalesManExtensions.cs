@@ -77,9 +77,17 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
 
-        public static string? ToFormattedDistance(this double? value) => value?.ToString("#0.## Km");
+        private static string GetDistanceFormat(bool simple = false) => simple switch
+        {
+            true => "#0",
+            _ => "#0.## Km"
+        };
 
-        public static string ToFormattedDistance(this double value) => value.ToString("#0.## Km");
+        public static string? ToFormattedDistance(this double? value, bool simple = false) =>
+            value?.ToString(GetDistanceFormat(simple));
+
+        public static string ToFormattedDistance(this double value, bool simple = false) =>
+            value.ToString(GetDistanceFormat(simple));
 
         public static string ToKey(this LocationGeo location, LocationGeo otherLocation) =>
             location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0

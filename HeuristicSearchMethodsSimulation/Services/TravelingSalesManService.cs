@@ -457,7 +457,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
                 {
                     PartialImprovingItem.CyclesMatch = true;
-                    PartialImprovingItem.Log.Add("Congrats in finding a more optimal route!");
+                    PartialImprovingItem.Log.Add("No further improvement can be made via pairwise exchange.");
                 }
 
                 OnStateChangeDelegate?.Invoke();

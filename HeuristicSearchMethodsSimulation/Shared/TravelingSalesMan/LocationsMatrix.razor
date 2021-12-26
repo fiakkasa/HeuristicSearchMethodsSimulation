@@ -2,32 +2,32 @@
     <Match>
         <div class="traveling-salesman-matrix-container @CssClass">
             <div class="table-responsive">
-                <table class="table table-striped text-center m-0">
+                <table class="table table-striped table-sm text-center m-0">
                     <thead>
                         <Condition Evaluation="Algorithm == TravelingSalesManAlgorithms.Evolutionary">
                             <Match>
                                 <tr>
                                     <th class="small"></th>
                                     <Iterations T="string" Items="HeaderIndices">
-                                        <th class="small">@context</th>
+                                        <th class="small align-middle">@context</th>
                                     </Iterations>
                                 </tr>
                             </Match>
                         </Condition>
                         <tr>
-                            <th class="small">Distance (Km)</th>
+                            <th class="small align-middle">Distance (Km)</th>
                             <Iterations T="string" Items="Data![0].Xlabels">
-                                <th class="small">@context</th>
+                                <th class="small align-middle">@context</th>
                             </Iterations>
                         </tr>
                     </thead>
                     <tbody>
                         <Iterations T="LocationRow" Items="Data">
                             <tr>
-                                <th class="small">@context.Ylabel</th>
+                                <th class="small align-middle text-nowrap">@context.Ylabel</th>
                                 <Iterations T="LocationToLocation" Items="context.Collection" Context="childContext">
-                                    <td class="@CellCssClass(childContext)">
-                                        @childContext.DistanceInKilometers.ToFormattedDistance()
+                                    <td class="@CellCssClass(childContext) align-middle">
+                                        @childContext.DistanceInKilometers.ToFormattedDistance(true)
                                     </td>
                                 </Iterations>
                             </tr>
