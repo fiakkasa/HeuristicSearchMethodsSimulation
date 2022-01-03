@@ -1,56 +1,94 @@
-﻿<Condition Evaluation="Collection?.Count > 0">
-	<Match>
-		<div class="traveling-salesman-guided-direct-table-container row @CssClass">
-			<Iterations T="GuidedDirectIteration" Items="Collection?.Take((Index ?? 0) + 1)">
-				<div class="step col-12 p-1">
-					<div class="p-1 px-2 @(Index == context.Index? "text-black" : "text-muted")">
-						Step @(context.Index): @context.Log
-					</div>
-				</div>
-			</Iterations>
-		</div>
-		<Condition Evaluation="Report?.Count > 1">
-			<Match>
-				<div class="report-container col-12 p-1">
-					<div class="text-center">
-						<button type="button" class="btn @(ShowReport ? "btn-outline-info" : "btn-info")" @onclick="_ => ShowReport = !ShowReport">Report</button>
-					</div>
-					<Condition Evaluation="ShowReport">
-						<Match>
-							<div class="report mt-2 table-responsive">
-								<table class="table table-sm table-striped text-center m-0">
-									<thead>
-										<tr>
-											<Iterations T="string" Items="Report![0]">
-												<th class="small">@context</th>
-											</Iterations>
-										</tr>
-									</thead>
-									<tbody>
-										<Iterations T="IEnumerable<string>" Items="Report!.Skip(1)">
-											<tr>
-												<Iterations T="string" Items="context" Context="childContext">
-													<td>
-														@childContext
-													</td>
-												</Iterations>
-											</tr>
-										</Iterations>
-									</tbody>
-								</table>
-							</div>
-						</Match>
-					</Condition>
-				</div>
-			</Match>
-		</Condition>
-	</Match>
+﻿@inject IJSRuntime js
+
+<Condition Evaluation="Collection?.Count > 0">
+    <Match>
+        <div class="traveling-salesman-guided-direct-table-container row @CssClass">
+            <Iterations T="GuidedDirectIteration" Items="Collection?.Take((Index ?? 0) + 1)">
+                <div class="step col-12 p-1">
+                    <div class="p-1 px-2 @(Index == context.Index? "text-black" : "text-muted")">
+                        Step @(context.Index): @context.Log
+                    </div>
+                </div>
+            </Iterations>
+        </div>
+        <div class="report-container col-12 p-1">
+            <Condition Evaluation="ShowReport">
+                <NotMatch>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
+                    </div>
+                </NotMatch>
+                <Match>
+                    <div class="text-center">
+                        <button type="button" class="me-1 btn btn-outline-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
+                        <button type="button" class="btn btn-outline-warning" @onclick="Print">Print</button>
+                    </div>
+                    <div class="report mt-2 table-responsive">
+                        <table class="table table-borderless text-center m-0">
+                            <tbody>
+                                <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
+                                    <tr>
+                                        <td colspan="3">
+                                            <h6 class="m-0">Number of Cities: @context.numberOfLocations</h6>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Algorithm</th>
+                                        <th>Route</th>
+                                        <th>Total Distance</th>
+                                    </tr>
+                                    <Iterations T="HistoryIteration" Items="context.attempts" Context="childContext">
+                                        <tr>
+                                            <td colspan="3">
+                                                <LocationsMap Data="childContext.MapLinesData"
+                                                              MarkerColor="@MapOptions.MarkerColor"
+                                                              MarkerSymbol="MapOptions.MarkerSymbol"
+                                                              LineColor="@MapOptions.LineColor"
+                                                              LineWidth="@MapOptions.LineWidth"
+                                                              LandColor="@MapOptions.LandColor"
+                                                              CountryColor="@MapOptions.CountryColor"
+                                                              CssClass="print" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>@childContext.Algo.ToString().Replace('_', ' ')</td>
+                                            <td>@childContext.Text</td>
+                                            <td>@childContext.DistanceInKilometers.ToFormattedDistance()</td>
+                                        </tr>
+                                    </Iterations>
+                                </Iterations>
+                                <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => !x.attempts.Any())">
+                                    <tr>
+                                        <td colspan="3">
+                                            <h6 class="m-0 text-muted">No attempts were made for Number of Cities: @context.numberOfLocations</h6>
+                                        </td>
+                                    </tr>
+                                </Iterations>
+                            </tbody>
+                        </table>
+                    </div>
+                </Match>
+            </Condition>
+        </div>
+    </Match>
 </Condition>
 
 @code {
-	[Parameter] public string? CssClass { get; set; }
-	[Parameter] public int? Index { get; set; }
-	[Parameter] public List<GuidedDirectIteration>? Collection { get; set; }
-	private bool ShowReport { get; set; }
-	[Parameter] public List<List<string>>? Report { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public int? Index { get; set; }
+    [Parameter] public List<GuidedDirectIteration>? Collection { get; set; }
+    private bool ShowReport { get; set; }
+    [Parameter] public MapOptions MapOptions { get; set; } = new();
+    [Parameter] public Dictionary<int, List<HistoryIteration>>? Report { get; set; }
+    [Parameter] public int MaxLocations { get; set; }
+    private IEnumerable<(int numberOfLocations, IEnumerable<HistoryIteration> attempts)> AttemptsPerLocation =>
+        Enumerable.Range(0, MaxLocations + 1)
+            .Where(i => i >= Consts.MinNumberOfLocations)
+            .Select(i =>
+                Report?.TryGetValue(i, out var attempts) == true
+                    ? (i, attempts)
+                    : (i, Enumerable.Empty<HistoryIteration>())
+            );
+
+    private async Task Print() => await js.InvokeVoidAsync("window.print");
 }

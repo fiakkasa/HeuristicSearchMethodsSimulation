@@ -2,78 +2,80 @@
 @implements IDisposable
 
 <ContentWithLoader Loading="!tsms.IsInit" Progress="tsms.Progress">
-	<Title>
-		<Header AlgorithmName="Guided Direct" ShowSubtitle="tsms.IsInit" />
-	</Title>
-	<Content>
-		<Condition Evaluation="tsms.HasLocations">
-			<NotMatch>
-				<div class="d-flex flex-wrap align-items-center mb-2">
-					<h4 class="m-0 me-2">No data available at the moment..</h4>
-					<button type="button" class="btn btn-primary btn-sm" @onclick="() => tsms.Refresh()">Refresh?</button>
-				</div>
-			</NotMatch>
-			<Match>
-				<div class="row">
-					<div class="col-12 col-lg-6">
-						<LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.GuidedDirectItem?.Matrix"
-										 NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
+    <Title>
+        <Header AlgorithmName="Guided Direct" ShowSubtitle="tsms.IsInit" />
+    </Title>
+    <Content>
+        <Condition Evaluation="tsms.HasLocations">
+            <NotMatch>
+                <div class="d-flex flex-wrap align-items-center mb-2">
+                    <h4 class="m-0 me-2">No data available at the moment..</h4>
+                    <button type="button" class="btn btn-primary btn-sm" @onclick="() => tsms.Refresh()">Refresh?</button>
+                </div>
+            </NotMatch>
+            <Match>
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.GuidedDirectItem?.Matrix"
+                                         NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
 
-						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
-							<GuidedDirectTable CssClass="mt-2" 
-											   Index="tsms.GuidedDirectItem?.Index" 
-											   Collection="tsms.GuidedDirectItem?.Iterations"
-											   Report="tsms.GuidedDirectItem?.Report" />
-						</ContentWithInsufficientLocationsMessage>
-					</div>
-					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
-						<div class="d-flex flex-wrap align-items-center justify-content-between">
-							<RangeSelector Min="tsms.MinSliderValue"
-										   Max="tsms.MaxSliderValue"
-										   Step="tsms.SliderStepValue"
-										   Value="tsms.SliderValue"
-										   ValueChanged="tsms.UpdateState"
-										   Disabled="tsms.Progress" />
-							<RouteSymmetry Value="tsms.RouteSymmetry" />
-						</div>
+                        <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
+                            <GuidedDirectTable CssClass="mt-2"
+                                               Index="tsms.GuidedDirectItem?.Index"
+                                               Collection="tsms.GuidedDirectItem?.Iterations"
+                                               MapOptions="tsms.MapOptions"
+                                               Report="tsms.History"
+                                               MaxLocations="tsms.MaxSliderValue" />
+                        </ContentWithInsufficientLocationsMessage>
+                    </div>
+                    <div class="col-12 mt-3 mt-lg-0 col-lg-6">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between">
+                            <RangeSelector Min="tsms.MinSliderValue"
+                                           Max="tsms.MaxSliderValue"
+                                           Step="tsms.SliderStepValue"
+                                           Value="tsms.SliderValue"
+                                           ValueChanged="tsms.UpdateState"
+                                           Disabled="tsms.Progress" />
+                            <RouteSymmetry Value="tsms.RouteSymmetry" />
+                        </div>
 
-						<LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.GuidedDirectItem?.MapChartData"
-									  TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
-									  Text="@tsms.GuidedDirectItem?.Current?.Text"
-									  CssClass="mt-3"
-									  MarkerColor="@tsms.MapOptions.MarkerColor"
-									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
-									  LineColor="@tsms.MapOptions.LineColor"
-									  LineWidth="@tsms.MapOptions.LineWidth"
-									  LandColor="@tsms.MapOptions.LandColor"
-									  CountryColor="@tsms.MapOptions.CountryColor" />
+                        <LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.GuidedDirectItem?.MapChartData"
+                                      TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
+                                      Text="@tsms.GuidedDirectItem?.Current?.Text"
+                                      CssClass="mt-3"
+                                      MarkerColor="@tsms.MapOptions.MarkerColor"
+                                      MarkerSymbol="tsms.MapOptions.MarkerSymbol"
+                                      LineColor="@tsms.MapOptions.LineColor"
+                                      LineWidth="@tsms.MapOptions.LineWidth"
+                                      LandColor="@tsms.MapOptions.LandColor"
+                                      CountryColor="@tsms.MapOptions.CountryColor" />
 
-						<GuidedDirectBuilder CssClass="mt-3"
-											 Disabled="tsms.Progress"
-											 Selected="tsms.GuidedDirectItem?.Visited"
-											 Collection="tsms.LocationsBySelection"
-											 OnSelection="tsms.SetGuidedDirectSelection"
-											 OnReset="tsms.ResetGuidedDirect" />
+                        <GuidedDirectBuilder CssClass="mt-3"
+                                             Disabled="tsms.Progress"
+                                             Selected="tsms.GuidedDirectItem?.Visited"
+                                             Collection="tsms.LocationsBySelection"
+                                             OnSelection="tsms.SetGuidedDirectSelection"
+                                             OnReset="tsms.ResetGuidedDirect" />
 
-						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
-							<AlgorithmsDropDown Disabled="tsms.Progress" />
-						</div>
-					</div>
-				</div>
-			</Match>
-		</Condition>
-	</Content>
+                        <div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
+                            <AlgorithmsDropDown Disabled="tsms.Progress" />
+                        </div>
+                    </div>
+                </div>
+            </Match>
+        </Condition>
+    </Content>
 </ContentWithLoader>
 
 @code {
-	protected override async Task OnInitializedAsync()
-	{
-		tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
-		await tsms.Init(TravelingSalesManAlgorithms.Guided_Direct);
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        tsms.OnStateChange += async () => await InvokeAsync(StateHasChanged);
+        await tsms.Init(TravelingSalesManAlgorithms.Guided_Direct);
+    }
 
-	public void Dispose()
-	{
-		tsms.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
-	}
+    public void Dispose()
+    {
+        tsms.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
+    }
 }

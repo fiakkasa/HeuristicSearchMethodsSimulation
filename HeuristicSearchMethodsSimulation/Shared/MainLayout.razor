@@ -2,8 +2,9 @@
 @using Microsoft.Extensions.Options
 @using HeuristicSearchMethodsSimulation.Models
 @inject IOptions<AppOptions> appOptionsAccessor
+@inject NavigationManager nav
 
-<div class="page vh-100 d-flex flex-column">
+<div class="page vh-100 d-flex flex-column @string.Join(' ', nav.ToBaseRelativePath(nav.Uri).Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))">
 	<nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
 		<div class="container-fluid justify-content-center">
 			<NavLink class="navbar-brand text-truncate" href="" Match="NavLinkMatch.All">

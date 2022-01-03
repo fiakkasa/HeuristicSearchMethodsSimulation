@@ -92,6 +92,8 @@ namespace HeuristicSearchMethodsSimulation.Services
         public GuidedDirectItem? GuidedDirectItem { get; set; }
         public EvolutionaryItem? EvolutionaryItem { get; set; }
 
+        public Dictionary<int, List<HistoryIteration>> History { get; set; } = new();
+
         public TravelingSalesManService(
             IOptions<MongoOptions> mongoOptions,
             IOptions<TravelingSalesManOptions> travelingSalesManOptions,
@@ -107,6 +109,21 @@ namespace HeuristicSearchMethodsSimulation.Services
             _logger = logger;
 
             InitValuesFromOptions();
+        }
+
+        private async Task SetHistory(HistoryIteration obj)
+        {
+            if (!History.ContainsKey(SliderValue))
+                History.Add(SliderValue, new());
+
+            History[SliderValue] =
+                await History[SliderValue]
+                    .Append(obj)
+                    .DistinctBy(x => x.Algo + x.Text)
+                    .OrderBy(x => x.DistanceInKilometers)
+                    .Take(Consts.MaxNumberOfHistoryLocations)
+                    .ToListAsync()
+                    .ConfigureAwait(true);
         }
 
         public async Task UpdateState(int sliderValue)
@@ -216,6 +233,15 @@ namespace HeuristicSearchMethodsSimulation.Services
                     ExhaustiveItem.Matrix.AddRange(matrix);
                     ExhaustiveItem.MapChartData.AddRange(mapLineData.Concat(ExhaustiveItem.MapMarkerData));
                     ExhaustiveItem.SelectedIteration = item;
+
+                    await SetHistory(
+                        new(
+                            TravelingSalesManAlgorithms.Exhaustive,
+                            item.Text,
+                            item.DistanceInKilometers,
+                            new(ExhaustiveItem.MapChartData)
+                        )
+                    ).ConfigureAwait(true);
                 }
 
                 if (!silent)
@@ -284,16 +310,26 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (PartialRandomItem.Builder.Collection.Count == LocationsBySelection.Count)
                 {
                     var totalDistance = await collection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                    var text = collection.ToText();
 
                     var obj = new PartialRandomIteration(
                         collection,
-                        collection.ToText(),
+                        text,
                         totalDistance,
                         Guid.NewGuid()
                     );
 
                     PartialRandomItem.Iterations.Add(obj);
                     await SetPartialRandomIteration(obj, true, cancellationToken).ConfigureAwait(true);
+
+                    await SetHistory(
+                        new(
+                            TravelingSalesManAlgorithms.Partial_Random,
+                            text,
+                            totalDistance,
+                            new(PartialRandomItem.MapChartData)
+                        )
+                    ).ConfigureAwait(true);
 
                     var locations = LocationsBySelection.Take(1).ToList();
 
@@ -427,7 +463,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public void PartialImprovingNextIteration()
+        public async Task PartialImprovingNextIteration()
         {
             try
             {
@@ -458,6 +494,15 @@ namespace HeuristicSearchMethodsSimulation.Services
                 {
                     PartialImprovingItem.CyclesMatch = true;
                     PartialImprovingItem.Log.Add("No further improvement can be made via pairwise exchange.");
+
+                    await SetHistory(
+                        new(
+                            TravelingSalesManAlgorithms.Partial_Improving,
+                            iteration.Text,
+                            iteration.DistanceInKilometers,
+                            PartialImprovingItem.MapChartData
+                        )
+                    ).ConfigureAwait(true);
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -888,33 +933,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
 
-            var preselectedRoute = LocationsBySelection.ToText();
-            var preselectedTotalDistance = await LocationsBySelection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-            var exhaustiveItems =
-                await (await CalculateExhaustiveIterations(LocationsBySelection, cancellationToken).ConfigureAwait(true))
-                    .OrderBy(x => x.DistanceInKilometers)
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
-            var exhaustiveMinItem = exhaustiveItems.FirstOrDefault();
-            var exhaustiveMaxItem = exhaustiveItems.LastOrDefault();
-            var exhaustiveRandomItem = exhaustiveItems.Skip(new Random().Next(exhaustiveItems.Count / 3, (exhaustiveItems.Count / 3) * 2)).FirstOrDefault();
-            var (partialImprovingRoute, partialImprovingTotalDistance) = await LocationsBySelection.ComputePartialImprovingSolution(cancellationToken).ConfigureAwait(true);
-
-            var report = new List<List<string>>()
-            {
-                new() { "Algorithm", "Route", "Total Distance"},
-                new() { "Preselected", preselectedRoute, preselectedTotalDistance.ToFormattedDistance() },
-                new() { "Partial Improving", partialImprovingRoute, partialImprovingTotalDistance.ToFormattedDistance() }
-            };
-
-            if (exhaustiveMinItem is { })
-                report.Insert(2, new List<string> { "Exhaustive (Min)", exhaustiveMinItem.Text, exhaustiveMinItem.DistanceInKilometers.ToFormattedDistance() });
-            if (exhaustiveMaxItem is { })
-                report.Insert(2, new List<string> { "Exhaustive (Max)", exhaustiveMaxItem.Text, exhaustiveMaxItem.DistanceInKilometers.ToFormattedDistance() });
-            if (exhaustiveRandomItem is { })
-                report.Insert(2, new List<string> { "Exhaustive (Random)", exhaustiveRandomItem.Text, exhaustiveRandomItem.DistanceInKilometers.ToFormattedDistance() });
-
-            GuidedDirectItem.Report = report;
             GuidedDirectItem.Solution = computedCollection;
             GuidedDirectItem.Visited.Add(iterations[0].Node.Id, iterations[0]);
             GuidedDirectItem.Iterations.AddRange(iterations);

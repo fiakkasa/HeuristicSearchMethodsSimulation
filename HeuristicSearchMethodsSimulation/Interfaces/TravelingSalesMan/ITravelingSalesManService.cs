@@ -22,6 +22,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         bool RouteSymmetry { get; }
         ChartsOptions ChartsOptions { get; }
         MapOptions MapOptions { get; }
+        Dictionary<int, List<HistoryIteration>> History { get; set; }
 
         event Action? OnStateChange;
 
@@ -56,7 +57,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         PartialImprovingItem? PartialImprovingItem { get; set; }
 
         Task ResetPartialImproving();
-        void PartialImprovingNextIteration();
+        Task PartialImprovingNextIteration();
 
         #endregion
 
