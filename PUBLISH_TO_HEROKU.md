@@ -19,6 +19,9 @@ App URL @ https://heuristic-search-methods-sim.herokuapp.com/
   - add CMD ASPNETCORE_URLS=http://\*:$PORT dotnet HeuristicSearchMethodsSimulation.dll after the commented out ENTRYPOINT line
 - Create an app on heroku
 - Add any variables the app requires in the heroku panel
+- Ensure you are logged in to heroku using both
+  - heroku auth:login
+  - heroku container:login
 - Push the docker image
 - Enjoy!
 
