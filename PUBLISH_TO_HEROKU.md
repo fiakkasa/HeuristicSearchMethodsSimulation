@@ -42,6 +42,12 @@ PS > heroku container:push -a heuristic-search-methods-sim web
 PS > heroku container:release -a heuristic-search-methods-sim web
 ```
 
+Doing it in one go!
+
+```powershell
+PS > docker build -t heuristicsearchmethodssimulation .;heroku container:push -a heuristic-search-methods-sim web;heroku container:release -a heuristic-search-methods-sim web
+```
+
 ## Resources
 
 - https://dev.to/alrobilliard/deploying-net-core-to-heroku-1lfe
