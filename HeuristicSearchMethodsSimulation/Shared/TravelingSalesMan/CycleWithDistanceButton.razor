@@ -3,7 +3,7 @@
 <Condition Evaluation="Text is { Length: > 0 } || DistanceInKilometers >= 0">
 	<Match>
 		<button type="button"
-				class="btn btn-sm w-100 border-0 @ButtonCssClass @CssClass"
+				class="btn btn-sm w-100 text-dense border-0 @ButtonCssClass @CssClass"
 				disabled="@Disabled"
 				@onclick="OnSelection.InvokeAsync">
 			<TextAndDistance Text="@Text" DistanceInKilometers="DistanceInKilometers" />

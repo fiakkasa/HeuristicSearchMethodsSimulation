@@ -56,7 +56,7 @@
         cell switch
         {
             { IsHighlightedDistance: true } => "min-distance bg-info bg-opacity-25",
-            { A.ShortCode: var a, B.ShortCode: var b } when a == b => "text-muted",
+            { A.Id: var a, B.Id: var b } when a == b => "text-muted",
             _ => string.Empty
         }
     );
