@@ -6,7 +6,7 @@
             <Iterations T="(int i, string log)" Items="Collection?.Select((log, i) => (i, log))">
                 <div class="step col-12 p-1">
                     <div class="p-1 px-2 @(Collection?.Count == (context.i + 1) ? "text-black" : "text-muted")">
-                        Step @(context.i): @context.log
+                        @context.log
                     </div>
                 </div>
             </Iterations>

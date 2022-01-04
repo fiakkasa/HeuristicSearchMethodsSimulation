@@ -557,7 +557,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 {
                     if (gdi.Log.LastOrDefault()?.StartsWith(location.ShortCode) == false)
                     {
-                        gdi.Log.Add($"{location.ShortCode} is not the best candidate..");
+                        gdi.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
                         OnStateChangeDelegate?.Invoke();
                     }
 
@@ -575,7 +575,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 else if (gdi.Index == gdi.Solution.Count - 1)
                 {
                     gdi.Index++;
-                    gdi.Log.Add("No further improvements can be made.");
+                    gdi.Log.Add("Congrats! No further improvements can be made.");
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -913,7 +913,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
 
             GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
-            GuidedDirectItem.Log.Add("Inspect the fittest (more economical) proposed solutions");
+            GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city");
 
             GuidedDirectItem.Matrix.AddRange(matrix);
             GuidedDirectItem.ResetMatrix.AddRange(matrix);
