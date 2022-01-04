@@ -401,10 +401,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     iterationMapLineData.Concat(markers).ToList(),
                     markers,
                     iterationMapLineData
-                )
-                {
-                    Log = i == 0 ? "Inspect the fittest (more economical) proposed solutions" : string.Empty
-                };
+                );
             }
 
             var computedCycle = await collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);

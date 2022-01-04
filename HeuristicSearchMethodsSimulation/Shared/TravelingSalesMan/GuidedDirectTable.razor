@@ -3,10 +3,10 @@
 <Condition Evaluation="Collection?.Count > 0">
     <Match>
         <div class="traveling-salesman-guided-direct-table-container row @CssClass">
-            <Iterations T="GuidedDirectIteration" Items="Collection?.Take((Index ?? 0) + 1)">
+            <Iterations T="(int i, string log)" Items="Collection?.Select((log, i) => (i, log))">
                 <div class="step col-12 p-1">
-                    <div class="p-1 px-2 @(Index == context.Index? "text-black" : "text-muted")">
-                        Step @(context.Index): @context.Log
+                    <div class="p-1 px-2 @(Collection?.Count == (context.i + 1) ? "text-black" : "text-muted")">
+                        Step @(context.i): @context.log
                     </div>
                 </div>
             </Iterations>
@@ -75,8 +75,7 @@
 
 @code {
     [Parameter] public string? CssClass { get; set; }
-    [Parameter] public int? Index { get; set; }
-    [Parameter] public List<GuidedDirectIteration>? Collection { get; set; }
+    [Parameter] public List<string>? Collection { get; set; }
     private bool ShowReport { get; set; }
     [Parameter] public MapOptions MapOptions { get; set; } = new();
     [Parameter] public Dictionary<int, List<HistoryIteration>>? Report { get; set; }

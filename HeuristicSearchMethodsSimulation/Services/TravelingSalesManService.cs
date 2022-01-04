@@ -553,21 +553,19 @@ namespace HeuristicSearchMethodsSimulation.Services
                     return;
                 }
 
+                if (location.Id != gdi.Next?.Node.Id)
+                {
+                    if (gdi.Log.LastOrDefault()?.StartsWith(location.ShortCode) == false)
+                    {
+                        gdi.Log.Add($"{location.ShortCode} is not the best candidate..");
+                        OnStateChangeDelegate?.Invoke();
+                    }
+
+                    return;
+                }
+
                 gdi.Index++;
                 gdi.Visited[gdi.Current.Node.Id] = gdi.Current with { };
-
-                var successMessages = new[]
-                {
-                    "Great",
-                    "Amazing",
-                    "Good job",
-                    "Well done"
-                };
-
-                gdi.Current.Log =
-                    location.Id == gdi.Current.Node.Id
-                        ? $"{successMessages[new Random().Next(0, successMessages.Length)]}! {location.ShortCode} is the shortest route to {prev.Node.ShortCode}."
-                        : $"Selected {location.ShortCode} is not the best candidate, {gdi.Current.Node.ShortCode} will be selected instead.";
 
                 if (gdi.Index == gdi.Solution.Count - 2)
                 {
@@ -577,7 +575,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 else if (gdi.Index == gdi.Solution.Count - 1)
                 {
                     gdi.Index++;
-                    gdi.Current.Log = "Tada!";
+                    gdi.Log.Add("No further improvements can be made.");
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -915,6 +913,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
 
             GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
+            GuidedDirectItem.Log.Add("Inspect the fittest (more economical) proposed solutions");
 
             GuidedDirectItem.Matrix.AddRange(matrix);
             GuidedDirectItem.ResetMatrix.AddRange(matrix);

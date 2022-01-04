@@ -16,6 +16,8 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<LocationGeo> Solution { get; set; } = new();
         public List<GuidedDirectIteration> Iterations { get; } = new();
         public Dictionary<Guid, GuidedDirectIteration> Visited { get; } = new();
+        public List<string> Log { get; set; } = new();
         public GuidedDirectIteration? Current => Iterations.Skip(Index).FirstOrDefault();
+        public GuidedDirectIteration? Next => Iterations.Skip(Index + 1).FirstOrDefault();
     }
 }

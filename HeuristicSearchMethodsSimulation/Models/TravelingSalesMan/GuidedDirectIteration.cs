@@ -13,8 +13,5 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         List<ITrace> MapChartData,
         List<ITrace> MapMarkerData,
         List<ITrace> MapLinesData
-    )
-    {
-        public string Log { get; set; } = string.Empty;
-    }
+    );
 }
