@@ -14,7 +14,7 @@
 				 Layout="_chartLayout"
 				 Data="_chartData"
 				 @ref="_chartRef"
-				 style="min-height: 640px" />
+				 style="@((_chartLayout.Width > 0 ? "width:" + _chartLayout.Width + "px;" : string.Empty) + "min-height:" + _chartLayout.Height + "px")" />
 	<Condition Evaluation="Text is { Length: > 0 } || TotalDistance >= 0">
 		<Match>
 			<div class="traveling-salesman-map-info-container d-flex align-items-center justify-content-end flex-wrap mt-1 small">
@@ -89,6 +89,29 @@
 	[Parameter] public string? CssClass { get; set; }
 	[Parameter] public string? Text { get; set; }
 	[Parameter] public double? TotalDistance { get; set; }
+	[Parameter] public int MapWidth 
+	{ 
+		set
+		{
+			_chartLayout.Width = value;
+		}
+	}
+	[Parameter] public int MapHeight 
+	{
+		set
+		{
+			_chartLayout.Height = value;
+		}
+	}
+	[Parameter] public bool AutoSizeMap 
+	{ 
+		set
+		{
+			_chartConfig.AutoSizable = value;
+			_chartConfig.Responsive = value;
+			_chartLayout.AutoSize = value;
+		} 
+	}
 	[Parameter]
 	public List<ITrace> Data
 	{

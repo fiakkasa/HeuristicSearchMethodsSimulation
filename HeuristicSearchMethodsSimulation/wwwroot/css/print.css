@@ -3,9 +3,22 @@
         size: letter portrait;
     }
 
+    *::-webkit-scrollbar {
+        display: none;
+    }
+
+    * {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+
     .page.GuidedDirect {
         height: unset !important;
-        max-width: 960px;
+        width: 8.5in !important;
+    }
+
+    .entries-container {
+        height: 11.25in;
     }
 
         .page.GuidedDirect > nav.navbar,
@@ -27,11 +40,11 @@
         }
 
         .page.GuidedDirect .traveling-salesman-map-container.print {
-            height: 400px;
+            height: 250px !important;
             overflow: hidden !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
 
             .page.GuidedDirect .traveling-salesman-map-container.print > div {

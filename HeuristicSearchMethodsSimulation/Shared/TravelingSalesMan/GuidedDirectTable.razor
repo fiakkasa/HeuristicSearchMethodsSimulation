@@ -23,40 +23,51 @@
                         <button type="button" class="me-1 btn btn-outline-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
                         <button type="button" class="btn btn-outline-warning" @onclick="Print">Print</button>
                     </div>
-                    <div class="report mt-2 table-responsive">
-                        <table class="table table-borderless text-center m-0">
-                            <tbody>
-                                <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
-                                    <tr>
-                                        <td colspan="3">
-                                            <h6 class="m-0">Number of Cities: @context.numberOfLocations</h6>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Algorithm</th>
-                                        <th>Route</th>
-                                        <th>Total Distance</th>
-                                    </tr>
-                                    <Iterations T="HistoryIteration" Items="context.attempts" Context="childContext">
+                    <div class="report mt-2">
+                        <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
+                            <div class="entries-container table-responsive">
+                                <table class="table table-borderless text-center m-0">
+                                    <tbody>
                                         <tr>
                                             <td colspan="3">
-                                                <LocationsMap Data="childContext.MapLinesData"
-                                                              MarkerColor="@MapOptions.MarkerColor"
-                                                              MarkerSymbol="MapOptions.MarkerSymbol"
-                                                              LineColor="@MapOptions.LineColor"
-                                                              LineWidth="@MapOptions.LineWidth"
-                                                              LandColor="@MapOptions.LandColor"
-                                                              CountryColor="@MapOptions.CountryColor"
-                                                              CssClass="print" />
+                                                <h6 class="m-0">Number of Cities: @context.numberOfLocations</h6>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>@childContext.Algo.ToString().Replace('_', ' ')</td>
-                                            <td>@childContext.Text</td>
-                                            <td>@childContext.DistanceInKilometers.ToFormattedDistance()</td>
+                                            <th>Algorithm</th>
+                                            <th>Route</th>
+                                            <th>Total Distance</th>
                                         </tr>
-                                    </Iterations>
-                                </Iterations>
+                                        <Iterations T="HistoryIteration" Items="context.attempts" Context="childContext">
+                                            <tr>
+                                                <td colspan="3">
+                                                    <div class="d-flex justify-content-center">
+                                                        <LocationsMap Data="childContext.MapLinesData"
+                                                                      AutoSizeMap="false"
+                                                                      MapHeight="250"
+                                                                      MapWidth="400"
+                                                                      MarkerColor="@MapOptions.MarkerColor"
+                                                                      MarkerSymbol="MapOptions.MarkerSymbol"
+                                                                      LineColor="@MapOptions.LineColor"
+                                                                      LineWidth="@MapOptions.LineWidth"
+                                                                      LandColor="@MapOptions.LandColor"
+                                                                      CountryColor="@MapOptions.CountryColor"
+                                                                      CssClass="print" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>@childContext.Algo.ToString().Replace('_', ' ')</td>
+                                                <td>@childContext.Text</td>
+                                                <td>@childContext.DistanceInKilometers.ToFormattedDistance()</td>
+                                            </tr>
+                                        </Iterations>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Iterations>
+                        <table class="table table-borderless text-center m-0">
+                            <tbody>
                                 <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => !x.attempts.Any())">
                                     <tr>
                                         <td colspan="3">
