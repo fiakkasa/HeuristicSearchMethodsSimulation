@@ -487,13 +487,12 @@ namespace HeuristicSearchMethodsSimulation.Services
 
                 PartialImprovingItem.MapChartData.AddRange(iteration.MapLinesData.Concat(PartialImprovingItem.MapMarkerData));
                 PartialImprovingItem.DistanceInKilometers = iteration.DistanceInKilometers;
-                PartialImprovingItem.Log.Add(iteration.Text);
+                PartialImprovingItem.Log.Add(iteration.Log);
                 PartialImprovingItem.Iteration++;
 
                 if (PartialImprovingItem.Iteration >= PartialImprovingItem.Iterations.Count)
                 {
                     PartialImprovingItem.CyclesMatch = true;
-                    PartialImprovingItem.Log.Add("No further improvement can be made via pairwise exchange.");
 
                     await SetHistory(
                         new(
@@ -853,23 +852,11 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 var iterations =
                     await locations
-                        .ComputePartialImprovingIterations(matrix, cancellationToken)
+                        .ComputePartialImprovingIterations(matrix, MapsOptions.PartialImproving, cancellationToken)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
 
                 var computed = iterations[0];
-
-                if (iterations.Count > 1 && DateTimeOffset.Now.Millisecond % 2 == 0)
-                {
-                    var random = new Random().Next(0, iterations.Count);
-
-                    iterations =
-                        iterations
-                            .Skip(random)
-                            .ToList();
-
-                    computed = iterations[0];
-                }
 
                 var computedCollection = computed.Collection;
                 var computedCycle = computed.Cycle;
@@ -887,11 +874,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 PartialImprovingItem.ComputedCycle.AddRange(computedCycle);
                 PartialImprovingItem.MapChartData.AddRange(mapLinesData.Concat(mapMarkerData));
                 PartialImprovingItem.CyclesMatch = cyclesMatch;
-                PartialImprovingItem.Log.Add(
-                    cyclesMatch
-                        ? "Congrats in finding an optimal route on your first attempt!"
-                        : "Randomly traverse initial route"
-                );
+                PartialImprovingItem.Log.Add(computed.Log);
             }
             catch (Exception ex)
             {

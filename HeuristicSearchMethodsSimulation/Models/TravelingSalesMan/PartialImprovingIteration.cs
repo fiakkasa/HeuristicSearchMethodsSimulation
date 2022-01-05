@@ -7,6 +7,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         List<LocationGeo> Collection,
         List<LocationPair> Cycle,
         List<LocationRow> Matrix,
+        string Log,
         string Text,
         double DistanceInKilometers,
         List<ITrace> MapLinesData

@@ -90,15 +90,15 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             value.ToString(GetDistanceFormat(simple));
 
         public static string ToKey(this LocationGeo location, LocationGeo otherLocation) =>
-            location.ShortCode.CompareTo(otherLocation.ShortCode) <= 0
+            location.Id.CompareTo(otherLocation.Id) <= 0
                 ? location.ToDirectionalKey(otherLocation)
                 : location.ToReverseDirectionalKey(otherLocation);
 
         public static string ToDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
-            $"{location.ShortCode}-{otherLocation.ShortCode}";
+            $"{location.Id}-{otherLocation.Id}";
 
         public static string ToReverseDirectionalKey(this LocationGeo location, LocationGeo otherLocation) =>
-            $"{otherLocation.ShortCode}-{location.ShortCode}";
+            $"{otherLocation.Id}-{location.Id}";
 
         public static string ToText(this List<LocationGeo> collection, string separator = " > ", string? customLastElemText = default) =>
             string.Join(
@@ -156,18 +156,18 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
                 .Sum();
 
+        public static ScatterGeo ToMapLine(this LocationPair x) =>
+            new ScatterGeo
+            {
+                LocationMode = LocationModeEnum.ISO3,
+                Lon = new List<object> { x.A.Longitude, x.B.Longitude },
+                Lat = new List<object> { x.A.Latitude, x.B.Latitude },
+                Mode = ModeFlag.Lines,
+                Meta = (x.A.Id, x.B.Id)
+            };
+
         public static IEnumerable<ITrace> ToMapLines(this IEnumerable<LocationPair> collection) =>
-            collection
-                .Select(x =>
-                    new ScatterGeo
-                    {
-                        LocationMode = LocationModeEnum.ISO3,
-                        Lon = new List<object> { x.A.Longitude, x.B.Longitude },
-                        Lat = new List<object> { x.A.Latitude, x.B.Latitude },
-                        Mode = ModeFlag.Lines,
-                        Meta = (x.A.Id, x.B.Id)
-                    }
-                );
+            collection.Select(x => x.ToMapLine());
 
         public static IEnumerable<ITrace> ToMapLines(this List<LocationGeo> collection) =>
             collection
@@ -230,6 +230,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static async IAsyncEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
             this List<LocationGeo> startingCollection,
             List<LocationRow> matrix,
+            PartialImprovingMapOptions mapOptions,
             [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
@@ -242,6 +243,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 startingCollection,
                 startingCycle,
                 startingMatrix,
+                "Randomly traverse initial route.",
                 startingCollection.ToText(),
                 startingDistance,
                 startingMapLinesData
@@ -274,21 +276,50 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 
                         if (iterationDistance < minDistance)
                         {
-                            minDistance = iterationDistance;
-                            evaluatedCollection = iterationCollection;
-
-                            var iterationCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var previousMatchCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                            var iterationCycle = await iterationCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
                             var iterationMapLinesData = await iterationCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
                             var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true);
+                            var iterationText = iterationCollection.ToText();
 
-                            yield return new PartialImprovingIteration(
-                                iterationCollection,
-                                iterationCycle,
-                                iterationMatrix,
-                                $"Swap edge {a.ShortCode} with edge {b.ShortCode}",
-                                iterationDistance,
-                                iterationMapLinesData
-                            );
+                            var pairsToKeep =
+                                await iterationCycle
+                                    .Select(x => x.A.ToKey(x.B))
+                                    .ExceptBy(previousMatchCycle.Select(x => x.A.ToKey(x.B)), x => x)
+                                    .ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                            var cyclesDiff =
+                                await previousMatchCycle
+                                    .Zip(iterationCycle)
+                                    .Join(
+                                        pairsToKeep,
+                                        ecc => ecc.Second.A.ToKey(ecc.Second.B),
+                                        ptk => ptk,
+                                        (ecc, _) => ecc
+                                    )
+                                    .ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                            foreach (var item in cyclesDiff)
+                            {
+                                var swapPairALine = item.First.ToMapLine();
+                                swapPairALine.Line = new() { Color = mapOptions.SwapPairALineColor, Width = mapOptions.SwapPairALineWidth };
+
+                                var swapPairBLine = item.Second.ToMapLine();
+                                swapPairBLine.Line = new() { Color = mapOptions.SwapPairBLineColor, Width = mapOptions.SwapPairBLineWidth };
+
+                                yield return new PartialImprovingIteration(
+                                    iterationCollection,
+                                    iterationCycle,
+                                    iterationMatrix,
+                                    $"Swap edge ({item.First.A.ShortCode}-{item.First.B.ShortCode}) with edge ({item.Second.A.ShortCode}-{item.Second.B.ShortCode})",
+                                    iterationText,
+                                    iterationDistance,
+                                    iterationMapLinesData.Append(swapPairALine).Append(swapPairBLine).ToList()
+                                );
+                            }
+
+                            minDistance = iterationDistance;
+                            evaluatedCollection = iterationCollection;
                         }
                     }
                 }
@@ -302,6 +333,18 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     && controlQueue.Skip(1).Take(10).Distinct().Count() == 1
                 )
                 && counter <= maxIterations
+            );
+
+            var lastIterationCycle = await evaluatedCollection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+
+            yield return new PartialImprovingIteration(
+                evaluatedCollection,
+                lastIterationCycle,
+                await matrix.HighlightMatrixCyclePairs(lastIterationCycle, cancellationToken).ConfigureAwait(true),
+                "No further improvement can be made via pairwise exchange.",
+                evaluatedCollection.ToText(),
+                await lastIterationCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true),
+                await lastIterationCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true)
             );
         }
 

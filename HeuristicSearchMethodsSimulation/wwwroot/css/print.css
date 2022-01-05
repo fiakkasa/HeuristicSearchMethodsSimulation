@@ -21,38 +21,39 @@
         height: 11.25in;
     }
 
-        .page.GuidedDirect > nav.navbar,
-        .page.GuidedDirect .traveling-salesman-header-container,
-        .page.GuidedDirect .traveling-salesman-matrix-container,
-        .page.GuidedDirect .traveling-salesman-map-container:not(.print),
-        .page.GuidedDirect .traveling-salesman-algo-dropdown,
-        .page.GuidedDirect .traveling-salesman-range-selector-container,
-        .page.GuidedDirect .traveling-salesman-route-symmetry,
-        .page.GuidedDirect .traveling-salesman-guided-direct-builder-container,
-        .page.GuidedDirect button,
-        .page.GuidedDirect .step {
-            display: none !important;
+    .page.GuidedDirect > nav.navbar,
+    .page.GuidedDirect .traveling-salesman-header-container,
+    .page.GuidedDirect .traveling-salesman-matrix-container,
+    .page.GuidedDirect .traveling-salesman-map-container:not(.print),
+    .page.GuidedDirect .traveling-salesman-algo-dropdown,
+    .page.GuidedDirect .traveling-salesman-range-selector-container,
+    .page.GuidedDirect .traveling-salesman-route-symmetry,
+    .page.GuidedDirect .traveling-salesman-guided-direct-builder-container,
+    .page.GuidedDirect button,
+    .page.GuidedDirect .step,
+    .page.GuidedDirect .traveling-salesman-map-container.print text {
+        display: none !important;
+    }
+
+    .page.GuidedDirect > div.flex-fill > div,
+    .page.GuidedDirect .report-container {
+        padding: 0 !important;
+    }
+
+    .page.GuidedDirect .traveling-salesman-map-container.print {
+        height: 250px !important;
+        overflow: hidden !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+        .page.GuidedDirect .traveling-salesman-map-container.print > div {
+            width: 100% !important;
         }
 
-        .page.GuidedDirect > div.flex-fill > div,
-        .page.GuidedDirect .report-container {
-            padding: 0 !important;
-        }
-
-        .page.GuidedDirect .traveling-salesman-map-container.print {
-            height: 250px !important;
-            overflow: hidden !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-        }
-
-            .page.GuidedDirect .traveling-salesman-map-container.print > div {
-                width: 100% !important;
-            }
-
-        .page.GuidedDirect .report-container > .report,
-        .page.GuidedDirect .traveling-salesman-guided-direct-table-container {
-            margin-top: 0 !important;
-        }
+    .page.GuidedDirect .report-container > .report,
+    .page.GuidedDirect .traveling-salesman-guided-direct-table-container {
+        margin-top: 0 !important;
+    }
 }

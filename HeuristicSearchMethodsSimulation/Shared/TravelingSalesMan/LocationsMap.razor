@@ -219,7 +219,8 @@
 
 		if (item.Line is not { }) item.Line = new();
 
-		item.Line.Color = _lineColor;
+		if(item.Line.Color is not { })
+			item.Line.Color = _lineColor;
 
 		return item;
 	}
@@ -230,7 +231,8 @@
 
 		if (item.Line is not { }) item.Line = new();
 
-		item.Line.Width = _lineWidth;
+		if(item.Line.Width is not { })
+			item.Line.Width = _lineWidth;
 
 		return item;
 	}
