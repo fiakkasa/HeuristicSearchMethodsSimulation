@@ -31,7 +31,8 @@
     .page.GuidedDirect .traveling-salesman-guided-direct-builder-container,
     .page.GuidedDirect button,
     .page.GuidedDirect .step,
-    .page.GuidedDirect .traveling-salesman-map-container.print text {
+    .page.GuidedDirect .traveling-salesman-map-container.print text,
+    .page.GuidedDirect .traveling-salesman-map-container.print .layer.land {
         display: none !important;
     }
 
@@ -46,6 +47,8 @@
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        border: 1px solid var(--bs-dark);
+        border-radius: 4px;
     }
 
         .page.GuidedDirect .traveling-salesman-map-container.print > div {
