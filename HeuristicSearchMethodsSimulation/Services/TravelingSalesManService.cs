@@ -856,7 +856,18 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
 
-                var computed = iterations[0];
+                var computed = iterations[0] with { };
+
+                if (iterations.Count > 1 && DateTimeOffset.Now.Millisecond % 2 == 0)
+                {
+                    var random = new Random().Next(0, iterations.Count - 1);
+
+                    iterations = iterations.Skip(random).ToList();
+                }
+
+                var cyclesMatch = iterations.Count == 1;
+
+                if (cyclesMatch) computed = iterations[0] with { Log = "Congrats in finding an optimal route on your first attempt!" };
 
                 var computedCollection = computed.Collection;
                 var computedCycle = computed.Cycle;
@@ -864,7 +875,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 var highlightedMatrix = computed.Matrix;
                 var mapLinesData = computed.MapLinesData;
                 var text = computedCollection.ToText();
-                var cyclesMatch = iterations.Count == 1;
 
                 PartialImprovingItem.Matrix.AddRange(highlightedMatrix);
                 PartialImprovingItem.DistanceInKilometers = totalDistance;
