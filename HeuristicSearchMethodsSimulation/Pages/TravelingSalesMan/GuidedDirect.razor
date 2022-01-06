@@ -20,6 +20,23 @@
                                          NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
 
                         <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
+                            <Condition Evaluation="tsms.GuidedDirectItem?.AllowRuleToggle == true">
+                                <Match>
+                                    <div class="traveling-salesman-rule-toggle-container d-flex justify-content-center mt-2">
+                                        <button type="button" 
+                                                class="btn btn-sm me-1 @(tsms.GuidedDirectItem?.Rule == 1 ? "btn-primary" : "btn-outline-primary")" 
+                                                @onclick="() => tsms.GuidedDirectItem.Rule = 1">
+                                            Rule 1
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-sm @(tsms.GuidedDirectItem?.Rule == 2 ? "btn-primary" : "btn-outline-primary")" 
+                                                @onclick="() => tsms.GuidedDirectItem.Rule = 2">
+                                            Rule 2
+                                        </button>
+                                    </div>
+                                </Match>
+                            </Condition>
+
                             <GuidedDirectTable CssClass="mt-2"
                                                Collection="tsms.GuidedDirectItem?.Log"
                                                MapOptions="tsms.MapOptions"

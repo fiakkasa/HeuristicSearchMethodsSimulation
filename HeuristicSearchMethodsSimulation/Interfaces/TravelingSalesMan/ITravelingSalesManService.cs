@@ -64,7 +64,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         #region Guided Direct
         GuidedDirectItem? GuidedDirectItem { get; set; }
 
-        void SetGuidedDirectSelection(LocationGeo location);
+        Task SetGuidedDirectSelection(LocationGeo location);
         Task ResetGuidedDirect();
         #endregion
 

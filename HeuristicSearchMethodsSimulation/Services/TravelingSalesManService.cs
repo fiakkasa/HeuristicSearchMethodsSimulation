@@ -540,7 +540,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public void SetGuidedDirectSelection(LocationGeo location)
+        public async Task SetGuidedDirectSelection(LocationGeo location)
         {
             try
             {
@@ -569,12 +569,25 @@ namespace HeuristicSearchMethodsSimulation.Services
                 if (gdi.Index == gdi.Solution.Count - 2)
                 {
                     var autoItem = LocationsBySelection.ExceptBy(gdi.Visited.Values.Select(x => x.Node.Id), x => x.Id).First();
-                    SetGuidedDirectSelection(autoItem);
+                    await SetGuidedDirectSelection(autoItem).ConfigureAwait(true);
                 }
                 else if (gdi.Index == gdi.Solution.Count - 1)
                 {
                     gdi.Index++;
                     gdi.Log.Add("Congrats! No further improvements can be made.");
+
+                    Progress = true;
+                    OnStateChangeDelegate?.Invoke();
+
+                    await Delay(3000).ConfigureAwait(true);
+
+                    gdi.Rule = 2;
+                    gdi.AllowRuleToggle = true;
+                    Progress = false;
+                    gdi.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
+                    OnStateChangeDelegate?.Invoke();
+
+                    return;
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -585,11 +598,11 @@ namespace HeuristicSearchMethodsSimulation.Services
             }
         }
 
-        private async Task Delay()
+        private async Task Delay(int time = 250)
         {
             try
             {
-                await Task.Delay(250, _cts.Token).ConfigureAwait(true);
+                await Task.Delay(time, _cts.Token).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -906,28 +919,32 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
 
             GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
-            GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city");
+            GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city.");
 
-            GuidedDirectItem.Matrix.AddRange(matrix);
-            GuidedDirectItem.ResetMatrix.AddRange(matrix);
-            GuidedDirectItem.MapChartData.AddRange(mapMarkerData);
-            GuidedDirectItem.MapMarkerData.AddRange(mapMarkerData);
+            GuidedDirectItem.HeadToClosestCity.Matrix.AddRange(matrix);
+            GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
+            GuidedDirectItem.HeadToClosestCity.MapChartData.AddRange(mapMarkerData);
+            GuidedDirectItem.HeadToClosestCity.MapMarkerData.AddRange(mapMarkerData);
+            GuidedDirectItem.Peripheral.Matrix.AddRange(matrix);
+            GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
+            GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
+            GuidedDirectItem.Peripheral.MapMarkerData.AddRange(mapMarkerData);
 
             if (locations.Count == 0) return;
 
-            var computedCollection =
+            var headToClosestCityCollection =
                 await locations
-                    .ComputeGuidedDirectCollection(cancellationToken)
+                    .ComputeHeadToClosestCityGuidedDirectCollection(cancellationToken)
                     .ConfigureAwait(true);
-            var iterations =
-                await computedCollection
-                    .ComputedGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+            var headToClosestCityIterations =
+                await headToClosestCityCollection
+                    .ComputedHeadToClosestCityGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
 
-            GuidedDirectItem.Solution = computedCollection;
-            GuidedDirectItem.Visited.Add(iterations[0].Node.Id, iterations[0]);
-            GuidedDirectItem.Iterations.AddRange(iterations);
+            GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
+            GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
+            GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
         }
 
         private void UpdateEvolutionaryState(

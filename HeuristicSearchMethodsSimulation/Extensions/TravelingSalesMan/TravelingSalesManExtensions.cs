@@ -413,7 +413,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             }
         }
 
-        public static async IAsyncEnumerable<GuidedDirectIteration> ComputedGuidedDirectIterationsFromGuidedDirectCollection(
+        public static async IAsyncEnumerable<GuidedDirectIteration> ComputedHeadToClosestCityGuidedDirectIterationsFromGuidedDirectCollection(
             this List<LocationGeo> collection,
             List<LocationRow> matrix,
             List<ITrace> markers,
@@ -465,7 +465,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             );
         }
 
-        public static async Task<List<LocationGeo>> ComputeGuidedDirectCollection(this List<LocationGeo> collection, CancellationToken cancellationToken)
+        public static async Task<List<LocationGeo>> ComputeHeadToClosestCityGuidedDirectCollection(this List<LocationGeo> collection, CancellationToken cancellationToken)
         {
             return await Compute(collection).ToListAsync(cancellationToken).ConfigureAwait(true);
 

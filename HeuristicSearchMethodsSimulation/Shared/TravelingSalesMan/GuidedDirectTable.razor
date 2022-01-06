@@ -15,13 +15,13 @@
             <Condition Evaluation="ShowReport">
                 <NotMatch>
                     <div class="text-center">
-                        <button type="button" class="btn btn-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
+                        <button type="button" class="btn btn-sm btn-outline-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
                     </div>
                 </NotMatch>
                 <Match>
                     <div class="text-center">
-                        <button type="button" class="me-1 btn btn-outline-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
-                        <button type="button" class="btn btn-outline-warning" @onclick="Print">Print</button>
+                        <button type="button" class="btn btn-sm btn-info me-1" @onclick="_ => ShowReport = !ShowReport">Report</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="Print">Print</button>
                     </div>
                     <div class="report mt-2">
                         <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
