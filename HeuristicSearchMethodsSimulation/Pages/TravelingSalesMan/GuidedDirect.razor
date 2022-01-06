@@ -22,16 +22,16 @@
                         <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
                             <Condition Evaluation="tsms.GuidedDirectItem?.AllowRuleToggle == true">
                                 <Match>
-                                    <div class="traveling-salesman-rule-toggle-container d-flex justify-content-center mt-2">
+                                    <div class="traveling-salesman-rule-toggle-container d-flex flex-wrap justify-content-center mt-2">
                                         <button type="button" 
-                                                class="btn btn-sm me-1 @(tsms.GuidedDirectItem?.Rule == 1 ? "btn-primary" : "btn-outline-primary")" 
-                                                @onclick="() => tsms.GuidedDirectItem.Rule = 1">
-                                            Rule 1
+                                                class="btn btn-sm mx-1 mt-1 @(tsms.GuidedDirectItem?.Rule == 1 ? "btn-primary disabled" : "btn-outline-primary")" 
+                                                @onclick="() => tsms.SetGuidedDirectRule(1)">
+                                            @(tsms.GuidedDirectItem?.HeadToClosestCity.Text ?? "Rule 1")
                                         </button>
                                         <button type="button" 
-                                                class="btn btn-sm @(tsms.GuidedDirectItem?.Rule == 2 ? "btn-primary" : "btn-outline-primary")" 
-                                                @onclick="() => tsms.GuidedDirectItem.Rule = 2">
-                                            Rule 2
+                                                class="btn btn-sm mx-1 mt-1 @(tsms.GuidedDirectItem?.Rule == 2 ? "btn-primary disabled" : "btn-outline-primary")" 
+                                                @onclick="() => tsms.SetGuidedDirectRule(2)">
+                                            @(tsms.GuidedDirectItem?.Peripheral.Text ?? "Rule 2")
                                         </button>
                                     </div>
                                 </Match>

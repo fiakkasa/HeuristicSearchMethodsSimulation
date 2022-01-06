@@ -66,6 +66,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 
         Task SetGuidedDirectSelection(LocationGeo location);
         Task ResetGuidedDirect();
+        void SetGuidedDirectRule(int rule);
         #endregion
 
         #region Evolutionary

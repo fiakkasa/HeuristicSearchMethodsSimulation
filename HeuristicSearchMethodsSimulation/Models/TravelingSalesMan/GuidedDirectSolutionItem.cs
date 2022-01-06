@@ -11,6 +11,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<LocationRow> ResetMatrix { get; } = new();
         public List<ITrace> MapChartData { get; } = new();
         public List<ITrace> MapMarkerData { get; } = new();
+        public string? Text { get; set; }
         public bool Completed { get; set; }
         public List<LocationGeo> Solution { get; set; } = new();
         public int Index { get; set; }

@@ -12,7 +12,15 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<string> Log { get; set; } = new();
         public int Rule { get; set; } = 1;
         public bool AllowRuleToggle { get; set; }
-
+        public string? Text
+        {
+            get => Rule == 1 ? HeadToClosestCity.Text : Peripheral.Text;
+            set
+            {
+                if (Rule == 1) HeadToClosestCity.Text = value;
+                else Peripheral.Text = value;
+            }
+        }
         public List<LocationRow> Matrix => Rule == 1 ? HeadToClosestCity.Matrix : Peripheral.Matrix;
         public List<LocationRow> ResetMatrix => Rule == 1 ? HeadToClosestCity.ResetMatrix : Peripheral.ResetMatrix;
         public List<ITrace> MapChartData => Rule == 1 ? HeadToClosestCity.MapChartData : Peripheral.MapChartData;

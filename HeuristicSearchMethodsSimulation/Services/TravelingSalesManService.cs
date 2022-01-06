@@ -540,12 +540,19 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
+        public void SetGuidedDirectRule(int rule)
+        {
+            if (GuidedDirectItem is not { AllowRuleToggle: true } gdi || gdi.Rule == rule) return;
+
+            gdi.Rule = rule;
+        }
+
         public async Task SetGuidedDirectSelection(LocationGeo location)
         {
             try
             {
                 if (
-                    GuidedDirectItem is not { Iterations.Count: > 0, Current: { } prev } gdi
+                    GuidedDirectItem is not { Iterations.Count: > 0, Current: { } } gdi
                     || gdi.Index >= gdi.Iterations.Count
                     || !gdi.Iterations.Any(x => x.Node.Id == location.Id))
                 {
@@ -579,8 +586,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                     Progress = true;
                     OnStateChangeDelegate?.Invoke();
 
-                    await Delay(3000).ConfigureAwait(true);
+                    await Delay(2500).ConfigureAwait(true);
 
+                    gdi.Text = gdi.Current.Text;
                     gdi.Rule = 2;
                     gdi.AllowRuleToggle = true;
                     Progress = false;
