@@ -413,7 +413,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             }
         }
 
-        public static async IAsyncEnumerable<GuidedDirectIteration> ComputedHeadToClosestCityGuidedDirectIterationsFromGuidedDirectCollection(
+        public static async IAsyncEnumerable<GuidedDirectIteration> ComputeGuidedDirectIterationsFromGuidedDirectCollection(
             this List<LocationGeo> collection,
             List<LocationRow> matrix,
             List<ITrace> markers,

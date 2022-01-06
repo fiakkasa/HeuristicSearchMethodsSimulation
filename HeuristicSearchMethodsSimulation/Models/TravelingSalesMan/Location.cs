@@ -1,5 +1,4 @@
-﻿using HeuristicSearchMethodsSimulation.Models;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDbGenericRepository.Attributes;
 
 namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
