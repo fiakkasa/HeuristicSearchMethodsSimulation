@@ -1149,8 +1149,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                                 Mode = ModeFlag.Markers | ModeFlag.Text,
                                 Marker = new()
                                 {
-                                    Color = options.Evolutionary.MarkerColor,
-                                    Symbol = options.Default.MarkerSymbol
+                                    Color = options.Evolutionary.FirstMarkerColor,
+                                    Symbol = options.Evolutionary.FirstMarkerSymbol
                                 },
                                 Text = x.ShortCode,
                                 TextPosition = TextPositionEnum.TopCenter,
