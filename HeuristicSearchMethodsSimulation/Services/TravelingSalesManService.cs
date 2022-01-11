@@ -146,11 +146,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .ConfigureAwait(true);
         }
 
-        public async Task Refresh()
+        private async Task SetDataFromDatabase()
         {
-            Progress = true;
-            OnStateChangeDelegate?.Invoke();
-
             var (locations, locationsCycles) = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
 
             Locations.Clear();
@@ -161,21 +158,27 @@ namespace HeuristicSearchMethodsSimulation.Services
                 await locationsCycles
                     .OfType<GuidedDirectPeripheralLocationsCycle>()
                     .OrderBy(x => x.NumberOfLocations)
-                    .ToListAsync()
+                    .ToListAsync(_cts.Token)
                     .ConfigureAwait(true)
             );
+        }
+
+        public async Task Refresh()
+        {
+            Progress = true;
+            OnStateChangeDelegate?.Invoke();
+
+            await SetDataFromDatabase().ConfigureAwait(true);
 
             await Task.WhenAll(new[]
-                {
-                    UpdateState(HasLocations ? SliderValue : _initialSliderValue, Algorithm, _cts.Token),
-                    Delay()
-                })
-                .ContinueWith(_ =>
-                {
-                    Progress = false;
-                    OnStateChangeDelegate?.Invoke();
-                })
-                .ConfigureAwait(true);
+            {
+                UpdateState(HasLocations ? SliderValue : _initialSliderValue, Algorithm, _cts.Token),
+                Delay()
+            })
+            .ConfigureAwait(true);
+
+            Progress = false;
+            OnStateChangeDelegate?.Invoke();
         }
 
         public async Task Init(TravelingSalesManAlgorithms algo)
@@ -191,31 +194,18 @@ namespace HeuristicSearchMethodsSimulation.Services
             OnStateChangeDelegate?.Invoke();
 
             if (!HasLocations)
-            {
-                var (locations, locationsCycles) = await Fetch(_fetchLimit, _cts.Token).ConfigureAwait(true);
+                await SetDataFromDatabase().ConfigureAwait(true);
 
-                Locations.Clear();
-                Locations.AddRange(locations);
+            await UpdateState(
+                HasLocations ? SliderValue : _initialSliderValue, Algorithm,
+                _cts.Token
+            )
+            .ConfigureAwait(true);
 
-                GuidedDirectLocationCycles.Clear();
-                GuidedDirectLocationCycles.AddRange(
-                    await locationsCycles
-                        .OfType<GuidedDirectPeripheralLocationsCycle>()
-                        .OrderBy(x => x.NumberOfLocations)
-                        .ToListAsync()
-                        .ConfigureAwait(true)
-                );
-            }
-
-            await UpdateState(HasLocations ? SliderValue : _initialSliderValue, Algorithm, _cts.Token)
-                .ContinueWith(_ =>
-                {
-                    IsInit = true;
-                    Progress = false;
-                    _isInitializing = false;
-                    OnStateChangeDelegate?.Invoke();
-                })
-                .ConfigureAwait(true);
+            IsInit = true;
+            Progress = false;
+            _isInitializing = false;
+            OnStateChangeDelegate?.Invoke();
         }
 
         public Task SetExhaustiveItem(ExhaustiveIteration item) => SetExhaustiveItem(item, false, _cts.Token);
@@ -1033,6 +1023,11 @@ namespace HeuristicSearchMethodsSimulation.Services
                     .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
+
+            GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
+            GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
+            GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
+
             var firstItem = locations[0] with { };
             var peripheralCycleForNumberOfCities =
                 GuidedDirectLocationCycles
@@ -1041,6 +1036,9 @@ namespace HeuristicSearchMethodsSimulation.Services
                         && x.NumberOfLocations == locations.Count
                     )?.Collection
                 ?? new List<Guid>();
+
+            if (peripheralCycleForNumberOfCities.Count == 0) return;
+
             var peripheralCollection =
                 await peripheralCycleForNumberOfCities
                     .Join(
@@ -1049,7 +1047,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                         l => l.Id,
                         (_, l) => l
                     )
-                    .ToListAsync()
+                    .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
             var peripheralIterationsLeft =
                await peripheralCollection
@@ -1065,12 +1063,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                     .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
-
-            GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
-            GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
-            GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
-
-            if (peripheralCycleForNumberOfCities.Count == 0) return;
 
             GuidedDirectItem.Peripheral.Solution = peripheralCollection;
             GuidedDirectItem.Peripheral.Visited.Add(peripheralIterationsRight[0].Node.Id, peripheralIterationsRight[0]);

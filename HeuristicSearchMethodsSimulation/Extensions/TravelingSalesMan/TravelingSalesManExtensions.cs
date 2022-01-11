@@ -157,7 +157,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .Sum();
 
         public static ScatterGeo ToMapLine(this LocationPair x) =>
-            new ScatterGeo
+            new()
             {
                 LocationMode = LocationModeEnum.ISO3,
                 Lon = new List<object> { x.A.Longitude, x.B.Longitude },
@@ -299,19 +299,19 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                     )
                                     .ToListAsync(cancellationToken).ConfigureAwait(true);
 
-                            foreach (var item in cyclesDiff)
+                            foreach (var (First, Second) in cyclesDiff)
                             {
-                                var swapPairALine = item.First.ToMapLine();
+                                var swapPairALine = First.ToMapLine();
                                 swapPairALine.Line = new() { Color = mapOptions.SwapPairALineColor, Width = mapOptions.SwapPairALineWidth };
 
-                                var swapPairBLine = item.Second.ToMapLine();
+                                var swapPairBLine = Second.ToMapLine();
                                 swapPairBLine.Line = new() { Color = mapOptions.SwapPairBLineColor, Width = mapOptions.SwapPairBLineWidth };
 
                                 yield return new PartialImprovingIteration(
                                     iterationCollection,
                                     iterationCycle,
                                     iterationMatrix,
-                                    $"Swap edge ({item.First.A.ShortCode}-{item.First.B.ShortCode}) with edge ({item.Second.A.ShortCode}-{item.Second.B.ShortCode})",
+                                    $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
                                     iterationText,
                                     iterationDistance,
                                     iterationMapLinesData.Append(swapPairALine).Append(swapPairBLine).ToList()
