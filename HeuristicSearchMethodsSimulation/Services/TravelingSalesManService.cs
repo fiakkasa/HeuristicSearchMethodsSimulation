@@ -766,7 +766,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                 #region Set
                 LocationsBySelection.AddRange(locationsBySelection);
 
-                UpdateNoneState(matrix, numberOfUniqueRoutes, numberOfUniqueRoutesPerNumberOfLocations, mapMarkerData, algo);
+                UpdateNoneState(locationsBySelection, matrix, numberOfUniqueRoutes, numberOfUniqueRoutesPerNumberOfLocations, mapMarkerData, algo);
                 await UpdatePreselectedState(locationsBySelection, matrix, mapMarkerData, algo, cancellationToken).ConfigureAwait(true);
                 await UpdateExhaustiveState(locationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, algo, cancellationToken).ConfigureAwait(true);
                 await UpdatePartialRandomState(locationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, algo, cancellationToken).ConfigureAwait(true);
@@ -782,6 +782,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         }
 
         private void UpdateNoneState(
+            List<LocationGeo> locations,
             List<LocationRow> matrix,
             long? numberOfUniqueRoutes,
             List<long> numberOfUniqueRoutesPerNumberOfLocations,
@@ -793,11 +794,20 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.None) return;
 
-            NoneItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
+            try
+            {
+                NoneItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
+                NoneItem.Matrix.AddRange(matrix);
+                NoneItem.MapChartData.AddRange(mapChartData);
 
-            NoneItem.Matrix.AddRange(matrix);
-            NoneItem.MapChartData.AddRange(mapChartData);
-            NoneItem.NumberOfUniqueRoutesPerNumberOfLocations.AddRange(numberOfUniqueRoutesPerNumberOfLocations);
+                if (locations.HasInsufficientLocations()) return;
+
+                NoneItem.NumberOfUniqueRoutesPerNumberOfLocations.AddRange(numberOfUniqueRoutesPerNumberOfLocations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         private async Task UpdatePreselectedState(
@@ -812,43 +822,55 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Preselected) return;
 
-            var matrixWithHighlights = matrix switch
+            try
             {
-                { Count: >= Consts.MinNumberOfLocations } =>
-                    await matrix
-                        .Select((row, rowIndex) =>
-                            row with
-                            {
-                                Collection =
-                                    row.Collection
-                                        .Select((cell, cellIndex) =>
-                                            rowIndex + 1 == cellIndex
-                                            || (rowIndex + 1 == row.Collection.Count && cellIndex == 0)
-                                                ? cell with { IsHighlightedDistance = true }
-                                                : cell
-                                        )
-                                        .ToList()
-                            }
-                        )
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true),
-                _ => matrix
-            };
-            var totalDistance =
-                locations.HasInsufficientLocations()
-                    ? default(double?)
-                    : await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-            var mapLineData = await locations.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                if (locations.HasInsufficientLocations())
+                {
+                    PreselectedItem = new() { NumberOfUniqueRoutes = 0 };
+                    PreselectedItem.Matrix.AddRange(matrix);
+                    PreselectedItem.MapChartData.AddRange(mapMarkerData);
 
-            PreselectedItem = new()
+                    return;
+                }
+
+                var matrixWithHighlights = matrix switch
+                {
+                    { Count: >= Consts.MinNumberOfLocations } =>
+                        await matrix
+                            .Select((row, rowIndex) =>
+                                row with
+                                {
+                                    Collection =
+                                        row.Collection
+                                            .Select((cell, cellIndex) =>
+                                                rowIndex + 1 == cellIndex
+                                                || (rowIndex + 1 == row.Collection.Count && cellIndex == 0)
+                                                    ? cell with { IsHighlightedDistance = true }
+                                                    : cell
+                                            )
+                                            .ToList()
+                                }
+                            )
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true),
+                    _ => matrix
+                };
+                var totalDistance = await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                var mapLineData = await locations.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                PreselectedItem = new()
+                {
+                    NumberOfUniqueRoutes = 1,
+                    Text = locations.ToText(),
+                    DistanceInKilometers = totalDistance
+                };
+                PreselectedItem.Matrix.AddRange(matrixWithHighlights);
+                PreselectedItem.MapChartData.AddRange(mapLineData.Concat(mapMarkerData));
+            }
+            catch (Exception ex)
             {
-                NumberOfUniqueRoutes = locations.HasInsufficientLocations() ? 0 : 1,
-                Text = locations.ToText(),
-                DistanceInKilometers = totalDistance
-            };
-
-            PreselectedItem.Matrix.AddRange(matrixWithHighlights);
-            PreselectedItem.MapChartData.AddRange(mapLineData.Concat(mapMarkerData));
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         private async Task UpdateExhaustiveState(
@@ -864,26 +886,44 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Exhaustive) return;
 
-            var iterations = await CalculateExhaustiveIterations(locations, cancellationToken).ConfigureAwait(true);
-
-            ExhaustiveItem = new()
+            try
             {
-                NumberOfUniqueRoutes = numberOfUniqueRoutes,
-                MaxExhaustiveLocationsToCalculateReached = locations.Count > _maxExhaustiveLocationsToCalculate
-            };
+                var maxExhaustiveLocationsToCalculateReached = locations.Count > _maxExhaustiveLocationsToCalculate;
 
-            ExhaustiveItem.ResetMatrix.AddRange(matrix);
-            ExhaustiveItem.Iterations.AddRange(iterations);
-            ExhaustiveItem.MapMarkerData.AddRange(mapMarkerData);
+                if (locations.HasInsufficientLocations() || maxExhaustiveLocationsToCalculateReached)
+                {
+                    ExhaustiveItem = new()
+                    {
+                        NumberOfUniqueRoutes = 0,
+                        MaxExhaustiveLocationsToCalculateReached = maxExhaustiveLocationsToCalculateReached
+                    };
+                    ExhaustiveItem.Matrix.AddRange(matrix);
+                    ExhaustiveItem.MapChartData.AddRange(mapMarkerData);
 
-            if (iterations.Count == 1)
-            {
-                await SetExhaustiveItem(iterations[0], true, cancellationToken).ConfigureAwait(true);
-                return;
+                    return;
+                }
+
+                ExhaustiveItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
+
+                var iterations = await CalculateExhaustiveIterations(locations, cancellationToken).ConfigureAwait(true);
+
+                ExhaustiveItem.ResetMatrix.AddRange(matrix);
+                ExhaustiveItem.Iterations.AddRange(iterations);
+                ExhaustiveItem.MapMarkerData.AddRange(mapMarkerData);
+
+                if (iterations.Count == 1)
+                {
+                    await SetExhaustiveItem(iterations[0], true, cancellationToken).ConfigureAwait(true);
+                    return;
+                }
+
+                ExhaustiveItem.Matrix.AddRange(matrix);
+                ExhaustiveItem.MapChartData.AddRange(mapMarkerData);
             }
-
-            ExhaustiveItem.Matrix.AddRange(matrix);
-            ExhaustiveItem.MapChartData.AddRange(mapMarkerData);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         private async Task UpdatePartialRandomState(
@@ -899,22 +939,27 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Partial_Random) return;
 
-            PartialRandomItem = new()
+            try
             {
-                NumberOfUniqueRoutes = numberOfUniqueRoutes
-            };
+                PartialRandomItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-            PartialRandomItem.ResetMatrix.AddRange(matrix);
-            PartialRandomItem.MapMarkerData.AddRange(mapMarkerData);
+                if (locations.HasInsufficientLocations())
+                {
+                    PartialRandomItem.Matrix.AddRange(matrix);
+                    PartialRandomItem.MapChartData.AddRange(mapMarkerData);
 
-            if (locations.Count > 0)
-            {
+                    return;
+                }
+
+                PartialRandomItem.ResetMatrix.AddRange(matrix);
+                PartialRandomItem.MapMarkerData.AddRange(mapMarkerData);
+
                 await SetPartialRandomLocation(locations[0], true, cancellationToken).ConfigureAwait(true);
-                return;
             }
-
-            PartialRandomItem.Matrix.AddRange(matrix);
-            PartialRandomItem.MapChartData.AddRange(mapMarkerData);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         private async Task UpdatePartialImprovingState(
@@ -930,21 +975,21 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Partial_Improving) return;
 
-            PartialImprovingItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
-
-            PartialImprovingItem.ResetMatrix.AddRange(matrix);
-            PartialImprovingItem.MapMarkerData.AddRange(mapMarkerData);
-
-            if (locations.Count == 0)
-            {
-                PartialImprovingItem.Matrix.AddRange(matrix);
-                PartialImprovingItem.MapChartData.AddRange(mapMarkerData);
-
-                return;
-            }
-
             try
             {
+                PartialImprovingItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
+
+                if (locations.HasInsufficientLocations())
+                {
+                    PartialImprovingItem.Matrix.AddRange(matrix);
+                    PartialImprovingItem.MapChartData.AddRange(mapMarkerData);
+
+                    return;
+                }
+
+                PartialImprovingItem.ResetMatrix.AddRange(matrix);
+                PartialImprovingItem.MapMarkerData.AddRange(mapMarkerData);
+
                 var iterations =
                     await locations
                         .ComputePartialImprovingIterations(matrix, MapsOptions.PartialImproving, cancellationToken)
@@ -1000,75 +1045,83 @@ namespace HeuristicSearchMethodsSimulation.Services
 
             if (algo != TravelingSalesManAlgorithms.Guided_Direct) return;
 
-            GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
-            GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city.");
+            try
+            {
+                GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-            GuidedDirectItem.HeadToClosestCity.Matrix.AddRange(matrix);
-            GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
-            GuidedDirectItem.HeadToClosestCity.MapChartData.AddRange(mapMarkerData);
-            GuidedDirectItem.HeadToClosestCity.MapMarkerData.AddRange(mapMarkerData);
-            GuidedDirectItem.Peripheral.Matrix.AddRange(matrix);
-            GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
-            GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
-            GuidedDirectItem.Peripheral.MapMarkerData.AddRange(mapMarkerData);
+                GuidedDirectItem.HeadToClosestCity.Matrix.AddRange(matrix);
+                GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
+                GuidedDirectItem.HeadToClosestCity.MapChartData.AddRange(mapMarkerData);
+                GuidedDirectItem.HeadToClosestCity.MapMarkerData.AddRange(mapMarkerData);
+                GuidedDirectItem.Peripheral.Matrix.AddRange(matrix);
+                GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
+                GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
+                GuidedDirectItem.Peripheral.MapMarkerData.AddRange(mapMarkerData);
 
-            if (locations.Count == 0) return;
+                if (locations.HasInsufficientLocations()) return;
 
-            var headToClosestCityCollection =
-                await matrix
-                    .ComputeHeadToClosestCityGuidedDirectCollection()
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
-            var headToClosestCityIterations =
-                await headToClosestCityCollection
-                    .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
+                GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city.");
 
-            GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
-            GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
-            GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
+                var headToClosestCityCollection =
+                    await matrix
+                        .ComputeHeadToClosestCityGuidedDirectCollection()
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
+                var headToClosestCityIterations =
+                    await headToClosestCityCollection
+                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
 
-            var firstItem = locations[0] with { };
-            var peripheralCycleForNumberOfCities =
-                GuidedDirectLocationCycles
-                    .FirstOrDefault(x =>
-                        x.Collection.FirstOrDefault() == firstItem.Id
-                        && x.NumberOfLocations == locations.Count
-                    )?.Collection
-                ?? new List<Guid>();
+                GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
+                GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
+                GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
 
-            if (peripheralCycleForNumberOfCities.Count == 0) return;
+                var firstItem = locations[0] with { };
+                var peripheralCycleForNumberOfCities =
+                    GuidedDirectLocationCycles
+                        .FirstOrDefault(x =>
+                            x.Collection.FirstOrDefault() == firstItem.Id
+                            && x.NumberOfLocations == locations.Count
+                        )?.Collection
+                    ?? new List<Guid>();
 
-            var peripheralCollection =
-                await peripheralCycleForNumberOfCities
-                    .Join(
-                        LocationsBySelection,
-                        s => s,
-                        l => l.Id,
-                        (_, l) => l
-                    )
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
-            var peripheralIterationsLeft =
-               await peripheralCollection
-                   .Append(firstItem)
-                   .Reverse()
-                   .SkipLast(1)
-                   .ToList()
-                   .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                   .ToListAsync(cancellationToken)
-                   .ConfigureAwait(true);
-            var peripheralIterationsRight =
-                await peripheralCollection
-                    .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
+                if (peripheralCycleForNumberOfCities.Count == 0) return;
 
-            GuidedDirectItem.Peripheral.Solution = peripheralCollection;
-            GuidedDirectItem.Peripheral.Visited.Add(peripheralIterationsRight[0].Node.Id, peripheralIterationsRight[0]);
-            GuidedDirectItem.Peripheral.IterationsLeft.AddRange(peripheralIterationsLeft);
-            GuidedDirectItem.Peripheral.IterationsRight.AddRange(peripheralIterationsRight);
+                var peripheralCollection =
+                    await peripheralCycleForNumberOfCities
+                        .Join(
+                            LocationsBySelection,
+                            s => s,
+                            l => l.Id,
+                            (_, l) => l
+                        )
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
+                var peripheralIterationsLeft =
+                   await peripheralCollection
+                       .Append(firstItem)
+                       .Reverse()
+                       .SkipLast(1)
+                       .ToList()
+                       .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+                       .ToListAsync(cancellationToken)
+                       .ConfigureAwait(true);
+                var peripheralIterationsRight =
+                    await peripheralCollection
+                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
+
+                GuidedDirectItem.Peripheral.Solution = peripheralCollection;
+                GuidedDirectItem.Peripheral.Visited.Add(peripheralIterationsRight[0].Node.Id, peripheralIterationsRight[0]);
+                GuidedDirectItem.Peripheral.IterationsLeft.AddRange(peripheralIterationsLeft);
+                GuidedDirectItem.Peripheral.IterationsRight.AddRange(peripheralIterationsRight);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         private void UpdateEvolutionaryState(
@@ -1222,13 +1275,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             try
             {
-                if (
-                    locations.HasInsufficientLocations() ||
-                    locations.Count > _maxExhaustiveLocationsToCalculate
-                )
-                {
-                    return new();
-                }
+                if (locations.HasInsufficientLocations()) return new();
 
                 return await locations
                     .CalculatePermutations(locations[0].Id)

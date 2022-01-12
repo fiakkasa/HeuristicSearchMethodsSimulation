@@ -497,7 +497,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 yield return found;
 
                 currentId = found.Id;
-                visited.Add(currentId, currentId);
+                visited[currentId] = currentId;
             }
         }
     }
