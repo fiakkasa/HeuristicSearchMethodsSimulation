@@ -1015,8 +1015,9 @@ namespace HeuristicSearchMethodsSimulation.Services
             if (locations.Count == 0) return;
 
             var headToClosestCityCollection =
-                await locations
-                    .ComputeHeadToClosestCityGuidedDirectCollection(cancellationToken)
+                await matrix
+                    .ComputeHeadToClosestCityGuidedDirectCollection()
+                    .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
             var headToClosestCityIterations =
                 await headToClosestCityCollection

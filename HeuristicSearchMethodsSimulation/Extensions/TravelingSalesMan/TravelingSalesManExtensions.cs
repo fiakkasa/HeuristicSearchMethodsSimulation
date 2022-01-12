@@ -38,6 +38,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     return new LocationRow(
                         Collection: rowCollection,
                         Ylabel: $"{location.Label} ({location.ShortCode})",
+                        YId: location.Id,
                         Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})")
                     );
                 })
@@ -465,48 +466,38 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             );
         }
 
-        public static async Task<List<LocationGeo>> ComputeHeadToClosestCityGuidedDirectCollection(this List<LocationGeo> collection, CancellationToken cancellationToken)
+        public static IEnumerable<LocationGeo> ComputeHeadToClosestCityGuidedDirectCollection(this List<LocationRow> matrix)
         {
-            return await Compute(collection).ToListAsync(cancellationToken).ConfigureAwait(true);
+            if (matrix.FirstOrDefault()?.Collection.FirstOrDefault() is not { } start) yield break;
 
-            static IEnumerable<LocationGeo> Compute(List<LocationGeo> collection)
+            yield return start.A;
+
+            var currentId = start.A.Id;
+            var visited = new Dictionary<Guid, Guid>
             {
-                if (collection.HasInsufficientLocations()) yield break;
+                [currentId] = currentId
+            };
 
-                var visited = new Dictionary<Guid, LocationGeo>();
-                var current = collection[0];
+            var matrixDict =
+                matrix
+                    .DistinctBy(x => x.YId)
+                    .ToDictionary(k => k.YId, v => v.Collection);
 
-                visited.Add(current.Id, current with { });
+            for (int i = 0; i < matrix.Count; i++)
+            {
+                if (!matrixDict.TryGetValue(currentId, out var collection)) continue;
 
-                yield return current;
+                var smallestDistancePair =
+                    collection
+                        .Where(x => x.B.Id != currentId && !visited.ContainsKey(x.B.Id))
+                        .MinBy(x => x.DistanceInKilometers);
 
-                for (int j = 1; j < collection.Count; j++)
-                {
-                    var minDistance = double.MaxValue;
+                if (smallestDistancePair?.B is not { } found) continue;
 
-                    for (int i = 1; i < collection.Count; i++)
-                    {
-                        var obj = collection[i];
+                yield return found;
 
-                        if (visited.ContainsKey(obj.Id))
-                            continue;
-
-                        var distance = current.CalculateDistancePointToPointInKilometers(obj);
-
-                        if (distance < minDistance)
-                        {
-                            minDistance = distance;
-                            current = obj with { };
-                        }
-                    }
-
-                    if (visited.ContainsKey(current.Id))
-                        continue;
-
-                    visited.Add(current.Id, current with { });
-
-                    yield return current;
-                }
+                currentId = found.Id;
+                visited.Add(currentId, currentId);
             }
         }
     }
