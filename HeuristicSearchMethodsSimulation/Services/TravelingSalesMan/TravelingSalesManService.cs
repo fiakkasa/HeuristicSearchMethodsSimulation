@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using HoverInfoFlag = Plotly.Blazor.Traces.ScatterGeoLib.HoverInfoFlag;
 using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Location;
 
-namespace HeuristicSearchMethodsSimulation.Services
+namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 {
     public class TravelingSalesManService : IDisposable, ITravelingSalesManService
     {
@@ -753,7 +753,7 @@ namespace HeuristicSearchMethodsSimulation.Services
             {
                 #region Calculate
                 var locationsBySelection = Locations.Take(sliderValue).ToList();
-                var matrix = await CalculateMatrix(locationsBySelection, cancellationToken).ConfigureAwait(true);
+                var matrix = await locationsBySelection.CalculateMatrix(cancellationToken).ConfigureAwait(true);
                 var numberOfUniqueRoutesPerNumberOfLocations = await CalculateNumberOfUniqueRoutesPerNumberOfLocations(sliderValue, cancellationToken).ConfigureAwait(true);
                 var numberOfUniqueRoutes = numberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
                 var mapMarkerData = await CalculateMapMarkers(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
@@ -1256,20 +1256,6 @@ namespace HeuristicSearchMethodsSimulation.Services
                 .Take(numberOfLocations)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(true);
-
-        private async Task<List<LocationRow>> CalculateMatrix(List<LocationGeo> locations, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await locations.CalculateMatrix(cancellationToken).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-
-                return new();
-            }
-        }
 
         private async Task<List<ExhaustiveIteration>> CalculateExhaustiveIterations(List<LocationGeo> locations, CancellationToken cancellationToken)
         {
