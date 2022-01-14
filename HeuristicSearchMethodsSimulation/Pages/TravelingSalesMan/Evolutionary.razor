@@ -45,6 +45,12 @@
 									  LandColor="@tsms.MapOptions.LandColor"
 									  CountryColor="@tsms.MapOptions.CountryColor" />
 
+						<EvolutionaryBuilder CssClass="mt-3"
+											 Disabled="tsms.Progress"
+											 Selected="tsms.EvolutionaryItem?.Visited"
+											 Collection="tsms.LocationsBySelection"
+											 OnSelection="tsms.SetEvolutionaryLocation" />
+
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
 							<AlgorithmsDropDown Disabled="tsms.Progress" />
 						</div>

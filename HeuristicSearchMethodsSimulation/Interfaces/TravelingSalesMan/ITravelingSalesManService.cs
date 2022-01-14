@@ -71,6 +71,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 
         #region Evolutionary
         EvolutionaryItem? EvolutionaryItem { get; set; }
+
+        Task SetEvolutionaryLocation(LocationGeo item);
         #endregion
     }
 }

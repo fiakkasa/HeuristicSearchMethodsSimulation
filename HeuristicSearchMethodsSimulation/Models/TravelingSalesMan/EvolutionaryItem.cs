@@ -1,4 +1,5 @@
 ﻿using Plotly.Blazor;
+using System;
 using System.Collections.Generic;
 
 namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
@@ -11,5 +12,6 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<ITrace> MapMarkerData { get; } = new();
         public long? NumberOfUniqueRoutes { get; set; }
         public double? DistanceInKilometers { get; set; }
+        public Dictionary<Guid, LocationGeo> Visited { get; } = new();
     }
 }
