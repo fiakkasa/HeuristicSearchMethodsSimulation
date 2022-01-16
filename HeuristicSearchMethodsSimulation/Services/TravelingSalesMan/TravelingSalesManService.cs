@@ -1135,12 +1135,14 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 var firstItem = locations[0] with { };
                 var peripheralCycleForNumberOfCities =
+#pragma warning disable RCS1077 // Optimize LINQ method call.
                     GuidedDirectLocationCycles
                         .FirstOrDefault(x =>
                             x.Collection.FirstOrDefault() == firstItem.Id
                             && x.NumberOfLocations == locations.Count
                         )?.Collection
                     ?? new List<Guid>();
+#pragma warning restore RCS1077 // Optimize LINQ method call.
 
                 if (peripheralCycleForNumberOfCities.Count == 0) return;
 
