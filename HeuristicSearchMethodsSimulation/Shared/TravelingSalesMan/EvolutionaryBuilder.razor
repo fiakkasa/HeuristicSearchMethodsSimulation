@@ -1,43 +1,62 @@
 ﻿<Condition Evaluation="Collection.HasInsufficientLocations()">
-    <NotMatch>
-        <div class="traveling-salesman-partial-random-builder-container d-flex @CssClass">
-            <div class="d-flex flex-wrap flex-fill justify-content-center me-1">
-                <Iterations T="(bool disabled, bool selected, int i, LocationGeo item)" Items="Col">
-                    <button type="button"
-                            class="btn btn-sm m-1 rounded-pill btn-@(context.selected ? "info" : "outline-info")"
-                            disabled="@context.disabled"
-                            @onclick="OnSelectionChange(context.disabled, context.item)">
-                        <Condition Evaluation="context.i > 0">
-                            <Match><span>@context.i - </span></Match>
-                        </Condition>
-                        <span>@context.item.Label</span>
-                        <span>(@context.item.ShortCode)</span>
-                    </button>
-                </Iterations>
-            </div>
-        </div>
-    </NotMatch>
+	<NotMatch>
+		<div class="traveling-salesman-evolutionary-builder-container d-flex @CssClass">
+			<div class="d-flex flex-wrap flex-fill justify-content-center me-1">
+				<Iterations T="EvolutionaryNode" Items="SelectedCollection">
+					<button type="button"
+							class="btn btn-sm m-1 rounded-pill btn-info"
+							disabled="@true">
+						<Condition Evaluation="context.Ordinal > 0">
+							<Match><span>@context.Ordinal - </span></Match>
+						</Condition>
+						<span>@context.Location.Label</span>
+						<span>(@context.Location.ShortCode)</span>
+					</button>
+				</Iterations>
+				<Iterations T="EvolutionaryNode" Items="NotSelectedCollection">
+					<button type="button"
+							class="btn btn-sm m-1 rounded-pill btn-outline-info"
+							disabled="@Disabled"
+							@onclick="OnSelectionChange(context)">
+						<Condition Evaluation="context.Ordinal > 0">
+							<Match><span>@context.Ordinal - </span></Match>
+						</Condition>
+						<span>@context.Location.Label</span>
+						<span>(@context.Location.ShortCode)</span>
+					</button>
+				</Iterations>
+			</div>
+			<Condition Evaluation="Selected?.Count > 1 && CycleComplete == false">
+				<Match>
+					<button type="button"
+							class="btn btn-outline-warning btn-sm flex-shrink-0"
+							disabled="@Disabled"
+							@onclick="OnReset.InvokeAsync">
+						Reset
+					</button>
+				</Match>
+			</Condition>
+		</div>
+	</NotMatch>
 </Condition>
 
 @code {
-    [Parameter] public string? CssClass { get; set; }
-    [Parameter] public bool Disabled { get; set; }
-    [Parameter] public List<LocationGeo>? Collection { get; set; }
-    [Parameter] public Dictionary<Guid, LocationGeo>? Selected { get; set; }
-    [Parameter] public EventCallback<LocationGeo> OnSelection { get; set; }
-    private IEnumerable<(bool disabled, bool selected, int i, LocationGeo item)> Col =>
-    (Collection ?? Enumerable.Empty<LocationGeo>()).Select(
-        (x, i) =>
-        (
-            disabled: Selected?.ContainsKey(x.Id) == true || Disabled,
-            selected: Selected?.ContainsKey(x.Id) == true,
-            i: i,
-            item: x
-        )
-    );
+	[Parameter] public string? CssClass { get; set; }
+	[Parameter] public bool Disabled { get; set; }
+	[Parameter] public bool? CycleComplete { get; set; }
+	[Parameter] public List<EvolutionaryNode>? Collection { get; set; }
+	[Parameter] public Dictionary<Guid, EvolutionaryNode>? Selected { get; set; }
+	[Parameter] public EventCallback<EvolutionaryNode> OnSelection { get; set; }
+	[Parameter] public EventCallback<bool> OnReset { get; set; }
+	private IEnumerable<EvolutionaryNode> SelectedCollection =>
+		Selected?.Values ??
+		Enumerable.Empty<EvolutionaryNode>();
+	private IEnumerable<EvolutionaryNode> NotSelectedCollection =>
+		Collection?.Where(x => Selected?.ContainsKey(x.Location.Id) == false) ??
+		Enumerable.Empty<EvolutionaryNode>();
 
-    private Func<Task> OnSelectionChange(bool disabled, LocationGeo item) =>
-        disabled
-            ? () => Task.FromResult(0)
-            : () => OnSelection.InvokeAsync(item);
+	private Func<Task> OnSelectionChange(EvolutionaryNode node) =>
+		Disabled
+			? () => Task.FromResult(0)
+			: () => OnSelection.InvokeAsync(node);
 }

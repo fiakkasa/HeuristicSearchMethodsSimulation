@@ -78,6 +78,9 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
 
+        public static bool HasInsufficientLocations(this List<EvolutionaryNode>? collection) =>
+            (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
+
         private static string GetDistanceFormat(bool simple = false) => simple switch
         {
             true => "#0",

@@ -118,9 +118,9 @@
 		set
 		{
 			var collection = (
-				value?.Count < 1
-					? new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
-					: value!
+				value?.Skip(1).Any() == true
+					? value!
+					: new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
 			)
 			.ConvertAll(x => ApplyLineWidth(ApplyLineColor(ApplyMarkerSymbol(ApplyMarkerColor(x)))));
 

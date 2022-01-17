@@ -21,7 +21,12 @@
 										 Algorithm="TravelingSalesManAlgorithms.Evolutionary" />
 
 						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
-
+							<EvolutionarySteps CssClass="mt-2"
+											   Disabled="tsms.Progress"
+											   Step="tsms.EvolutionaryItem?.Step"
+											   CycleComplete="tsms.EvolutionaryItem?.CycleComplete"
+											   Generations="tsms.EvolutionaryItem?.Generations"
+											   OnNextStep="tsms.SetEvolutionaryStep" />
 						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
@@ -47,9 +52,11 @@
 
 						<EvolutionaryBuilder CssClass="mt-3"
 											 Disabled="tsms.Progress"
+											 CycleComplete="tsms.EvolutionaryItem?.CycleComplete"
 											 Selected="tsms.EvolutionaryItem?.Visited"
-											 Collection="tsms.LocationsBySelection"
-											 OnSelection="tsms.SetEvolutionaryLocation" />
+											 Collection="tsms.EvolutionaryItem?.Nodes"
+											 OnSelection="tsms.SetEvolutionaryLocation"
+											 OnReset="tsms.ResetEvolutionary"/>
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
 							<AlgorithmsDropDown Disabled="tsms.Progress" />

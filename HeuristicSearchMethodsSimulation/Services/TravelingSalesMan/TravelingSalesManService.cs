@@ -671,13 +671,56 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public Task SetEvolutionaryLocation(LocationGeo item) => SetEvolutionaryLocation(item, false, _cts.Token);
+        public async Task ResetEvolutionary()
+        {
+            if (EvolutionaryItem is not { }) return;
 
-        private async Task SetEvolutionaryLocation(LocationGeo item, bool silent, CancellationToken cancellationToken)
+            Progress = true;
+            OnStateChangeDelegate?.Invoke();
+
+            UpdateEvolutionaryState(
+                LocationsBySelection,
+                EvolutionaryItem.NumberOfUniqueRoutes,
+                EvolutionaryItem.ResetMatrix,
+                EvolutionaryItem.MapMarkerData,
+                TravelingSalesManAlgorithms.Evolutionary
+            );
+
+            await Delay().ConfigureAwait(true);
+
+            Progress = false;
+            OnStateChangeDelegate?.Invoke();
+        }
+
+        public async Task SetEvolutionaryStep(int? step = default)
         {
             try
             {
-                if (EvolutionaryItem is not { } || LocationsBySelection.Skip(EvolutionaryItem.Visited.Count).FirstOrDefault()?.Id != item.Id) return;
+                if (EvolutionaryItem is not { }) return;
+
+                Progress = true;
+                OnStateChangeDelegate?.Invoke();
+
+                await Delay().ConfigureAwait(true);
+
+                EvolutionaryItem.Step = step ?? EvolutionaryItem.Step + 1;
+
+                Progress = false;
+                OnStateChangeDelegate?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        public Task SetEvolutionaryLocation(EvolutionaryNode item) => SetEvolutionaryLocation(item, false, _cts.Token);
+
+        private async Task SetEvolutionaryLocation(EvolutionaryNode item, bool silent, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (EvolutionaryItem is not { CycleComplete: false } || EvolutionaryItem.Visited.ContainsKey(item.Location.Id)) return;
 
                 if (!silent)
                 {
@@ -685,19 +728,26 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     OnStateChangeDelegate?.Invoke();
                 }
 
-                EvolutionaryItem.Visited[item.Id] = item with { };
+                EvolutionaryItem.Generations[0].Nodes.Add(item with { });
+                EvolutionaryItem.Visited[item.Location.Id] = item with { };
 
-                if (EvolutionaryItem.Visited.Count == LocationsBySelection.Count - 1)
+                if (
+                    EvolutionaryItem.Visited.Count == LocationsBySelection.Count - 1 &&
+                    EvolutionaryItem.Nodes.ExceptBy(EvolutionaryItem.Visited.Keys, x => x.Location.Id).FirstOrDefault() is { } last
+                )
                 {
-                    var last = LocationsBySelection.Last();
-                    EvolutionaryItem.Visited[last.Id] = last with { };
+                    EvolutionaryItem.Generations[0].Nodes.Add(last);
+                    EvolutionaryItem.Visited[last.Location.Id] = last with { };
                 }
 
-                var collection = await EvolutionaryItem.Visited.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
-
+                var collection =
+                    await EvolutionaryItem.Visited.Values
+                        .Select(x => x.Location)
+                        .ToListAsync(cancellationToken).ConfigureAwait(true);
+                var cycleComplete = EvolutionaryItem.Visited.Count == LocationsBySelection.Count;
                 var cyclePairs =
                     await (
-                        EvolutionaryItem.Visited.Count == LocationsBySelection.Count
+                        cycleComplete
                             ? collection.ToCyclePairs()
                             : collection.ToPartialCyclePairs()
                     )
@@ -713,7 +763,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 EvolutionaryItem.Matrix.AddRange(matrix);
                 EvolutionaryItem.DistanceInKilometers = totalDistance;
-                EvolutionaryItem.MapChartData.AddRange(EvolutionaryItem.MapMarkerData.Concat(mapLineData));
+                EvolutionaryItem.MapChartData.AddRange(mapLineData.Concat(EvolutionaryItem.MapMarkerData));
+
+                if (cycleComplete)
+                {
+                    EvolutionaryItem.Generations[0].DistanceInKilometers = totalDistance;
+                    EvolutionaryItem.CycleComplete = true;
+                }
 
                 if (!silent)
                 {
@@ -1205,8 +1261,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (locations.HasInsufficientLocations()) return;
 
-                var first = locations[0];
-                EvolutionaryItem.Visited[first.Id] = first with { };
+                EvolutionaryItem.Nodes.AddRange(locations.Select((x, i) => new EvolutionaryNode(i, x)));
+                var first = EvolutionaryItem.Nodes[0];
+                EvolutionaryItem.Generations.Add(new());
+                EvolutionaryItem.Generations[0].Nodes.Add(first with { });
+                EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)
             {

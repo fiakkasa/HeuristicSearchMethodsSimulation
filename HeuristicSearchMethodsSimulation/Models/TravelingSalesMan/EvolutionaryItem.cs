@@ -12,6 +12,10 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<ITrace> MapMarkerData { get; } = new();
         public long? NumberOfUniqueRoutes { get; set; }
         public double? DistanceInKilometers { get; set; }
-        public Dictionary<Guid, LocationGeo> Visited { get; } = new();
+        public List<EvolutionaryNode> Nodes { get; } = new();
+        public Dictionary<Guid, EvolutionaryNode> Visited { get; } = new();
+        public bool CycleComplete { get; set; }
+        public int Step { get; set; }
+        public List<EvolutionaryNodes> Generations { get; } = new();
     }
 }
