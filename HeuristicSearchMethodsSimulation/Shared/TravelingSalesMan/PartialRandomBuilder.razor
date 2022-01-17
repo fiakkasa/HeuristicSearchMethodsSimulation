@@ -16,7 +16,7 @@
 							<button type="button"
 									class="btn btn-sm m-1 rounded-pill btn-outline-info"
 									disabled="@Disabled"
-									@onclick="OnSelectionChange(context)">
+									@onclick="() => OnSelection.InvokeAsync(context)">
 								<span>@context.Label</span>
 								<span>(@context.ShortCode)</span>
 							</button>
@@ -45,7 +45,4 @@
 	[Parameter] public Dictionary<Guid, LocationGeo>? Selected { get; set; }
 	[Parameter] public EventCallback<LocationGeo> OnSelection { get; set; }
 	[Parameter] public EventCallback<bool> OnReset { get; set; }
-
-	private Func<Task> OnSelectionChange(LocationGeo item) =>
-		() => OnSelection.InvokeAsync(item);
 }

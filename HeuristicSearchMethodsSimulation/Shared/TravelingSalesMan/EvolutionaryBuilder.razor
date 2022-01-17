@@ -17,7 +17,7 @@
 					<button type="button"
 							class="btn btn-sm m-1 rounded-pill btn-outline-info"
 							disabled="@Disabled"
-							@onclick="OnSelectionChange(context)">
+							@onclick="() => OnSelection.InvokeAsync(context)">
 						<Condition Evaluation="context.Ordinal > 0">
 							<Match><span>@context.Ordinal - </span></Match>
 						</Condition>
@@ -54,9 +54,4 @@
 	private IEnumerable<EvolutionaryNode> NotSelectedCollection =>
 		Collection?.Where(x => Selected?.ContainsKey(x.Location.Id) == false) ??
 		Enumerable.Empty<EvolutionaryNode>();
-
-	private Func<Task> OnSelectionChange(EvolutionaryNode node) =>
-		Disabled
-			? () => Task.FromResult(0)
-			: () => OnSelection.InvokeAsync(node);
 }

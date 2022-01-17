@@ -19,7 +19,7 @@
 					<button type="button"
 							class="btn btn-sm m-1 rounded-pill btn-outline-info"
 							disabled="@Disabled"
-							@onclick="OnSelectionChange(context)">
+							@onclick="() => OnSelection.InvokeAsync(context)">
 						<span>@context.Label</span>
 						<span>(@context.ShortCode)</span>
 					</button>
@@ -52,7 +52,4 @@
 	private IEnumerable<LocationGeo> NonSelectedCollection => 
 		Collection?.Where(x => Selected?.ContainsKey(x.Id) == false) ??
 		Enumerable.Empty<LocationGeo>();
-
-	private Func<Task> OnSelectionChange(LocationGeo item) =>
-		() => OnSelection.InvokeAsync(item);
 }
