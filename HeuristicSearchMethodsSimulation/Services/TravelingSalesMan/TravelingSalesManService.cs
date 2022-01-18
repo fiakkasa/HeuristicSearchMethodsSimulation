@@ -729,6 +729,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
 
                 EvolutionaryItem.Generations[0].Nodes.Add(item with { });
+                EvolutionaryItem.Generations[1].Nodes.Add(item with { });
                 EvolutionaryItem.Visited[item.Location.Id] = item with { };
 
                 if (
@@ -736,7 +737,56 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     EvolutionaryItem.Nodes.ExceptBy(EvolutionaryItem.Visited.Keys, x => x.Location.Id).FirstOrDefault() is { } last
                 )
                 {
-                    EvolutionaryItem.Generations[0].Nodes.Add(last);
+                    EvolutionaryItem.Generations[0].Nodes.Add(last with { });
+                    EvolutionaryItem.Generations[1].Nodes =
+                        await EvolutionaryItem.Generations[1].Nodes
+                            .Append(last with { })
+                            .Skip(1)
+                            .OrderBy(x => Random.Shared.Next())
+                            .Prepend(EvolutionaryItem.Generations[1].Nodes[0])
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true);
+                    EvolutionaryItem.Generations[1].DistanceInKilometers =
+                        await EvolutionaryItem.Generations[1].Nodes
+                            .ConvertAll(x => x.Location)
+                            .CalculateDistanceOfCycle(cancellationToken)
+                            .ConfigureAwait(true);
+
+                    EvolutionaryItem.Offsprings[0].Nodes =
+                        await EvolutionaryItem.Generations[0].Nodes
+                            .Take(EvolutionaryItem.NumberOfBitsOffspring)
+                            .Concat(
+                            await EvolutionaryItem.Generations[0].Nodes
+                                .Skip(EvolutionaryItem.NumberOfBitsOffspring)
+                                .OrderBy(x => Random.Shared.Next())
+                                .ToListAsync(cancellationToken)
+                                .ConfigureAwait(true)
+                            )
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(true);
+                    EvolutionaryItem.Offsprings[1].Nodes =
+                       await EvolutionaryItem.Generations[1].Nodes
+                           .Take(EvolutionaryItem.NumberOfBitsOffspring)
+                           .Concat(
+                           await EvolutionaryItem.Generations[1].Nodes
+                               .Skip(EvolutionaryItem.NumberOfBitsOffspring)
+                               .OrderBy(x => Random.Shared.Next())
+                               .ToListAsync(cancellationToken)
+                               .ConfigureAwait(true)
+                           )
+                           .ToListAsync(cancellationToken)
+                           .ConfigureAwait(true);
+
+                    EvolutionaryItem.Offsprings[0].DistanceInKilometers =
+                        await EvolutionaryItem.Offsprings[0].Nodes
+                            .ConvertAll(x => x.Location)
+                            .CalculateDistanceOfCycle(cancellationToken)
+                            .ConfigureAwait(true);
+                    EvolutionaryItem.Offsprings[1].DistanceInKilometers =
+                        await EvolutionaryItem.Offsprings[1].Nodes
+                            .ConvertAll(x => x.Location)
+                            .CalculateDistanceOfCycle(cancellationToken)
+                            .ConfigureAwait(true);
                     EvolutionaryItem.Visited[last.Location.Id] = last with { };
                 }
 
@@ -1261,10 +1311,22 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (locations.HasInsufficientLocations()) return;
 
+                EvolutionaryItem.NumberOfBitsOffspring = LocationsBySelection.Count switch
+                {
+                    < 5 => 2,
+                    < 7 => 3,
+                    _ => 4
+                };
                 EvolutionaryItem.Nodes.AddRange(locations.Select((x, i) => new EvolutionaryNode(i, x)));
                 var first = EvolutionaryItem.Nodes[0];
-                EvolutionaryItem.Generations.Add(new());
-                EvolutionaryItem.Generations[0].Nodes.Add(first with { });
+                EvolutionaryItem.Generations.AddRange(
+                    new EvolutionaryNodes[]
+                    {
+                        new() { Nodes = new() { first with { } } },
+                        new() { Nodes = new() { first with { } } }
+                    }
+                );
+                EvolutionaryItem.Offsprings.AddRange(new EvolutionaryNodes[] { new(), new() });
                 EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)
