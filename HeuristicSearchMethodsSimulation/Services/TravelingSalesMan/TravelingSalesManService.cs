@@ -300,7 +300,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public async Task SetPartialRandomLocation(Guid locationId)
         {
             if (LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location)
-                await SetPartialRandomLocation(location, false, _cts.Token);
+                await SetPartialRandomLocation(location, true, _cts.Token);
         }
 
         public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, false, _cts.Token);
@@ -600,9 +600,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (location.Id != htcc.Next?.Node.Id)
                 {
-                    if (gdi.Log.LastOrDefault()?.StartsWith(location.ShortCode) == false)
+                    if (!htcc.Log.Any(x => x.StartsWith(location.ShortCode)))
                     {
-                        gdi.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
+                        htcc.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
                         OnStateChangeDelegate?.Invoke();
                     }
 
@@ -621,11 +621,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     htcc.Index++;
                     htcc.Text = $"{htcc.Current.Text} ({htcc.Current.DistanceInKilometers.ToFormattedDistance()})";
-                    gdi.Log.Add("Congrats! No further improvements can be made while heading to the closest city.");
+                    htcc.Log.Add("Congrats! No further improvements can be made while heading to the closest city.");
+                    htcc.Completed = true;
 
                     if (gdi.Peripheral is { Iterations.Count: > 0 } p)
                     {
-                        p.Completed = true;
                         Progress = true;
                         OnStateChangeDelegate?.Invoke();
 
@@ -634,7 +634,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         gdi.Rule = 2;
                         gdi.AllowRuleToggle = true;
                         Progress = false;
-                        gdi.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
+                        p.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
                     }
                 }
 
@@ -661,9 +661,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (location.Id != p.Next?.Node.Id)
                 {
-                    if (gdi.Log.LastOrDefault()?.StartsWith(location.ShortCode) == false)
+                    if (!p.Log.Any(x => x.StartsWith(location.ShortCode)))
                     {
-                        gdi.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
+                        p.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
                         OnStateChangeDelegate?.Invoke();
                     }
 
@@ -682,7 +682,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     p.Index++;
                     p.Text = $"{p.Current.Text} ({p.Current.DistanceInKilometers.ToFormattedDistance()})";
-                    gdi.Log.Add("Congrats! No further improvements can be made while sticking to an exterior route.");
+                    p.Log.Add("Congrats! No further improvements can be made while sticking to an exterior route.");
                     p.Completed = true;
                 }
 

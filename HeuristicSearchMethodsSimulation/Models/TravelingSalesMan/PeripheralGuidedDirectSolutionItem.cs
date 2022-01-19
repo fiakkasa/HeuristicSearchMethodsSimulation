@@ -6,6 +6,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
     public record PeripheralGuidedDirectSolutionItem : GuidedDirectSolutionItem
     {
         public bool Left { get; set; }
+        public List<string> Log { get; set; } = new();
         public List<LocationGeo> Solution { get; set; } = new();
         public List<GuidedDirectIteration> IterationsLeft { get; } = new();
         public List<GuidedDirectIteration> IterationsRight { get; } = new();

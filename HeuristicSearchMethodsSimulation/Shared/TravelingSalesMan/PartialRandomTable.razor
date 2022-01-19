@@ -11,7 +11,7 @@
 														 DistanceInKilometers="context.DistanceInKilometers"
 														 Selected="context.Id == SelectedId"
 														 Disabled="Disabled"
-														 OnSelection="OnSelectionChange(context)" />
+														 OnSelection="() => OnSelection.InvokeAsync(context)" />
 							</div>
 							<div class="col-lg-6"></div>
 						</ItemContent>
@@ -35,7 +35,4 @@
 	[Parameter] public Guid? SelectedId { get; set; }
 	[Parameter] public bool DisplayExcessRecordsMessage { get; set; }
 	[Parameter] public EventCallback<PartialRandomIteration> OnSelection { get; set; }
-
-	private Func<Task> OnSelectionChange(PartialRandomIteration item) =>
-		() => OnSelection.InvokeAsync(item);
 }

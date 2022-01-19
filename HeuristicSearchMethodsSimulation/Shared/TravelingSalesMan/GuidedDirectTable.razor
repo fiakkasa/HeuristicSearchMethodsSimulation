@@ -11,83 +11,89 @@
                 </div>
             </Iterations>
         </div>
-        <div class="report-container col-12 p-1">
-            <Condition Evaluation="ShowReport">
-                <NotMatch>
-                    <div class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-info" @onclick="_ => ShowReport = !ShowReport">Report</button>
-                    </div>
-                </NotMatch>
-                <Match>
-                    <div class="text-center">
-                        <button type="button" class="btn btn-sm btn-info me-1" @onclick="_ => ShowReport = !ShowReport">Report</button>
-                        <button type="button" class="btn btn-sm btn-outline-warning" @onclick="Print">Print</button>
-                    </div>
-                    <div class="report mt-2">
-                        <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
-                            <div class="entries-container table-responsive">
+        <Condition Evaluation="_hasAttempts">
+            <Match>
+                <div class="report-container col-12 p-1">
+                    <Condition Evaluation="_showReport">
+                        <NotMatch>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-info" @onclick="() => _showReport = !_showReport">Report</button>
+                            </div>
+                        </NotMatch>
+                        <Match>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-sm btn-info me-1" @onclick="() => _showReport = !_showReport">Report</button>
+                                <button type="button" class="btn btn-sm btn-outline-warning" @onclick="Print">Print</button>
+                            </div>
+                            <div class="report mt-2">
+                                <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => x.attempts.Any())">
+                                    <div class="entries-container table-responsive">
+                                        <table class="table table-borderless text-center m-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <h6 class="m-0">Number of Cities: @context.numberOfLocations</h6>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Algorithm</th>
+                                                    <th>Route</th>
+                                                    <th>Total Distance</th>
+                                                </tr>
+                                                <Iterations T="HistoryIteration" Items="context.attempts" Context="childContext">
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            <div class="d-flex justify-content-center">
+                                                                <LocationsMap Data="childContext.MapLinesData"
+                                                                              AutoSizeMap="false"
+                                                                              MapHeight="250"
+                                                                              MapWidth="400"
+                                                                              MarkerColor="@MapOptions.MarkerColor"
+                                                                              MarkerSymbol="MapOptions.MarkerSymbol"
+                                                                              LineColor="@MapOptions.LineColor"
+                                                                              LineWidth="@MapOptions.LineWidth"
+                                                                              LandColor="@MapOptions.LandColor"
+                                                                              CountryColor="@MapOptions.CountryColor"
+                                                                              CssClass="print" />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>@childContext.Algo.ToString().Replace('_', ' ')</td>
+                                                        <td>@childContext.Text</td>
+                                                        <td>@childContext.DistanceInKilometers.ToFormattedDistance()</td>
+                                                    </tr>
+                                                </Iterations>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </Iterations>
                                 <table class="table table-borderless text-center m-0">
                                     <tbody>
-                                        <tr>
-                                            <td colspan="3">
-                                                <h6 class="m-0">Number of Cities: @context.numberOfLocations</h6>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th>Algorithm</th>
-                                            <th>Route</th>
-                                            <th>Total Distance</th>
-                                        </tr>
-                                        <Iterations T="HistoryIteration" Items="context.attempts" Context="childContext">
+                                        <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => !x.attempts.Any())">
                                             <tr>
                                                 <td colspan="3">
-                                                    <div class="d-flex justify-content-center">
-                                                        <LocationsMap Data="childContext.MapLinesData"
-                                                                      AutoSizeMap="false"
-                                                                      MapHeight="250"
-                                                                      MapWidth="400"
-                                                                      MarkerColor="@MapOptions.MarkerColor"
-                                                                      MarkerSymbol="MapOptions.MarkerSymbol"
-                                                                      LineColor="@MapOptions.LineColor"
-                                                                      LineWidth="@MapOptions.LineWidth"
-                                                                      LandColor="@MapOptions.LandColor"
-                                                                      CountryColor="@MapOptions.CountryColor"
-                                                                      CssClass="print" />
-                                                    </div>
+                                                    <h6 class="m-0 text-muted">No attempts were made for Number of Cities: @context.numberOfLocations</h6>
                                                 </td>
-                                            </tr>
-                                            <tr>
-                                                <td>@childContext.Algo.ToString().Replace('_', ' ')</td>
-                                                <td>@childContext.Text</td>
-                                                <td>@childContext.DistanceInKilometers.ToFormattedDistance()</td>
                                             </tr>
                                         </Iterations>
                                     </tbody>
                                 </table>
                             </div>
-                        </Iterations>
-                        <table class="table table-borderless text-center m-0">
-                            <tbody>
-                                <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => !x.attempts.Any())">
-                                    <tr>
-                                        <td colspan="3">
-                                            <h6 class="m-0 text-muted">No attempts were made for Number of Cities: @context.numberOfLocations</h6>
-                                        </td>
-                                    </tr>
-                                </Iterations>
-                            </tbody>
-                        </table>
-                    </div>
-                </Match>
-            </Condition>
-        </div>
+                        </Match>
+                    </Condition>
+                </div>
+            </Match>
+        </Condition>
+
     </Match>
 </Condition>
 
 @code {
+    private bool _hasAttempts;
+    private bool _showReport;
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public List<string>? Collection { get; set; }
-    private bool ShowReport { get; set; }
     [Parameter] public MapOptions MapOptions { get; set; } = new();
     [Parameter] public Dictionary<int, List<HistoryIteration>>? Report { get; set; }
     [Parameter] public int MaxLocations { get; set; }
@@ -101,4 +107,11 @@
             );
 
     private async Task Print() => await js.InvokeVoidAsync("window.print");
+
+    protected override void OnParametersSet()
+    {
+        _hasAttempts = Report?.Values.Any(x => x.Count > 0) == true;
+
+        if (!_hasAttempts) _showReport = false;
+    }
 }

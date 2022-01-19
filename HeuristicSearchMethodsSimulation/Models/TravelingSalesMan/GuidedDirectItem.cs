@@ -9,10 +9,10 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public HeadToClosestCityGuidedDirectSolutionItem HeadToClosestCity { get; set; } = new();
         public PeripheralGuidedDirectSolutionItem Peripheral { get; set; } = new();
         public long? NumberOfUniqueRoutes { get; set; }
-        public List<string> Log { get; set; } = new();
         public int Rule { get; set; } = 1;
         public bool AllowRuleToggle { get; set; }
 
+        public List<string> Log => Rule == 1 ? HeadToClosestCity.Log : Peripheral.Log;
         public bool Completed => Rule == 1 ? HeadToClosestCity.Completed : Peripheral.Completed;
         public List<LocationRow> Matrix => Rule == 1 ? HeadToClosestCity.Matrix : Peripheral.Matrix;
         public List<LocationRow> ResetMatrix => Rule == 1 ? HeadToClosestCity.ResetMatrix : Peripheral.ResetMatrix;

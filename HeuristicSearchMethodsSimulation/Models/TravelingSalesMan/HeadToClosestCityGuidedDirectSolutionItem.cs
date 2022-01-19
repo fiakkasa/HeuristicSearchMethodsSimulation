@@ -5,6 +5,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
 {
     public record HeadToClosestCityGuidedDirectSolutionItem : GuidedDirectSolutionItem
     {
+        public List<string> Log { get; set; } = new();
         public List<LocationGeo> Solution { get; set; } = new();
         public List<GuidedDirectIteration> Iterations { get; } = new();
         public GuidedDirectIteration? Current => Iterations.Skip(Index).FirstOrDefault();
