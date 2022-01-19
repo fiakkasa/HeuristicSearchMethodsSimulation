@@ -297,6 +297,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
+        public async Task SetPartialRandomLocation(Guid locationId)
+        {
+            if (LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location)
+                await SetPartialRandomLocation(location, false, _cts.Token);
+        }
+
         public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, false, _cts.Token);
 
         private async Task SetPartialRandomLocation(LocationGeo item, bool silent, CancellationToken cancellationToken)
@@ -330,7 +336,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     );
 
                     PartialRandomItem.Iterations.Add(obj);
-                    await SetPartialRandomIteration(obj, true, cancellationToken).ConfigureAwait(true);
 
                     await SetHistory(
                         new(
@@ -557,6 +562,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             gdi.Rule = rule;
         }
 
+        public async Task SetGuidedDirectSelection(Guid locationId)
+        {
+            if (LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location)
+                await SetGuidedDirectSelection(location).ConfigureAwait(true);
+        }
+
         public async Task SetGuidedDirectSelection(LocationGeo location)
         {
             try
@@ -606,8 +617,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     htcc.Text = $"{htcc.Current.Text} ({htcc.Current.DistanceInKilometers.ToFormattedDistance()})";
                     gdi.Log.Add("Congrats! No further improvements can be made while heading to the closest city.");
 
-                    if (gdi.Peripheral is { Iterations.Count: > 0 })
+                    if (gdi.Peripheral is { Iterations.Count: > 0 } p)
                     {
+                        p.Completed = true;
                         Progress = true;
                         OnStateChangeDelegate?.Invoke();
 
@@ -665,6 +677,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     p.Index++;
                     p.Text = $"{p.Current.Text} ({p.Current.DistanceInKilometers.ToFormattedDistance()})";
                     gdi.Log.Add("Congrats! No further improvements can be made while sticking to an exterior route.");
+                    p.Completed = true;
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -715,6 +728,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         public Task SetEvolutionaryLocation(EvolutionaryNode item) => SetEvolutionaryLocation(item, false, _cts.Token);
+        public async Task SetEvolutionaryLocation(Guid locationId)
+        {
+            if (EvolutionaryItem?.Nodes.Skip(1).FirstOrDefault(x => x.Location.Id == locationId) is { } node)
+                await SetEvolutionaryLocation(node, false, _cts.Token).ConfigureAwait(true);
+        }
 
         private async Task SetEvolutionaryLocation(EvolutionaryNode item, bool silent, CancellationToken cancellationToken)
         {
@@ -1167,9 +1185,10 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     iterations = iterations.Skip(random).ToList();
                 }
 
-                var cyclesMatch = iterations.Count == 1;
+                var cyclesMatch = iterations.Count == 1 || locations.Count == Consts.MinNumberOfLocations;
 
-                if (cyclesMatch) computed = iterations[0] with { Log = "Congrats in finding an optimal route on your first attempt!" };
+                if (cyclesMatch)
+                    computed = iterations[0] with { Log = "Congrats in finding an optimal route on your first attempt!" };
 
                 var computedCollection = computed.Collection;
                 var computedCycle = computed.Cycle;

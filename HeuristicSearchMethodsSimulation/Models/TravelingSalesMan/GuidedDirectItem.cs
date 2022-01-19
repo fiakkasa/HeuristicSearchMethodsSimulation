@@ -13,6 +13,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public int Rule { get; set; } = 1;
         public bool AllowRuleToggle { get; set; }
 
+        public bool Completed => Rule == 1 ? HeadToClosestCity.Completed : Peripheral.Completed;
         public List<LocationRow> Matrix => Rule == 1 ? HeadToClosestCity.Matrix : Peripheral.Matrix;
         public List<LocationRow> ResetMatrix => Rule == 1 ? HeadToClosestCity.ResetMatrix : Peripheral.ResetMatrix;
         public List<ITrace> MapChartData => Rule == 1 ? HeadToClosestCity.MapChartData : Peripheral.MapChartData;

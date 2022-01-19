@@ -6,253 +6,281 @@
 @using Plotly.Blazor.LayoutLib.GeoLib.ProjectionLib
 @using Plotly.Blazor.Traces.ScatterGeoLib
 @using Plotly.Blazor.Traces.ScatterGeoLib.MarkerLib;
+@inject IJSRuntime JS
 @inject ILogger<LocationsMap> logger
 @implements IDisposable
 
-<div class="traveling-salesman-map-container overflow-auto @CssClass">
-	<PlotlyChart Config="_chartConfig"
-				 Layout="_chartLayout"
-				 Data="_chartData"
-				 @ref="_chartRef"
-				 style="@((_chartLayout.Width > 0 ? "width:" + _chartLayout.Width + "px;" : string.Empty) + "min-height:" + _chartLayout.Height + "px")" />
-	<Condition Evaluation="Text is { Length: > 0 } || TotalDistance >= 0">
-		<Match>
-			<div class="traveling-salesman-map-info-container d-flex align-items-center justify-content-end flex-wrap mt-1 small">
-				<Condition Evaluation="Text is { Length: > 0 }">
-					<Match>
-						<div class="text-container d-flex flex-wrap align-items-center justify-content-center text-muted">
-							<div class="text me-4">
-								@Text
-							</div>
-						</div>
-					</Match>
-				</Condition>
-				<Condition Evaluation="TotalDistance >= 0">
-					<Match>
-						<div class="total-distance-container d-flex flex-wrap align-items-center justify-content-center text-muted">
-							<div class="text me-2">
-								Total Distance:
-							</div>
-							<div class="total-distance text-center border px-4 py-1">
-								@TotalDistance.ToFormattedDistance()
-							</div>
-						</div>
-					</Match>
-				</Condition>
-			</div>
-		</Match>
-	</Condition>
+<div id="@_id" class="traveling-salesman-map-container overflow-auto @CssClass">
+    <PlotlyChart Config="_chartConfig"
+                 Layout="_chartLayout"
+                 Data="_chartData"
+                 @ref="_chartRef"
+                 style="@((_chartLayout.Width > 0 ? "width:" + _chartLayout.Width + "px;" : string.Empty) + "min-height:" + _chartLayout.Height + "px")" />
+
+    <Condition Evaluation="Text is { Length: > 0 } || TotalDistance >= 0">
+        <Match>
+            <div class="traveling-salesman-map-info-container d-flex align-items-center justify-content-end flex-wrap mt-1 small">
+                <Condition Evaluation="Text is { Length: > 0 }">
+                    <Match>
+                        <div class="text-container d-flex flex-wrap align-items-center justify-content-center text-muted">
+                            <div class="text me-4">
+                                @Text
+                            </div>
+                        </div>
+                    </Match>
+                </Condition>
+                <Condition Evaluation="TotalDistance >= 0">
+                    <Match>
+                        <div class="total-distance-container d-flex flex-wrap align-items-center justify-content-center text-muted">
+                            <div class="text me-2">
+                                Total Distance:
+                            </div>
+                            <div class="total-distance text-center border px-4 py-1">
+                                @TotalDistance.ToFormattedDistance()
+                            </div>
+                        </div>
+                    </Match>
+                </Condition>
+            </div>
+        </Match>
+    </Condition>
 </div>
 
 @code {
-	private PlotlyChart? _chartRef;
-	private readonly Config _chartConfig = new()
-		{
-			DisplayLogo = false,
-			DisplayModeBar = DisplayModeBarEnum.False,
-			AutoSizable = true,
-			Responsive = true,
-			ShowTips = false
-		};
-	private readonly Layout _chartLayout = new()
-		{
-			Height = 640,
-			ShowLegend = false,
-			AutoSize = true,
-			Margin = new()
-			{
-				AutoExpand = false,
-				B = 0,
-				L = 0,
-				R = 0,
-				T = 0,
-				Pad = 0
-			},
-			DragMode = DragModeEnum.False,
-			Geo = new List<Geo> {
-			new Geo {
-				Scope = ScopeEnum.USA,
-				ShowLand = true,
-				ShowSubUnits = true,
-				LandColor = "#d3d3d3",
-				SubUnitColor = "#ffffff",
-				SubUnitWidth = 2
-			}
-		},
-		};
-	private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
-	private string? _markerColor;
-	private SymbolEnum? _markerSymbol = SymbolEnum.Circle;
-	private string? _lineColor;
-	private int? _lineWidth;
+    private PlotlyChart? _chartRef;
+    private string _id = $"tspm_{Random.Shared.Next()}_{DateTimeOffset.Now.Ticks}";
+    private bool _eventsBound;
+    private readonly Config _chartConfig = new()
+        {
+            DisplayLogo = false,
+            DisplayModeBar = DisplayModeBarEnum.False,
+            AutoSizable = true,
+            Responsive = true,
+            ShowTips = false
+        };
+    private readonly Layout _chartLayout = new()
+        {
+            Height = 640,
+            ShowLegend = false,
+            AutoSize = true,
+            Margin = new()
+            {
+                AutoExpand = false,
+                B = 0,
+                L = 0,
+                R = 0,
+                T = 0,
+                Pad = 0
+            },
+            DragMode = DragModeEnum.False,
+            Geo = new List<Geo> {
+            new Geo {
+                Scope = ScopeEnum.USA,
+                ShowLand = true,
+                ShowSubUnits = true,
+                LandColor = "#d3d3d3",
+                SubUnitColor = "#ffffff",
+                SubUnitWidth = 2
+            }
+        },
+        };
+    private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
+    private string? _markerColor;
+    private SymbolEnum? _markerSymbol = SymbolEnum.Circle;
+    private string? _lineColor;
+    private int? _lineWidth;
+    private DotNetObjectReference<LocationsMap>? _objRef;
 
-	[Parameter] public string? CssClass { get; set; }
-	[Parameter] public string? Text { get; set; }
-	[Parameter] public double? TotalDistance { get; set; }
-	[Parameter] public int MapWidth 
-	{ 
-		set
-		{
-			_chartLayout.Width = value;
-		}
-	}
-	[Parameter] public int MapHeight 
-	{
-		set
-		{
-			_chartLayout.Height = value;
-		}
-	}
-	[Parameter] public bool AutoSizeMap 
-	{ 
-		set
-		{
-			_chartConfig.AutoSizable = value;
-			_chartConfig.Responsive = value;
-			_chartLayout.AutoSize = value;
-		} 
-	}
-	[Parameter]
-	public List<ITrace> Data
-	{
-		set
-		{
-			var collection = (
-				value?.Skip(1).Any() == true
-					? value!
-					: new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
-			)
-			.ConvertAll(x => ApplyLineWidth(ApplyLineColor(ApplyMarkerSymbol(ApplyMarkerColor(x)))));
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public double? TotalDistance { get; set; }
+    [Parameter]
+    public int MapWidth
+    {
+        set
+        {
+            _chartLayout.Width = value;
+        }
+    }
+    [Parameter]
+    public int MapHeight
+    {
+        set
+        {
+            _chartLayout.Height = value;
+        }
+    }
+    [Parameter]
+    public bool AutoSizeMap
+    {
+        set
+        {
+            _chartConfig.AutoSizable = value;
+            _chartConfig.Responsive = value;
+            _chartLayout.AutoSize = value;
+        }
+    }
+    [Parameter]
+    public List<ITrace> Data
+    {
+        set
+        {
+            var collection = (
+                value?.Skip(1).Any() == true
+                    ? value!
+                    : new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+            )
+            .ConvertAll(x => ApplyLineWidth(ApplyLineColor(ApplyMarkerSymbol(ApplyMarkerColor(x)))));
 
-			_chartData.Clear();
-			_chartData.AddRange(collection!);
-		}
-	}
-	[Parameter]
-	public string LandColor
-	{
-		set
-		{
-			_chartLayout.Geo[0].LandColor = value?.Trim() is { Length: > 0 } color
-				? color
-				: "#f8f4f4";
-		}
-	}
-	[Parameter]
-	public string CountryColor
-	{
-		set
-		{
-			_chartLayout.Geo[0].CountryColor = value?.Trim() is { Length: > 0 } color
-				? color
-				: "#d3d3d3";
-		}
-	}
-	[Parameter]
-	public string? MarkerColor
-	{
-		set
-		{
-			_markerColor = value;
+            _chartData.Clear();
+            _chartData.AddRange(collection!);
+        }
+    }
+    [Parameter]
+    public string LandColor
+    {
+        set
+        {
+            _chartLayout.Geo[0].LandColor = value?.Trim() is { Length: > 0 } color
+                ? color
+                : "#f8f4f4";
+        }
+    }
+    [Parameter]
+    public string CountryColor
+    {
+        set
+        {
+            _chartLayout.Geo[0].CountryColor = value?.Trim() is { Length: > 0 } color
+                ? color
+                : "#d3d3d3";
+        }
+    }
+    [Parameter]
+    public string? MarkerColor
+    {
+        set
+        {
+            _markerColor = value;
 
-			_chartData.ForEach(x => _ = ApplyMarkerColor(x));
-		}
-	}
-	[Parameter]
-	public SymbolEnum? MarkerSymbol
-	{
-		set
-		{
-			_markerSymbol = value;
+            _chartData.ForEach(x => _ = ApplyMarkerColor(x));
+        }
+    }
+    [Parameter]
+    public SymbolEnum? MarkerSymbol
+    {
+        set
+        {
+            _markerSymbol = value;
 
-			_chartData.ForEach(x => _ = ApplyMarkerSymbol(x));
-		}
-	}
-	[Parameter]
-	public string? LineColor
-	{
-		set
-		{
-			_lineColor = value;
+            _chartData.ForEach(x => _ = ApplyMarkerSymbol(x));
+        }
+    }
+    [Parameter]
+    public string? LineColor
+    {
+        set
+        {
+            _lineColor = value;
 
-			_chartData.ForEach(x => _ = ApplyLineColor(x));
-		}
-	}
-	[Parameter]
-	public int? LineWidth
-	{
-		set
-		{
-			_lineWidth = value;
+            _chartData.ForEach(x => _ = ApplyLineColor(x));
+        }
+    }
+    [Parameter]
+    public int? LineWidth
+    {
+        set
+        {
+            _lineWidth = value;
 
-			_chartData.ForEach(x => _ = ApplyLineWidth(x));
-		}
-	}
+            _chartData.ForEach(x => _ = ApplyLineWidth(x));
+        }
+    }
+    [Parameter] public EventCallback<Guid> OnMarkerClicked { get; set; }
 
-	private ITrace ApplyMarkerColor(ITrace obj)
-	{
-		if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
+    private ITrace ApplyMarkerColor(ITrace obj)
+    {
+        if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
 
-		if (item.Marker is not { }) item.Marker = new();
+        if (item.Marker is not { }) item.Marker = new();
 
-		if (item.Marker.Color is not { })
-			item.Marker.Color = _markerColor;
+        if (item.Marker.Color is not { })
+            item.Marker.Color = _markerColor;
 
-		return item;
-	}
+        return item;
+    }
 
-	private ITrace ApplyMarkerSymbol(ITrace obj)
-	{
-		if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
+    private ITrace ApplyMarkerSymbol(ITrace obj)
+    {
+        if (!(obj is ScatterGeo { Mode: ModeFlag mode } item && mode.HasFlag(ModeFlag.Markers))) return obj;
 
-		if (item.Marker is not { }) item.Marker = new();
+        if (item.Marker is not { }) item.Marker = new();
 
-		if (item.Marker.Symbol is not { })
-			item.Marker.Symbol = _markerSymbol;
+        if (item.Marker.Symbol is not { })
+            item.Marker.Symbol = _markerSymbol;
 
-		return item;
-	}
+        return item;
+    }
 
-	private ITrace ApplyLineColor(ITrace obj)
-	{
-		if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
+    private ITrace ApplyLineColor(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
 
-		if (item.Line is not { }) item.Line = new();
+        if (item.Line is not { }) item.Line = new();
 
-		if(item.Line.Color is not { })
-			item.Line.Color = _lineColor;
+        if (item.Line.Color is not { })
+            item.Line.Color = _lineColor;
 
-		return item;
-	}
+        return item;
+    }
 
-	private ITrace ApplyLineWidth(ITrace obj)
-	{
-		if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
+    private ITrace ApplyLineWidth(ITrace obj)
+    {
+        if (obj is not ScatterGeo { Mode: ModeFlag.Lines } item) return obj;
 
-		if (item.Line is not { }) item.Line = new();
+        if (item.Line is not { }) item.Line = new();
 
-		if(item.Line.Width is not { })
-			item.Line.Width = _lineWidth;
+        if (item.Line.Width is not { })
+            item.Line.Width = _lineWidth;
 
-		return item;
-	}
+        return item;
+    }
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender) return;
+    [JSInvokable]
+    public async Task TspMapMarkerClick(string id)
+    {
+        if (Disabled) return;
 
-		try
-		{
-			if (_chartRef is { } m) await m!.React();
-		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, ex.Message);
-		}
-	}
+        if (Guid.TryParse(id, out var guid)) await OnMarkerClicked.InvokeAsync(guid);
+    }
 
-	public void Dispose()
-	{
-		_chartRef?.Dispose();
-	}
+    protected override void OnInitialized()
+    {
+        _objRef = DotNetObjectReference.Create(this);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (!_eventsBound)
+            {
+                await Task.Delay(250);
+                _eventsBound = await JS.InvokeAsync<bool>("bindTspMapMarkerEvents", _objRef, _id);
+            }
+
+            if (_chartRef is { } m) await m.React();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _chartRef?.Dispose();
+        _objRef?.Dispose();
+    }
 }

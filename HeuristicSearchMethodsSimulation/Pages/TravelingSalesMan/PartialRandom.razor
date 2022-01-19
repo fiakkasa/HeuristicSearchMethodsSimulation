@@ -42,6 +42,7 @@
 						<Condition Evaluation="tsms.PartialRandomItem?.SelectedIteration is {}">
 							<Match>
 								<LocationsMap Data="tsms.PartialRandomItem?.MapChartData"
+											  Disabled="tsms.Progress"
 											  TotalDistance="tsms.PartialRandomItem?.SelectedIteration?.DistanceInKilometers"
 											  CssClass="mt-3"
 											  MarkerColor="@tsms.MapOptions.MarkerColor"
@@ -53,6 +54,7 @@
 							</Match>
 							<NotMatch>
 								<LocationsMap Data="tsms.PartialRandomItem?.Builder?.MapChartData ?? tsms.PartialRandomItem?.MapChartData"
+											  Disabled="tsms.Progress"
 											  TotalDistance="tsms.PartialRandomItem?.Builder?.DistanceInKilometers"
 											  Text="@tsms.PartialRandomItem?.Builder?.Text"
 											  CssClass="mt-3"
@@ -61,7 +63,8 @@
 											  LineColor="@tsms.MapOptions.LineColor"
 											  LineWidth="tsms.MapOptions.LineWidth"
 											  LandColor="@tsms.MapOptions.LandColor"
-											  CountryColor="@tsms.MapOptions.CountryColor" />
+											  CountryColor="@tsms.MapOptions.CountryColor"
+											  OnMarkerClicked="tsms.SetPartialRandomLocation" />
 							</NotMatch>
 						</Condition>
 

@@ -49,7 +49,9 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         PartialRandomItem? PartialRandomItem { get; set; }
 
         Task ClearPartialRandomBuilder();
+        Task SetPartialRandomLocation(Guid locationId);
         Task SetPartialRandomLocation(LocationGeo item);
+
         Task SetPartialRandomItem(PartialRandomIteration item);
         #endregion
 
@@ -64,6 +66,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         #region Guided Direct
         GuidedDirectItem? GuidedDirectItem { get; set; }
 
+        Task SetGuidedDirectSelection(Guid locationId);
         Task SetGuidedDirectSelection(LocationGeo location);
         Task ResetGuidedDirect();
         void SetGuidedDirectRule(int rule);
@@ -72,8 +75,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         #region Evolutionary
         EvolutionaryItem? EvolutionaryItem { get; set; }
 
+        Task SetEvolutionaryLocation(Guid locationId);
         Task SetEvolutionaryLocation(EvolutionaryNode item);
-
         Task SetEvolutionaryStep(int? step = null);
 
         Task ResetEvolutionary();

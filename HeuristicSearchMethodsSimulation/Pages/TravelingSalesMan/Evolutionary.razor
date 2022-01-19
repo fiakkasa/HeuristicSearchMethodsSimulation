@@ -44,6 +44,7 @@
 						</div>
 
 						<LocationsMap Data="tsms.EvolutionaryItem?.MapChartData"
+									  Disabled="tsms.Progress || tsms.EvolutionaryItem?.CycleComplete == true"
 									  TotalDistance="tsms.EvolutionaryItem?.DistanceInKilometers"
 									  CssClass="mt-3"
 									  MarkerColor="@tsms.MapOptions.MarkerColor"
@@ -51,7 +52,8 @@
 									  LineColor="@tsms.MapOptions.LineColor"
 									  LineWidth="tsms.MapOptions.LineWidth"
 									  LandColor="@tsms.MapOptions.LandColor"
-									  CountryColor="@tsms.MapOptions.CountryColor" />
+									  CountryColor="@tsms.MapOptions.CountryColor"
+									  OnMarkerClicked="tsms.SetEvolutionaryLocation" />
 
 						<EvolutionaryBuilder CssClass="mt-3"
 											 Disabled="tsms.Progress"

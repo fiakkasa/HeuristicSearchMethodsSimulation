@@ -56,6 +56,7 @@
                         </div>
 
                         <LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.GuidedDirectItem?.MapChartData"
+                                      Disabled="tsms.Progress || tsms.GuidedDirectItem?.Completed == true"
                                       TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
                                       Text="@tsms.GuidedDirectItem?.Current?.Text"
                                       CssClass="mt-3"
@@ -64,7 +65,8 @@
                                       LineColor="@tsms.MapOptions.LineColor"
                                       LineWidth="@tsms.MapOptions.LineWidth"
                                       LandColor="@tsms.MapOptions.LandColor"
-                                      CountryColor="@tsms.MapOptions.CountryColor" />
+                                      CountryColor="@tsms.MapOptions.CountryColor" 
+                                      OnMarkerClicked="tsms.SetGuidedDirectSelection" />
 
                         <GuidedDirectBuilder CssClass="mt-3"
                                              Disabled="tsms.Progress"
