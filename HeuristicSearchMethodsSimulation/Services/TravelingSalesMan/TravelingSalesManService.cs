@@ -337,14 +337,20 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                     PartialRandomItem.Iterations.Add(obj);
 
+                    PartialRandomItem.Matrix.Clear();
+                    PartialRandomItem.MapChartData.Clear();
+
+                    PartialRandomItem.Matrix.AddRange(PartialRandomItem.ResetMatrix);
+                    PartialRandomItem.MapChartData.AddRange(PartialRandomItem.MapMarkerData);
+
                     await SetHistory(
-                        new(
-                            TravelingSalesManAlgorithms.Partial_Random,
-                            text,
-                            totalDistance,
-                            new(PartialRandomItem.MapChartData)
-                        )
-                    ).ConfigureAwait(true);
+                         new(
+                             TravelingSalesManAlgorithms.Partial_Random,
+                             text,
+                             totalDistance,
+                             new(PartialRandomItem.MapChartData)
+                         )
+                     ).ConfigureAwait(true);
 
                     var locations = LocationsBySelection.Take(1).ToList();
 
