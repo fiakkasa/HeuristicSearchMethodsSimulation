@@ -775,6 +775,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             .Prepend(EvolutionaryItem.Generations[1].Nodes[0])
                             .ToListAsync(cancellationToken)
                             .ConfigureAwait(true);
+                    if (EvolutionaryItem.Generations[0].Nodes[1].Ordinal == EvolutionaryItem.Generations[1].Nodes[1].Ordinal)
+                    {
+                        var second = EvolutionaryItem.Generations[0].Nodes[1] with { };
+                        EvolutionaryItem.Generations[1].Nodes.RemoveAt(1);
+                        EvolutionaryItem.Generations[1].Nodes.Add(second);
+                    }
+
                     EvolutionaryItem.Generations[1].DistanceInKilometers =
                         await EvolutionaryItem.Generations[1].Nodes
                             .ConvertAll(x => x.Location)
