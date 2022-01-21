@@ -513,26 +513,32 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             var i = 0;
             foreach (var nodes in collection.Select(x => x.Nodes))
             {
-                var prefix = await nodes.Take(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
-                var suffix = await nodes.Skip(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
-                var mutatedSuffix = new List<EvolutionaryNode>();
-
-                var otherParent = i switch
-                {
-                    0 => 1,
-                    _ when i == nodes.Count - 1 => nodes.Count - 2,
-                    _ => i - 1
-                };
-
-                for (var j = 0; j < collection[otherParent].Nodes.Count; j++)
-                {
-                    if (suffix.IndexOf(collection[otherParent].Nodes[j]) != -1)
+                var seed = collection
+                    .Skip(i switch
                     {
-                        mutatedSuffix.Add(collection[otherParent].Nodes[j]);
+                        0 => 1,
+                        _ when i == nodes.Count - 1 => nodes.Count - 2,
+                        _ => i - 1
+                    })
+                    .FirstOrDefault()?
+                    .Nodes;
+                if (seed is not { }) break;
+
+                var tail = await nodes.Skip(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
+                var newTail = new List<EvolutionaryNode>();
+
+                for (var j = 0; j < seed.Count; j++)
+                {
+                    if (tail.Contains(seed[j]))
+                    {
+                        newTail.Add(seed[j]);
                     }
                 }
 
-                var result = await prefix.Concat(mutatedSuffix).ToListAsync(cancellationToken).ConfigureAwait(true);
+                var result = await nodes.Take(numberOfBits)
+                    .Concat(newTail)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(true);
 
                 yield return new()
                 {
@@ -542,7 +548,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         .ConfigureAwait(true)
                 };
 
-                i = 0;
+                i++;
             }
         }
     }

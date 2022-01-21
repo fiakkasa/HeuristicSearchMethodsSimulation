@@ -777,7 +777,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             .ConfigureAwait(true);
                     if (EvolutionaryItem.Generations[0].Nodes[1].Ordinal == EvolutionaryItem.Generations[1].Nodes[1].Ordinal)
                     {
-                        var second = EvolutionaryItem.Generations[0].Nodes[1] with { };
+                        var second = EvolutionaryItem.Generations[1].Nodes[1] with { };
                         EvolutionaryItem.Generations[1].Nodes.RemoveAt(1);
                         EvolutionaryItem.Generations[1].Nodes.Add(second);
                     }
