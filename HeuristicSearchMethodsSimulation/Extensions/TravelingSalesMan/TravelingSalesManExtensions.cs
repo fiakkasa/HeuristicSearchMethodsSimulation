@@ -503,5 +503,47 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 visited[currentId] = currentId;
             }
         }
+
+        public static async IAsyncEnumerable<EvolutionaryNodes> ComputeEvolutionaryOffsprings(
+            this List<EvolutionaryNodes> collection,
+            int numberOfBits,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
+        {
+            var i = 0;
+            foreach (var nodes in collection.Select(x => x.Nodes))
+            {
+                var prefix = await nodes.Take(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
+                var suffix = await nodes.Skip(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
+                var mutatedSuffix = new List<EvolutionaryNode>();
+
+                var otherParent = i switch
+                {
+                    0 => 1,
+                    _ when i == nodes.Count - 1 => nodes.Count - 2,
+                    _ => i - 1
+                };
+
+                for (var j = 0; j < collection[otherParent].Nodes.Count; j++)
+                {
+                    if (suffix.IndexOf(collection[otherParent].Nodes[j]) != -1)
+                    {
+                        mutatedSuffix.Add(collection[otherParent].Nodes[j]);
+                    }
+                }
+
+                var result = await prefix.Concat(mutatedSuffix).ToListAsync(cancellationToken).ConfigureAwait(true);
+
+                yield return new()
+                {
+                    Nodes = result,
+                    DistanceInKilometers = await result.ConvertAll(x => x.Location)
+                        .CalculateDistanceOfCycle(cancellationToken)
+                        .ConfigureAwait(true)
+                };
+
+                i = 0;
+            }
+        }
     }
 }

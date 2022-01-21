@@ -788,41 +788,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             .CalculateDistanceOfCycle(cancellationToken)
                             .ConfigureAwait(true);
 
-                    EvolutionaryItem.Offsprings[0].Nodes =
-                        await EvolutionaryItem.Generations[0].Nodes
-                            .Take(EvolutionaryItem.NumberOfBitsOffspring)
-                            .Concat(
-                            await EvolutionaryItem.Generations[0].Nodes
-                                .Skip(EvolutionaryItem.NumberOfBitsOffspring)
-                                .OrderBy(x => Random.Shared.Next())
-                                .ToListAsync(cancellationToken)
-                                .ConfigureAwait(true)
-                            )
+                    EvolutionaryItem.Offsprings.AddRange(
+                        await EvolutionaryItem.Generations
+                            .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring, cancellationToken)
                             .ToListAsync(cancellationToken)
-                            .ConfigureAwait(true);
-                    EvolutionaryItem.Offsprings[1].Nodes =
-                       await EvolutionaryItem.Generations[1].Nodes
-                           .Take(EvolutionaryItem.NumberOfBitsOffspring)
-                           .Concat(
-                           await EvolutionaryItem.Generations[1].Nodes
-                               .Skip(EvolutionaryItem.NumberOfBitsOffspring)
-                               .OrderBy(x => Random.Shared.Next())
-                               .ToListAsync(cancellationToken)
-                               .ConfigureAwait(true)
-                           )
-                           .ToListAsync(cancellationToken)
-                           .ConfigureAwait(true);
+                            .ConfigureAwait(true)
+                    );
 
-                    EvolutionaryItem.Offsprings[0].DistanceInKilometers =
-                        await EvolutionaryItem.Offsprings[0].Nodes
-                            .ConvertAll(x => x.Location)
-                            .CalculateDistanceOfCycle(cancellationToken)
-                            .ConfigureAwait(true);
-                    EvolutionaryItem.Offsprings[1].DistanceInKilometers =
-                        await EvolutionaryItem.Offsprings[1].Nodes
-                            .ConvertAll(x => x.Location)
-                            .CalculateDistanceOfCycle(cancellationToken)
-                            .ConfigureAwait(true);
                     EvolutionaryItem.Visited[last.Location.Id] = last with { };
                 }
 
@@ -1363,7 +1335,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         new() { Nodes = new() { first with { } } }
                     }
                 );
-                EvolutionaryItem.Offsprings.AddRange(new EvolutionaryNodes[] { new(), new() });
                 EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)

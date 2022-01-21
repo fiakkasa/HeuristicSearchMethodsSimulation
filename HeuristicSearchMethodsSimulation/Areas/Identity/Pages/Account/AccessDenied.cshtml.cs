@@ -10,4 +10,3 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account
         }
     }
 }
-
