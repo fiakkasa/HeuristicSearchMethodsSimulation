@@ -19,7 +19,7 @@
                         <LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.GuidedDirectItem?.Matrix"
                                          NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
 
-                        <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientLocations()">
+                        <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientData()">
                             <Condition Evaluation="tsms.GuidedDirectItem?.AllowRuleToggle == true">
                                 <Match>
                                     <div class="traveling-salesman-rule-toggle-container d-flex flex-wrap justify-content-center mt-2">

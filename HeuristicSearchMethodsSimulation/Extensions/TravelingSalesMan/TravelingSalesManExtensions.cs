@@ -9,7 +9,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Location;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
@@ -75,10 +74,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(true);
 
-        public static bool HasInsufficientLocations<T>(this List<T>? collection) where T : Location =>
-            (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
-
-        public static bool HasInsufficientLocations(this List<EvolutionaryNode>? collection) =>
+        public static bool HasInsufficientData<T>(this List<T>? collection) =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
 
         private static string GetDistanceFormat(bool simple = false) => simple switch
@@ -253,7 +249,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 startingMapLinesData
             );
 
-            if (startingCollection.HasInsufficientLocations()) yield break;
+            if (startingCollection.HasInsufficientData()) yield break;
 
             var minDistance = startingDistance;
             var evaluatedCollection = startingCollection;
@@ -369,7 +365,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 
                 yield return (Route: startingCollection.ToText(), DistanceInKilometers: startingDistance);
 
-                if (startingCollection.HasInsufficientLocations()) yield break;
+                if (startingCollection.HasInsufficientData()) yield break;
 
                 var minDistance = startingDistance;
                 var evaluatedCollection = startingCollection;
@@ -424,7 +420,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
-            if (collection.HasInsufficientLocations()) yield break;
+            if (collection.HasInsufficientData()) yield break;
 
             var iterationCollection = new List<LocationGeo>();
 
@@ -550,6 +546,21 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 
                 i++;
             }
+        }
+
+        public static void ComputeEvolutionaryRanks(this List<EvolutionaryNodes> collection)
+        {
+            if (collection.HasInsufficientData()) return;
+
+            var min = collection.Where(x => x.DistanceInKilometers > 0).MinBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
+            var max = collection.Where(x => x.DistanceInKilometers > 0).MaxBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
+
+            if ((min, max) is { min: not { } or <= 0, max: not { } or <= 0 }) return;
+
+            var maxMin = max - min;
+
+            foreach (var item in collection)
+                item.Rank = (item.DistanceInKilometers - min) / maxMin;
         }
     }
 }

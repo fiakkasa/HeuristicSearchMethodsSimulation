@@ -63,7 +63,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public bool IsInit { get; private set; }
         public bool Progress { get; private set; }
         public List<LocationGeo> Locations { get; } = new();
-        public bool HasLocations => !Locations.HasInsufficientLocations();
+        public bool HasLocations => !Locations.HasInsufficientData();
         public List<LocationGeo> LocationsBySelection { get; } = new();
         public TravelingSalesManAlgorithms Algorithm { get; private set; }
         public int MinSliderValue { get; private set; }
@@ -716,18 +716,56 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             OnStateChangeDelegate?.Invoke();
         }
 
-        public async Task SetEvolutionaryStep(int? step = default)
+        public async Task SetEvolutionaryStep(int step)
         {
             try
             {
-                if (EvolutionaryItem is not { }) return;
+                if (EvolutionaryItem is not { } || EvolutionaryItem.Step >= step) return;
 
                 Progress = true;
                 OnStateChangeDelegate?.Invoke();
 
                 await Delay().ConfigureAwait(true);
 
-                EvolutionaryItem.Step = step ?? EvolutionaryItem.Step + 1;
+                EvolutionaryItem.Step = step;
+
+                switch (EvolutionaryItem.Step)
+                {
+                    case 1:
+                        for (int i = 0; i < 9; i++)
+                        {
+                            var nodes =
+                                await EvolutionaryItem.Generations[0].Nodes
+                                    .Skip(1)
+                                    .OrderBy(x => Random.Shared.Next())
+                                    .Prepend(EvolutionaryItem.Generations[0].Nodes[0])
+                                    .ToListAsync(_cts.Token)
+                                    .ConfigureAwait(true);
+                            var distanceInKilometers =
+                                await nodes.ConvertAll(x => x.Location)
+                                    .CalculateDistanceOfCycle(_cts.Token)
+                                    .ConfigureAwait(true);
+                            EvolutionaryItem.Generations.Add(
+                                new()
+                                {
+                                    Nodes = nodes,
+                                    DistanceInKilometers = distanceInKilometers
+                                }
+                            );
+                        }
+
+                        EvolutionaryItem.Generations.ComputeEvolutionaryRanks();
+
+                        EvolutionaryItem.Offsprings.AddRange(
+                            await EvolutionaryItem.Generations
+                                .Take(2)
+                                .ToList()
+                                .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring, _cts.Token)
+                                .ToListAsync(_cts.Token)
+                                .ConfigureAwait(true)
+                        );
+                        break;
+                }
 
                 Progress = false;
                 OnStateChangeDelegate?.Invoke();
@@ -758,7 +796,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
 
                 EvolutionaryItem.Generations[0].Nodes.Add(item with { });
-                EvolutionaryItem.Generations[1].Nodes.Add(item with { });
                 EvolutionaryItem.Visited[item.Location.Id] = item with { };
 
                 if (
@@ -767,34 +804,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 )
                 {
                     EvolutionaryItem.Generations[0].Nodes.Add(last with { });
-                    EvolutionaryItem.Generations[1].Nodes =
-                        await EvolutionaryItem.Generations[1].Nodes
-                            .Append(last with { })
-                            .Skip(1)
-                            .OrderBy(x => Random.Shared.Next())
-                            .Prepend(EvolutionaryItem.Generations[1].Nodes[0])
-                            .ToListAsync(cancellationToken)
-                            .ConfigureAwait(true);
-                    if (EvolutionaryItem.Generations[0].Nodes[1].Ordinal == EvolutionaryItem.Generations[1].Nodes[1].Ordinal)
-                    {
-                        var second = EvolutionaryItem.Generations[1].Nodes[1] with { };
-                        EvolutionaryItem.Generations[1].Nodes.RemoveAt(1);
-                        EvolutionaryItem.Generations[1].Nodes.Add(second);
-                    }
-
-                    EvolutionaryItem.Generations[1].DistanceInKilometers =
-                        await EvolutionaryItem.Generations[1].Nodes
-                            .ConvertAll(x => x.Location)
-                            .CalculateDistanceOfCycle(cancellationToken)
-                            .ConfigureAwait(true);
-
-                    EvolutionaryItem.Offsprings.AddRange(
-                        await EvolutionaryItem.Generations
-                            .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring, cancellationToken)
-                            .ToListAsync(cancellationToken)
-                            .ConfigureAwait(true)
-                    );
-
                     EvolutionaryItem.Visited[last.Location.Id] = last with { };
                 }
 
@@ -970,7 +979,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 NoneItem.Matrix.AddRange(matrix);
                 NoneItem.MapChartData.AddRange(mapChartData);
 
-                if (locations.HasInsufficientLocations()) return;
+                if (locations.HasInsufficientData()) return;
 
                 NoneItem.NumberOfUniqueRoutesPerNumberOfLocations.AddRange(numberOfUniqueRoutesPerNumberOfLocations);
             }
@@ -994,7 +1003,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             try
             {
-                if (locations.HasInsufficientLocations())
+                if (locations.HasInsufficientData())
                 {
                     PreselectedItem = new() { NumberOfUniqueRoutes = 0 };
                     PreselectedItem.Matrix.AddRange(matrix);
@@ -1060,7 +1069,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 var maxExhaustiveLocationsToCalculateReached = locations.Count > _maxExhaustiveLocationsToCalculate;
 
-                if (locations.HasInsufficientLocations() || maxExhaustiveLocationsToCalculateReached)
+                if (locations.HasInsufficientData() || maxExhaustiveLocationsToCalculateReached)
                 {
                     ExhaustiveItem = new()
                     {
@@ -1113,7 +1122,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 PartialRandomItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-                if (locations.HasInsufficientLocations())
+                if (locations.HasInsufficientData())
                 {
                     PartialRandomItem.Matrix.AddRange(matrix);
                     PartialRandomItem.MapChartData.AddRange(mapMarkerData);
@@ -1149,7 +1158,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 PartialImprovingItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-                if (locations.HasInsufficientLocations())
+                if (locations.HasInsufficientData())
                 {
                     PartialImprovingItem.Matrix.AddRange(matrix);
                     PartialImprovingItem.MapChartData.AddRange(mapMarkerData);
@@ -1229,7 +1238,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
                 GuidedDirectItem.Peripheral.MapMarkerData.AddRange(mapMarkerData);
 
-                if (locations.HasInsufficientLocations()) return;
+                if (locations.HasInsufficientData()) return;
 
                 GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city.");
 
@@ -1318,7 +1327,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 EvolutionaryItem.MapChartData.AddRange(mapMarkerData);
                 EvolutionaryItem.MapMarkerData.AddRange(mapMarkerData);
 
-                if (locations.HasInsufficientLocations()) return;
+                if (locations.HasInsufficientData()) return;
 
                 EvolutionaryItem.NumberOfBitsOffspring = LocationsBySelection.Count switch
                 {
@@ -1328,13 +1337,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 };
                 EvolutionaryItem.Nodes.AddRange(locations.Select((x, i) => new EvolutionaryNode(i, x)));
                 var first = EvolutionaryItem.Nodes[0];
-                EvolutionaryItem.Generations.AddRange(
-                    new EvolutionaryNodes[]
-                    {
-                        new() { Nodes = new() { first with { } } },
-                        new() { Nodes = new() { first with { } } }
-                    }
-                );
+                EvolutionaryItem.Generations.Add(new() { Nodes = new() { first with { } } });
                 EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)
@@ -1461,7 +1464,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             try
             {
-                if (locations.HasInsufficientLocations()) return new();
+                if (locations.HasInsufficientData()) return new();
 
                 return await locations
                     .CalculatePermutations(locations[0].Id)

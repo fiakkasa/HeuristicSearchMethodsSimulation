@@ -77,7 +77,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 
         Task SetEvolutionaryLocation(Guid locationId);
         Task SetEvolutionaryLocation(EvolutionaryNode item);
-        Task SetEvolutionaryStep(int? step = null);
+        Task SetEvolutionaryStep(int step);
 
         Task ResetEvolutionary();
         #endregion

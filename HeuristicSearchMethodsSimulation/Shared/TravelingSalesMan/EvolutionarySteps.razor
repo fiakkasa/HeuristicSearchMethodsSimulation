@@ -58,27 +58,17 @@
             }
         </div>
         <div class="steps row">
-            @if (Step == 0)
-            {
-                <div class="col-12 mt-1">
+            <div class="col-12 mt-1">
+                @if (Step == 0)
+                {
                     <div class="d-flex flex-wrap">
                         <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
                             <div class="p-1 text-muted">@context</div>
                         </Iterations>
                     </div>
-                    @if (CycleComplete == true)
-                    {
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync(1)">
-                                Next
-                            </button>
-                        </div>
-                    }
-                </div>
-            }
-            else if (Step == 1)
-            {
-                <div class="col-12 mt-1">
+                }
+                else if (Step == 1)
+                {
                     <div class="d-flex flex-wrap justify-content-center align-items-center">
                         <div class="p-1">
                             <div class="d-flex flex-wrap">
@@ -109,13 +99,26 @@
                             </div>
                         </div>
                     </div>
+                }
+                else if (Step == 2)
+                {
+                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                        <div class="d-flex flex-wrap @(context.index > 0 ? "mt-2" : string.Empty)">
+                            <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                <div class="p-1 px-2 border border-1 border-light @Step2GenerationCssClass(context.nodes.Rank)">@childContext</div>
+                            </Iterations>
+                        </div>
+                    </Iterations>
+                }
+                @if ((CycleComplete == true && Step == 0) || Step > 0)
+                {
                     <div class="mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync(2)">
+                        <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
                             Next
                         </button>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
     </div>
 }
@@ -129,11 +132,19 @@
     [Parameter] public bool? CycleComplete { get; set; }
     [Parameter] public List<EvolutionaryNodes>? Generations { get; set; }
     [Parameter] public List<EvolutionaryNodes>? Offsprings { get; set; }
-    [Parameter] public EventCallback<int?> OnNextStep { get; set; }
+    [Parameter] public EventCallback<int> OnNextStep { get; set; }
 
     private string Step1OffspringCssClass(int index, bool top) => (Evaluation: index < NumberOfLocations - NumberOfBitsOffspring - 1, Top: top) switch
     {
         { Evaluation: true, Top: true } or { Evaluation: false, Top: false } => "bg-opacity-50",
         _ => string.Empty
+    };
+
+    private string Step2GenerationCssClass(double? rank) => rank switch
+    {
+        0D => "bg-success text-white",
+        <= 0.5D => "bg-success text-white bg-opacity-75",
+        <= 0.75D => "bg-success text-dark bg-opacity-50",
+        _ => "bg-success text-dark bg-opacity-25"
     };
 }
