@@ -16,6 +16,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public Dictionary<Guid, EvolutionaryNode> Visited { get; } = new();
         public bool CycleComplete { get; set; }
         public int NumberOfBitsOffspring { get; set; }
+        public int CurrentGenerationIteration { get; set; }
         public int Step { get; set; }
         public List<EvolutionaryNodes> Generations { get; } = new();
         public List<EvolutionaryNodes> Offsprings { get; } = new();

@@ -61,36 +61,38 @@
             <div class="col-12 mt-1">
                 @if (Step == 0)
                 {
-                    <div class="d-flex flex-wrap">
-                        <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
-                            <div class="p-1 text-muted">@context</div>
-                        </Iterations>
+                    <div class="overflow-auto">
+                        <div class="d-flex">
+                            <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
+                                <div class="p-1 text-muted">@context</div>
+                            </Iterations>
+                        </div>
                     </div>
                 }
                 else if (Step == 1)
                 {
-                    <div class="d-flex flex-wrap justify-content-center align-items-center">
-                        <div class="p-1">
-                            <div class="d-flex flex-wrap">
+                    <div class="d-flex flex-wrap align-items-center justify-content-center overflow-auto small">
+                        <div class="p-1 flex-shrink-0">
+                            <div class="d-flex">
                                 <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
                                     <div class="p-1 px-2 bg-success text-white bg-opacity-50 border border-1 border-light">@context</div>
                                 </Iterations>
                             </div>
-                            <div class="d-flex flex-wrap mt-2">
+                            <div class="d-flex mt-2">
                                 <Iterations T="int" Items="Generations?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light">@context</div>
                                 </Iterations>
                             </div>
                         </div>
-                        <div class="p-1">
-                            <div class="d-flex flex-wrap">
+                        <div class="p-1 flex-shrink-0">
+                            <div class="d-flex">
                                 <Iterations T="(int ordinal, int index)" Items="Offsprings?.FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i))">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light @Step1OffspringCssClass(context.index, true)">
                                         @context.ordinal
                                     </div>
                                 </Iterations>
                             </div>
-                            <div class="d-flex flex-wrap mt-2">
+                            <div class="d-flex mt-2">
                                 <Iterations T="(int ordinal, int index)" Items="Offsprings?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i))">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light @Step1OffspringCssClass(context.index, false)">
                                         @context.ordinal
@@ -102,24 +104,78 @@
                 }
                 else if (Step == 2)
                 {
-                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
-                        <div class="d-flex flex-wrap @(context.index > 0 ? "mt-2" : string.Empty)">
-                            <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
-                                <div class="p-1 px-2 border border-1 border-light @Step2GenerationCssClass(context.nodes.Rank)">@childContext</div>
-                            </Iterations>
+                    <div class="row">
+                        <div class="col-auto">
+                            <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
+                            <div class="border border-1 pb-2 overflow-auto small">
+                                <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                    <div class="d-flex mt-2 px-2">
+                                        <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                            <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                        </Iterations>
+                                    </div>
+                                </Iterations>
+                            </div>
                         </div>
-                    </Iterations>
+                    </div>
                 }
-                @if ((CycleComplete == true && Step == 0) || Step > 0)
+                else if (Step >= 3)
                 {
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
-                            Next
-                        </button>
+                    <div class="row">
+                        <div class="col-auto">
+                            <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
+                            <div class="border border-1 pb-2 overflow-auto small">
+                                <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                    <div class="d-flex mt-2 px-2">
+                                        <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                            <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                        </Iterations>
+                                    </div>
+                                </Iterations>
+                            </div>
+                        </div>
+                        @if (Step < 8)
+                        {
+                            <div class="col-auto">
+                                <div>Mating Pool</div>
+                                <div class="border border-1 pb-2 overflow-auto small">
+                                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                        <div class="d-flex mt-2 px-2">
+                                            <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                            </Iterations>
+                                        </div>
+                                    </Iterations>
+                                </div>
+                            </div>
+                        }
+                        <div class="col-auto">
+                            <div>Generation: @((CurrentGenerationIteration ?? 0) + 1)</div>
+                            <div class="border border-1 pb-2 overflow-auto small">
+                                <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                    <div class="d-flex mt-2 px-2">
+                                        <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                            <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                        </Iterations>
+                                    </div>
+                                </Iterations>
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
         </div>
+
+        @if (CycleComplete == true || Step > 0)
+        {
+            <div class="steps-controls row">
+                <div class="col-12 mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
     </div>
 }
 
@@ -127,6 +183,7 @@
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public int? Step { get; set; }
+    [Parameter] public int? CurrentGenerationIteration { get; set; }
     [Parameter] public int? NumberOfBitsOffspring { get; set; }
     [Parameter] public int? NumberOfLocations { get; set; }
     [Parameter] public bool? CycleComplete { get; set; }
@@ -140,7 +197,7 @@
         _ => string.Empty
     };
 
-    private string Step2GenerationCssClass(double? rank) => rank switch
+    private string RankCssClass(double? rank) => rank switch
     {
         0D => "bg-success text-white",
         <= 0.5D => "bg-success text-white bg-opacity-75",

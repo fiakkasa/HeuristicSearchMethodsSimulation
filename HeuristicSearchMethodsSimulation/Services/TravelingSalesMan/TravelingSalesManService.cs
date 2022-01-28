@@ -765,6 +765,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                                 .ConfigureAwait(true)
                         );
                         break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 7:
+                        break;
+                    case 8:
+                        break;
+                    case 9:
+                        EvolutionaryItem.Step = 2;
+                        EvolutionaryItem.CurrentGenerationIteration++;
+                        break;
                 }
 
                 Progress = false;
