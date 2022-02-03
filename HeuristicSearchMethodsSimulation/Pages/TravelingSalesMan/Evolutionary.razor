@@ -29,8 +29,12 @@
 											   NumberOfLocations="tsms.LocationsBySelection.Count"
 											   CycleComplete="tsms.EvolutionaryItem?.CycleComplete"
 											   Generations="tsms.EvolutionaryItem?.Generations"
+											   NextGenerations="tsms.EvolutionaryItem?.NextGenerations"
+											   MatingPool="tsms.EvolutionaryItem?.MatingPool"
 											   Offsprings="tsms.EvolutionaryItem?.Offsprings"
-											   OnNextStep="tsms.SetEvolutionaryStep" />
+											   OnNextStep="tsms.SetEvolutionaryStep"
+											   OnSpin="tsms.SetEvolutionarySpin"
+											   OnReset="tsms.ResetEvolutionary"/>
 						</ContentWithInsufficientLocationsMessage>
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">

@@ -716,6 +716,20 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             OnStateChangeDelegate?.Invoke();
         }
 
+        public async Task SetEvolutionarySpin()
+        {
+            try
+            {
+                if (EvolutionaryItem is not { Step: 4 }) return;
+
+                await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
         public async Task SetEvolutionaryStep(int step)
         {
             try

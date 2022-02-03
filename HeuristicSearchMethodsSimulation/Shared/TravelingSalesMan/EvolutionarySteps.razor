@@ -40,7 +40,7 @@
             }
             @if (Step >= 5)
             {
-                <div class="col-12 @(Step == 5 ? "text-black" : "text-muted")">
+                <div class="col-12 @(Step == 5 || Step == 6 ? "text-black" : "text-muted")">
                     Step 3: Breed the new candidate solutions.
                 </div>
             }
@@ -139,7 +139,7 @@
                             <div class="col-auto">
                                 <div>Mating Pool</div>
                                 <div class="border border-1 pb-2 overflow-auto small">
-                                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(MatingPool?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
                                         <div class="d-flex mt-2 px-2">
                                             <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                 <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
@@ -149,10 +149,38 @@
                                 </div>
                             </div>
                         }
+                        @if (Step > 4 && Step < 8)
+                        {
+                            <div class="col-auto">
+                                <div>Offsprings</div>
+                                <div class="border border-1 pb-2 overflow-auto small">
+                                    @if (Step == 5)
+                                    {
+                                        <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Offsprings?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                            <div class="d-flex mt-2 px-2">
+                                                <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                    <div class="p-1 px-2 border border-1 border-light">@childContext</div>
+                                                </Iterations>
+                                            </div>
+                                        </Iterations>
+                                    }
+                                    else
+                                    {
+                                        <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Offsprings?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                            <div class="d-flex mt-2 px-2">
+                                                <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                    <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                                </Iterations>
+                                            </div>
+                                        </Iterations>
+                                    }
+                                </div>
+                            </div>
+                        }
                         <div class="col-auto">
                             <div>Generation: @((CurrentGenerationIteration ?? 0) + 1)</div>
                             <div class="border border-1 pb-2 overflow-auto small">
-                                <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(NextGenerations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
                                     <div class="d-flex mt-2 px-2">
                                         <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                             <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
@@ -170,8 +198,20 @@
         {
             <div class="steps-controls row">
                 <div class="col-12 mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-info" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
-                        Next
+                    @if (Step != 4)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-info me-2" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
+                            Next
+                        </button>
+                    }
+                    else if (Step == 4)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-info me-2" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
+                            Spin
+                        </button>
+                    }
+                    <button type="button" class="btn btn-sm btn-outline-warning" disabled="@Disabled" @onclick="() => OnReset.InvokeAsync()">
+                        Reset
                     </button>
                 </div>
             </div>
@@ -188,8 +228,12 @@
     [Parameter] public int? NumberOfLocations { get; set; }
     [Parameter] public bool? CycleComplete { get; set; }
     [Parameter] public List<EvolutionaryNodes>? Generations { get; set; }
+    [Parameter] public List<EvolutionaryNodes>? NextGenerations { get; set; }
+    [Parameter] public List<EvolutionaryNodes>? MatingPool { get; set; }
     [Parameter] public List<EvolutionaryNodes>? Offsprings { get; set; }
     [Parameter] public EventCallback<int> OnNextStep { get; set; }
+    [Parameter] public EventCallback OnSpin { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
 
     private string Step1OffspringCssClass(int index, bool top) => (Evaluation: index < NumberOfLocations - NumberOfBitsOffspring - 1, Top: top) switch
     {

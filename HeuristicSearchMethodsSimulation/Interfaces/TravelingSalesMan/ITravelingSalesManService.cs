@@ -80,6 +80,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         Task SetEvolutionaryStep(int step);
 
         Task ResetEvolutionary();
+        Task SetEvolutionarySpin();
         #endregion
     }
 }
