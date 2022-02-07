@@ -722,6 +722,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 if (EvolutionaryItem is not { Step: 4 }) return;
 
+                EvolutionaryItem.Spinning = true;
+                Progress = true;
+                OnStateChangeDelegate?.Invoke();
+
+                await Delay(5000).ConfigureAwait(true);
+
+                Progress = false;
+                EvolutionaryItem.Spinning = false;
+                OnStateChangeDelegate?.Invoke();
+
                 await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -780,8 +790,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         );
                         break;
                     case 3:
+                        EvolutionaryItem.NextGenerations.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank == 0));
                         break;
                     case 4:
+                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank > 0));
+                        if (EvolutionaryItem.WheelItems.Count == 0) EvolutionaryItem.Step = 10;
                         break;
                     case 7:
                         break;
@@ -790,6 +803,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     case 9:
                         EvolutionaryItem.Step = 2;
                         EvolutionaryItem.CurrentGenerationIteration++;
+                        EvolutionaryItem.Generations.Clear();
+                        EvolutionaryItem.Generations.AddRange(EvolutionaryItem.NextGenerations);
+                        EvolutionaryItem.MatingPool.Clear();
+                        EvolutionaryItem.WheelItems.Clear();
+                        EvolutionaryItem.Offsprings.Clear();
+                        EvolutionaryItem.NextGenerations.Clear();
                         break;
                 }
 

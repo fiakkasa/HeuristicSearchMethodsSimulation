@@ -56,6 +56,12 @@
                     Step 4: Construct the next generation.
                 </div>
             }
+            @if (Step == 10)
+            {
+                <div class="text-black">
+                    The algorithm has converged!
+                </div>
+            }
         </div>
         <div class="steps row">
             <div class="col-12 mt-1">
@@ -63,7 +69,7 @@
                 {
                     <div class="overflow-auto">
                         <div class="d-flex">
-                            <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
+                            <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal) ?? Enumerable.Empty<int>()">
                                 <div class="p-1 text-muted">@context</div>
                             </Iterations>
                         </div>
@@ -74,26 +80,26 @@
                     <div class="d-flex flex-wrap align-items-center justify-content-center overflow-auto small">
                         <div class="p-1 flex-shrink-0">
                             <div class="d-flex">
-                                <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
+                                <Iterations T="int" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal) ?? Enumerable.Empty<int>()">
                                     <div class="p-1 px-2 bg-success text-white bg-opacity-50 border border-1 border-light">@context</div>
                                 </Iterations>
                             </div>
                             <div class="d-flex mt-2">
-                                <Iterations T="int" Items="Generations?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal)">
+                                <Iterations T="int" Items="Generations?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select(x => x.Ordinal) ?? Enumerable.Empty<int>()">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light">@context</div>
                                 </Iterations>
                             </div>
                         </div>
                         <div class="p-1 flex-shrink-0">
                             <div class="d-flex">
-                                <Iterations T="(int ordinal, int index)" Items="Offsprings?.FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i))">
+                                <Iterations T="(int ordinal, int index)" Items="Offsprings?.FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i)) ?? Enumerable.Empty<(int, int)>()">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light @Step1OffspringCssClass(context.index, true)">
                                         @context.ordinal
                                     </div>
                                 </Iterations>
                             </div>
                             <div class="d-flex mt-2">
-                                <Iterations T="(int ordinal, int index)" Items="Offsprings?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i))">
+                                <Iterations T="(int ordinal, int index)" Items="Offsprings?.Skip(1).FirstOrDefault()?.Nodes.Skip(1).Select((x, i) => (ordinal: x.Ordinal, index: i)) ?? Enumerable.Empty<(int, int)>()">
                                     <div class="p-1 px-2 bg-success text-white border border-1 border-light @Step1OffspringCssClass(context.index, false)">
                                         @context.ordinal
                                     </div>
@@ -139,13 +145,24 @@
                             <div class="col-auto">
                                 <div>Mating Pool</div>
                                 <div class="border border-1 pb-2 overflow-auto small">
-                                    <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(MatingPool?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
+                                    @if (MatingPool is { Count: > 0 })
+                                    {
+                                        <Iterations T="(EvolutionaryNodes nodes, int index)" Items="MatingPool.OrderBy(x => x.Rank).Select((x, i) => (nodes: x, index: i))">
+                                            <div class="d-flex mt-2 px-2">
+                                                <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                    <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                                </Iterations>
+                                            </div>
+                                        </Iterations>
+                                    }
+                                    else
+                                    {
                                         <div class="d-flex mt-2 px-2">
-                                            <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
-                                                <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                            <Iterations T="EvolutionaryNode" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1)" Context="childContext">
+                                                <div class="p-1 px-2 border border-1 border-light bg-white text-white breather">&nbsp;</div>
                                             </Iterations>
                                         </div>
-                                    </Iterations>
+                                    }
                                 </div>
                             </div>
                         }
@@ -154,25 +171,36 @@
                             <div class="col-auto">
                                 <div>Offsprings</div>
                                 <div class="border border-1 pb-2 overflow-auto small">
-                                    @if (Step == 5)
+                                    @if (Offsprings is { Count: > 0 })
                                     {
-                                        <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Offsprings?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
-                                            <div class="d-flex mt-2 px-2">
-                                                <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
-                                                    <div class="p-1 px-2 border border-1 border-light">@childContext</div>
-                                                </Iterations>
-                                            </div>
-                                        </Iterations>
+                                        @if (Step == 5)
+                                        {
+                                            <Iterations T="(EvolutionaryNodes nodes, int index)" Items="Offsprings.OrderBy(x => x.Rank).Select((x, i) => (nodes: x, index: i))">
+                                                <div class="d-flex mt-2 px-2">
+                                                    <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                        <div class="p-1 px-2 border border-1 border-light">@childContext</div>
+                                                    </Iterations>
+                                                </div>
+                                            </Iterations>
+                                        }
+                                        else
+                                        {
+                                            <Iterations T="(EvolutionaryNodes nodes, int index)" Items="Offsprings.OrderBy(x => x.Rank).Select((x, i) => (nodes: x, index: i))">
+                                                <div class="d-flex mt-2 px-2">
+                                                    <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
+                                                        <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
+                                                    </Iterations>
+                                                </div>
+                                            </Iterations>
+                                        }
                                     }
                                     else
                                     {
-                                        <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Offsprings?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
-                                            <div class="d-flex mt-2 px-2">
-                                                <Iterations T="int" Items="context.nodes.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
-                                                    <div class="p-1 px-2 border border-1 border-light @RankCssClass(context.nodes.Rank)">@childContext</div>
-                                                </Iterations>
-                                            </div>
-                                        </Iterations>
+                                        <div class="d-flex mt-2 px-2">
+                                            <Iterations T="EvolutionaryNode" Items="Generations?.FirstOrDefault()?.Nodes.Skip(1)?? Enumerable.Empty<EvolutionaryNode>()" Context="childContext">
+                                                <div class="p-1 px-2 border border-1 border-light bg-white text-white breather">&nbsp;</div>
+                                            </Iterations>
+                                        </div>
                                     }
                                 </div>
                             </div>
@@ -198,7 +226,7 @@
         {
             <div class="steps-controls row">
                 <div class="col-12 mt-2">
-                    @if (Step != 4)
+                    @if (Step != 4 && Step < 10)
                     {
                         <button type="button" class="btn btn-sm btn-outline-info me-2" disabled="@Disabled" @onclick="() => OnNextStep.InvokeAsync((Step ?? 0) + 1)">
                             Next
@@ -206,6 +234,11 @@
                     }
                     else if (Step == 4)
                     {
+                        <div class="position-relative pb-2">
+                            <button type="button" class="spinner@(Spinning == true? " spinning" : string.Empty) border-0 overflow-hidden" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
+                                🔥
+                            </button>
+                        </div>
                         <button type="button" class="btn btn-sm btn-outline-info me-2" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
                             Spin
                         </button>
@@ -230,7 +263,9 @@
     [Parameter] public List<EvolutionaryNodes>? Generations { get; set; }
     [Parameter] public List<EvolutionaryNodes>? NextGenerations { get; set; }
     [Parameter] public List<EvolutionaryNodes>? MatingPool { get; set; }
+    [Parameter] public List<EvolutionaryNodes>? WheelItems { get; set; }
     [Parameter] public List<EvolutionaryNodes>? Offsprings { get; set; }
+    [Parameter] public bool? Spinning { get; set; }
     [Parameter] public EventCallback<int> OnNextStep { get; set; }
     [Parameter] public EventCallback OnSpin { get; set; }
     [Parameter] public EventCallback OnReset { get; set; }

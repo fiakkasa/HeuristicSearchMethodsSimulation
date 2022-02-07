@@ -21,6 +21,8 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public List<EvolutionaryNodes> Generations { get; } = new();
         public List<EvolutionaryNodes> NextGenerations { get; } = new();
         public List<EvolutionaryNodes> MatingPool { get; } = new();
+        public List<EvolutionaryNodes> WheelItems { get; } = new();
         public List<EvolutionaryNodes> Offsprings { get; } = new();
+        public bool Spinning { get; set; }
     }
 }
