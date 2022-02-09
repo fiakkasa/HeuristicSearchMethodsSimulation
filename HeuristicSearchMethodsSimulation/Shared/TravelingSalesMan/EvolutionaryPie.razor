@@ -1,0 +1,92 @@
+﻿@using Plotly.Blazor
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.ConfigLib
+@using Plotly.Blazor.Traces.PieLib
+@inject ILogger<EvolutionaryPie> logger
+@implements IDisposable
+
+<div class="traveling-salesman-evolutionary-pie-container @CssClass @VisibilityClass">
+    <PlotlyChart Config="_chartConfig"
+                 Layout="_chartLayout"
+                 Data="_chartData"
+                 @ref="_chartRef" 
+                 style="@("width:" + _chartLayout.Width + "px; height:" + _chartLayout.Height + "px;")" />
+</div>
+
+@code {
+    private PlotlyChart? _chartRef;
+    private readonly Config _chartConfig = new()
+        {
+            Responsive = false,
+            DisplayLogo = false,
+            DisplayModeBar = DisplayModeBarEnum.False,
+            AutoSizable = false,
+            ShowTips = false
+        };
+    private readonly Layout _chartLayout = new()
+        {
+            Width = 200,
+            Height = 200,
+            AutoSize = false,
+            ShowLegend = false,
+            Margin = new()
+            {
+                AutoExpand = false,
+                B = 0,
+                L = 0,
+                R = 0,
+                T = 0,
+                Pad = 0
+            },
+            HoverMode = Plotly.Blazor.LayoutLib.HoverModeEnum.False
+        };
+    private readonly List<ITrace> _chartData = new List<ITrace> { new Pie() };
+
+    private string VisibilityClass =>
+        _chartData.FirstOrDefault() is Pie pie && pie.Values?.Count > 0 && pie.Values?.Count == pie.Labels?.Count
+            ? string.Empty
+            : "d-none";
+
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter]
+    public List<EvolutionaryNodes>? Value
+    {
+        set
+        {
+            _chartData.Clear();
+            _chartData.Add(
+                new Pie
+                {   
+                    Text = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => $"[{string.Join("", x.Nodes.Skip(1).Select(y => y.Ordinal))}]<br />{x.DistanceInKilometers.ToFormattedDistance()}").ToList<object>(),
+                    TextInfo = TextInfoFlag.Text | TextInfoFlag.Percent,
+                    TextPosition = TextPositionEnum.Inside,
+                    TextFont = new()
+                    {
+                        Size = 8M
+                    },
+                    Labels = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => string.Join("", x.Nodes.Skip(1).Select(y => y.Ordinal))).ToList<object>(),
+                    Values = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => (object)(long)(x.DistanceInKilometers ?? 0 / 1000)).ToList()
+                }
+            );
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) return;
+
+        try
+        {
+            if (_chartRef is { } c) await c!.React();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _chartRef?.Dispose();
+    }
+}

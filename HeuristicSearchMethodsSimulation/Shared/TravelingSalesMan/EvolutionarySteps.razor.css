@@ -1,16 +1,13 @@
-﻿.spinner {
-    width: 100px;
-    height: 100px;
-    background-color: #0CB1C4;
-    border-radius: 50%;
+﻿.spinner-container {
+    border-radius: 100%;
 }
 
-    .spinner.spinning {
-        animation-name: spin;
-        animation-duration: 1s;
-        animation-iteration-count: infinite;
-        animation-timing-function: linear;
-    }
+::deep .spinner.spinning {
+    animation-name: spin;
+    animation-duration: 500ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
 
 .breather {
     animation-name: breathe;

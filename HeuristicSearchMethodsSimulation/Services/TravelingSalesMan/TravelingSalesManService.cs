@@ -720,19 +720,31 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             try
             {
-                if (EvolutionaryItem is not { Step: 4 }) return;
+                if (EvolutionaryItem is not { Step: 4, WheelItems.Count: > 0 }) return;
 
                 EvolutionaryItem.Spinning = true;
                 Progress = true;
                 OnStateChangeDelegate?.Invoke();
 
-                await Delay(5000).ConfigureAwait(true);
+                await Delay(1000).ConfigureAwait(true);
+
+                if (EvolutionaryItem.WheelItems.Count == 2)
+                {
+                    EvolutionaryItem.MatingPool.AddRange(EvolutionaryItem.WheelItems.Take(2));
+                    EvolutionaryItem.WheelItems.Clear();
+                }
+                else
+                {
+                    EvolutionaryItem.MatingPool.AddRange(EvolutionaryItem.WheelItems.Take(1));
+                    EvolutionaryItem.WheelItems.RemoveAt(0);
+                }
 
                 Progress = false;
                 EvolutionaryItem.Spinning = false;
                 OnStateChangeDelegate?.Invoke();
 
-                await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
+                if (EvolutionaryItem.WheelItems.Count == 0)
+                    await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
             }
             catch (Exception ex)
             {

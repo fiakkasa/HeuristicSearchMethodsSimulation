@@ -111,7 +111,7 @@
                 else if (Step == 2)
                 {
                     <div class="row">
-                        <div class="col-auto">
+                        <div class="col-auto mb-1">
                             <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
                             <div class="border border-1 pb-2 overflow-auto small">
                                 <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
@@ -128,7 +128,7 @@
                 else if (Step >= 3)
                 {
                     <div class="row">
-                        <div class="col-auto">
+                        <div class="col-auto mb-1">
                             <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
                             <div class="border border-1 pb-2 overflow-auto small">
                                 <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(Generations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
@@ -142,7 +142,7 @@
                         </div>
                         @if (Step < 8)
                         {
-                            <div class="col-auto">
+                            <div class="col-auto mb-1">
                                 <div>Mating Pool</div>
                                 <div class="border border-1 pb-2 overflow-auto small">
                                     @if (MatingPool is { Count: > 0 })
@@ -168,7 +168,7 @@
                         }
                         @if (Step > 4 && Step < 8)
                         {
-                            <div class="col-auto">
+                            <div class="col-auto mb-1">
                                 <div>Offsprings</div>
                                 <div class="border border-1 pb-2 overflow-auto small">
                                     @if (Offsprings is { Count: > 0 })
@@ -205,7 +205,7 @@
                                 </div>
                             </div>
                         }
-                        <div class="col-auto">
+                        <div class="col-auto mb-1">
                             <div>Generation: @((CurrentGenerationIteration ?? 0) + 1)</div>
                             <div class="border border-1 pb-2 overflow-auto small">
                                 <Iterations T="(EvolutionaryNodes nodes, int index)" Items="(NextGenerations?.OrderBy(x => x.Rank) ?? Enumerable.Empty<EvolutionaryNodes>()).Select((x, i) => (nodes: x, index: i))">
@@ -235,8 +235,8 @@
                     else if (Step == 4)
                     {
                         <div class="position-relative pb-2">
-                            <button type="button" class="spinner@(Spinning == true? " spinning" : string.Empty) border-0 overflow-hidden" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
-                                🔥
+                            <button type="button" class="spinner-container border-0 p-0 m-0 overflow-hidden" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
+                                <EvolutionaryPie CssClass="@(Spinning == true? "spinner spinning" :"spinner")" Value="WheelItems" />
                             </button>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-info me-2" disabled="@Disabled" @onclick="() => OnSpin.InvokeAsync()">
