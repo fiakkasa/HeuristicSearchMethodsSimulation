@@ -110,6 +110,11 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     .Select(x => x)
             );
 
+        public static string ToText(this EvolutionaryNodes obj) => obj.Nodes.ToText();
+
+        public static string ToText(this List<EvolutionaryNode> collection) =>
+            string.Join("", collection.Skip(1).Select(y => y.Ordinal));
+
         public static IEnumerable<LocationPair> ToPartialCyclePairs(this List<LocationGeo> collection)
         {
             if (collection.Count >= 2)

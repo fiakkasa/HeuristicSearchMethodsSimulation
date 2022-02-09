@@ -728,16 +728,10 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 await Delay(1000).ConfigureAwait(true);
 
-                if (EvolutionaryItem.WheelItems.Count == 2)
-                {
-                    EvolutionaryItem.MatingPool.AddRange(EvolutionaryItem.WheelItems.Take(2));
-                    EvolutionaryItem.WheelItems.Clear();
-                }
-                else
-                {
-                    EvolutionaryItem.MatingPool.AddRange(EvolutionaryItem.WheelItems.Take(1));
-                    EvolutionaryItem.WheelItems.RemoveAt(0);
-                }
+                var items = EvolutionaryItem.WheelItems.Take(EvolutionaryItem.WheelItems.Count <= 2 ? 2 : 1).ToList();
+                EvolutionaryItem.MatingPool.AddRange(items);
+                EvolutionaryItem.Generations.RemoveAll(x => items.Any(y => x.Id == y.Id));
+                EvolutionaryItem.WheelItems.RemoveAll(x => items.Any(y => x.Id == y.Id));
 
                 Progress = false;
                 EvolutionaryItem.Spinning = false;
@@ -768,27 +762,39 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 switch (EvolutionaryItem.Step)
                 {
                     case 1:
-                        for (int i = 0; i < 9; i++)
+                        var first = EvolutionaryItem.Generations[0];
+                        var generations = new List<EvolutionaryNodes>();
+
+                        for (int i = 0; i < 20; i++)
                         {
                             var nodes =
-                                await EvolutionaryItem.Generations[0].Nodes
+                                await first.Nodes
                                     .Skip(1)
                                     .OrderBy(x => Random.Shared.Next())
-                                    .Prepend(EvolutionaryItem.Generations[0].Nodes[0])
+                                    .Prepend(first.Nodes[0])
                                     .ToListAsync(_cts.Token)
                                     .ConfigureAwait(true);
+                            var nodesText = nodes.ToText();
+
+                            if (first.Text == nodesText) continue;
+
                             var distanceInKilometers =
                                 await nodes.ConvertAll(x => x.Location)
                                     .CalculateDistanceOfCycle(_cts.Token)
                                     .ConfigureAwait(true);
-                            EvolutionaryItem.Generations.Add(
+
+                            generations.Add(
                                 new()
                                 {
+                                    Id = Guid.NewGuid(),
                                     Nodes = nodes,
+                                    Text = nodesText,
                                     DistanceInKilometers = distanceInKilometers
                                 }
                             );
                         }
+
+                        EvolutionaryItem.Generations.AddRange(generations.DistinctBy(x => x.Text).Take(9));
 
                         EvolutionaryItem.Generations.ComputeEvolutionaryRanks();
 
@@ -805,7 +811,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.NextGenerations.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank == 0));
                         break;
                     case 4:
-                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank > 0));
+                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank > 0).Take(4));
                         if (EvolutionaryItem.WheelItems.Count == 0) EvolutionaryItem.Step = 10;
                         break;
                     case 7:
@@ -892,6 +898,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 if (cycleComplete)
                 {
                     EvolutionaryItem.Generations[0].DistanceInKilometers = totalDistance;
+                    EvolutionaryItem.Generations[0].Text = EvolutionaryItem.Generations[0].ToText();
                     EvolutionaryItem.CycleComplete = true;
                 }
 
@@ -1394,7 +1401,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 };
                 EvolutionaryItem.Nodes.AddRange(locations.Select((x, i) => new EvolutionaryNode(i, x)));
                 var first = EvolutionaryItem.Nodes[0];
-                EvolutionaryItem.Generations.Add(new() { Nodes = new() { first with { } } });
+                EvolutionaryItem.Generations.Add(new() { Id = Guid.NewGuid(), Nodes = new() { first with { } } });
                 EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)

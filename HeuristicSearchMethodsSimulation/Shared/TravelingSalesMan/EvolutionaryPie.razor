@@ -54,18 +54,41 @@
         set
         {
             _chartData.Clear();
+            var collection = value ?? Enumerable.Empty<EvolutionaryNodes>();
             _chartData.Add(
                 new Pie
                 {   
-                    Text = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => $"[{string.Join("", x.Nodes.Skip(1).Select(y => y.Ordinal))}]<br />{x.DistanceInKilometers.ToFormattedDistance()}").ToList<object>(),
+                    Text = collection.Select(x => $"[{x.Text}]<br />{x.DistanceInKilometers.ToFormattedDistance()}").ToList<object>(),
                     TextInfo = TextInfoFlag.Text | TextInfoFlag.Percent,
                     TextPosition = TextPositionEnum.Inside,
                     TextFont = new()
                     {
-                        Size = 8M
+                        Size = 8M,
+                        ColorArray = collection.Select(x => x.Rank switch
+                        {
+                            0D => "FFFFFF",
+                            <= 0.5D => "FFFFFF",
+                            <= 0.75D => "222222",
+                            _ => "222222"
+                        }).ToList<object>()
                     },
-                    Labels = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => string.Join("", x.Nodes.Skip(1).Select(y => y.Ordinal))).ToList<object>(),
-                    Values = (value ?? Enumerable.Empty<EvolutionaryNodes>()).Select(x => (object)(long)(x.DistanceInKilometers ?? 0 / 1000)).ToList()
+                    Marker = new() 
+                    { 
+                        Line = new()
+                        {
+                            Color = "FFFFFF",
+                            Width = 1M
+                        },
+                        Colors = collection.Select(x => x.Rank switch
+                        {
+                            0D => "43AC6AFF",
+                            <= 0.5D => "43AC6ABF",
+                            <= 0.75D => "43AC6A80",
+                            _ => "43AC6A40"
+                        }).ToList<object>()
+                    },
+                    Labels = collection.Select(x => x.Text).ToList<object>(),
+                    Values = collection.Select(x => (object)(long)(x.DistanceInKilometers ?? 0 / 1000)).ToList()
                 }
             );
         }

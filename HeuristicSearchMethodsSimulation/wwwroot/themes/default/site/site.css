@@ -10,6 +10,10 @@
     color: var(--bs-danger, #dc3545);
 }
 
+.builder-buttons-container > button {
+    display: none !important;
+}
+
 #blazor-error-ui {
     background: var(--bs-cyan, #0dcaf0);
     color: var(--bs-white, #fff);
