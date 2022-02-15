@@ -18,8 +18,8 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public int NumberOfBitsOffspring { get; set; }
         public int CurrentGenerationIteration { get; set; }
         public int Step { get; set; }
-        public List<EvolutionaryNodes> Generations { get; } = new();
-        public List<EvolutionaryNodes> NextGenerations { get; } = new();
+        public List<EvolutionaryNodes> CurrentGeneration { get; } = new();
+        public List<EvolutionaryNodes> NextGeneration { get; } = new();
         public List<EvolutionaryNodes> MatingPool { get; } = new();
         public List<EvolutionaryNodes> WheelItems { get; } = new();
         public List<EvolutionaryNodes> Offsprings { get; } = new();

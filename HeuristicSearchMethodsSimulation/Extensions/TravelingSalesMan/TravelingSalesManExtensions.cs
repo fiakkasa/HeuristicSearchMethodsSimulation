@@ -77,6 +77,12 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static bool HasInsufficientData<T>(this List<T>? collection) =>
             (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
 
+        public static bool HasInsufficientData<T>(this IEnumerable<T>? collection) =>
+           (collection?.Take(Consts.MinNumberOfLocations).Count() ?? 0) < Consts.MinNumberOfLocations;
+
+        public static async Task<bool> HasInsufficientData<T>(this IAsyncEnumerable<T>? collection, CancellationToken cancellationToken) =>
+            (collection is { } ? await collection.CountAsync(cancellationToken).ConfigureAwait(true) : 0) < Consts.MinNumberOfLocations;
+
         private static string GetDistanceFormat(bool simple = false) => simple switch
         {
             true => "#0",
@@ -505,13 +511,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             }
         }
 
-        public static async IAsyncEnumerable<EvolutionaryNodes> ComputeEvolutionaryOffsprings(
-            this List<EvolutionaryNodes> collection,
-            int numberOfBits,
-            [EnumeratorCancellation] CancellationToken cancellationToken
-        )
+        public static IEnumerable<EvolutionaryNodes> ComputeEvolutionaryOffsprings(this IEnumerable<EvolutionaryNodes> collection, int numberOfBits)
         {
             var i = 0;
+
             foreach (var nodes in collection.Select(x => x.Nodes))
             {
                 var seed = collection
@@ -525,47 +528,50 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     .Nodes;
                 if (seed is not { }) break;
 
-                var tail = await nodes.Skip(numberOfBits).ToListAsync(cancellationToken).ConfigureAwait(true);
+                var tail = nodes.Skip(numberOfBits).ToList();
                 var newTail = new List<EvolutionaryNode>();
 
                 for (var j = 0; j < seed.Count; j++)
                 {
-                    if (tail.Contains(seed[j]))
-                    {
-                        newTail.Add(seed[j]);
-                    }
+                    if (!tail.Contains(seed[j])) continue;
+
+                    newTail.Add(seed[j]);
                 }
 
-                var result = await nodes.Take(numberOfBits)
-                    .Concat(newTail)
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
+                var result =
+                    nodes
+                        .Take(numberOfBits)
+                        .Concat(newTail)
+                        .ToList();
 
                 yield return new()
                 {
+                    Id = Guid.NewGuid(),
                     Nodes = result,
-                    DistanceInKilometers = await result.ConvertAll(x => x.Location)
-                        .CalculateDistanceOfCycle(cancellationToken)
-                        .ConfigureAwait(true)
+                    Text = result.ToText(),
+                    DistanceInKilometers =
+                        result
+                            .ConvertAll(x => x.Location)
+                            .CalculateDistanceOfCycle()
                 };
 
                 i++;
             }
         }
 
-        public static void ComputeEvolutionaryRanks(this List<EvolutionaryNodes> collection)
+        public static IEnumerable<EvolutionaryNodes> ComputeEvolutionaryRanks(this IEnumerable<EvolutionaryNodes> collection)
         {
-            if (collection.HasInsufficientData()) return;
+            if (!collection.Any())
+                return Enumerable.Empty<EvolutionaryNodes>();
 
             var min = collection.Where(x => x.DistanceInKilometers > 0).MinBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
             var max = collection.Where(x => x.DistanceInKilometers > 0).MaxBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
 
-            if ((min, max) is { min: not { } or <= 0, max: not { } or <= 0 }) return;
+            if ((min, max) is { min: not { } or <= 0, max: not { } or <= 0 }) return new List<EvolutionaryNodes>();
 
             var maxMin = max - min;
 
-            foreach (var item in collection)
-                item.Rank = (item.DistanceInKilometers - min) / maxMin;
+            return collection.Select(x => x with { Rank = (x.DistanceInKilometers - min) / maxMin });
         }
     }
 }

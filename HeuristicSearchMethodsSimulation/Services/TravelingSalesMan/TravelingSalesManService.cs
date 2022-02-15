@@ -728,17 +728,33 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 await Delay(1000).ConfigureAwait(true);
 
-                var items = EvolutionaryItem.WheelItems.Take(EvolutionaryItem.WheelItems.Count <= 2 ? 2 : 1).ToList();
+                var items =
+                    EvolutionaryItem.WheelItems
+                        .OrderBy(_ => Random.Shared.Next())
+                        .Take(EvolutionaryItem.WheelItems.Count <= 2 ? 2 : 1)
+                        .ToList();
                 EvolutionaryItem.MatingPool.AddRange(items);
-                EvolutionaryItem.Generations.RemoveAll(x => items.Any(y => x.Id == y.Id));
+                EvolutionaryItem.CurrentGeneration.RemoveAll(x => items.Any(y => x.Id == y.Id));
                 EvolutionaryItem.WheelItems.RemoveAll(x => items.Any(y => x.Id == y.Id));
 
                 Progress = false;
                 EvolutionaryItem.Spinning = false;
                 OnStateChangeDelegate?.Invoke();
 
-                if (EvolutionaryItem.WheelItems.Count == 0)
-                    await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
+                if (EvolutionaryItem.WheelItems.Count > 0) return;
+
+                await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
+
+                EvolutionaryItem.Offsprings.Clear();
+
+                if (EvolutionaryItem.MatingPool.Count == 0) return;
+
+                EvolutionaryItem.Offsprings.AddRange(
+                    EvolutionaryItem.MatingPool
+                        .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring - 1)
+                        .DistinctBy(x => x.Text)
+                        .ComputeEvolutionaryRanks()
+                );
             }
             catch (Exception ex)
             {
@@ -762,7 +778,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 switch (EvolutionaryItem.Step)
                 {
                     case 1:
-                        var first = EvolutionaryItem.Generations[0];
+                        var first = EvolutionaryItem.CurrentGeneration[0] with { };
                         var generations = new List<EvolutionaryNodes>();
 
                         for (int i = 0; i < 20; i++)
@@ -794,39 +810,50 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             );
                         }
 
-                        EvolutionaryItem.Generations.AddRange(generations.DistinctBy(x => x.Text).Take(9));
-
-                        EvolutionaryItem.Generations.ComputeEvolutionaryRanks();
+                        EvolutionaryItem.CurrentGeneration.Clear();
+                        EvolutionaryItem.CurrentGeneration.AddRange(
+                            generations
+                                .Prepend(first)
+                                .DistinctBy(x => x.Text)
+                                .Take(9)
+                                .ComputeEvolutionaryRanks()
+                        );
 
                         EvolutionaryItem.Offsprings.AddRange(
-                            await EvolutionaryItem.Generations
+                             EvolutionaryItem.CurrentGeneration
                                 .Take(2)
-                                .ToList()
-                                .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring, _cts.Token)
-                                .ToListAsync(_cts.Token)
-                                .ConfigureAwait(true)
+                                .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring)
                         );
                         break;
                     case 3:
-                        EvolutionaryItem.NextGenerations.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank == 0));
+                        EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
                     case 4:
-                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.Generations.Where(x => x.Rank > 0).Take(4));
+                        var currentGenCutOff = EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).ToList();
+                        EvolutionaryItem.WheelItems.AddRange(
+                            currentGenCutOff.Take(((currentGenCutOff.Count / 2) * 2) is { } count && count > 8 ? 8 : count)
+                        );
                         if (EvolutionaryItem.WheelItems.Count == 0) EvolutionaryItem.Step = 10;
                         break;
                     case 7:
-                        break;
-                    case 8:
+                        var nextGeneration =
+                            EvolutionaryItem.NextGeneration
+                                .Concat(EvolutionaryItem.Offsprings)
+                                .DistinctBy(x => x.Text)
+                                .OrderBy(x => x.Rank)
+                                .ToList();
+                        EvolutionaryItem.NextGeneration.Clear();
+                        EvolutionaryItem.NextGeneration.AddRange(nextGeneration);
                         break;
                     case 9:
-                        EvolutionaryItem.Step = 2;
                         EvolutionaryItem.CurrentGenerationIteration++;
-                        EvolutionaryItem.Generations.Clear();
-                        EvolutionaryItem.Generations.AddRange(EvolutionaryItem.NextGenerations);
+                        EvolutionaryItem.CurrentGeneration.Clear();
+                        EvolutionaryItem.CurrentGeneration.AddRange(EvolutionaryItem.NextGeneration);
                         EvolutionaryItem.MatingPool.Clear();
                         EvolutionaryItem.WheelItems.Clear();
                         EvolutionaryItem.Offsprings.Clear();
-                        EvolutionaryItem.NextGenerations.Clear();
+                        EvolutionaryItem.NextGeneration.Clear();
+                        EvolutionaryItem.Step = 2;
                         break;
                 }
 
@@ -858,7 +885,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     OnStateChangeDelegate?.Invoke();
                 }
 
-                EvolutionaryItem.Generations[0].Nodes.Add(item with { });
+                EvolutionaryItem.CurrentGeneration[0].Nodes.Add(item with { });
                 EvolutionaryItem.Visited[item.Location.Id] = item with { };
 
                 if (
@@ -866,7 +893,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     EvolutionaryItem.Nodes.ExceptBy(EvolutionaryItem.Visited.Keys, x => x.Location.Id).FirstOrDefault() is { } last
                 )
                 {
-                    EvolutionaryItem.Generations[0].Nodes.Add(last with { });
+                    EvolutionaryItem.CurrentGeneration[0].Nodes.Add(last with { });
                     EvolutionaryItem.Visited[last.Location.Id] = last with { };
                 }
 
@@ -897,8 +924,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (cycleComplete)
                 {
-                    EvolutionaryItem.Generations[0].DistanceInKilometers = totalDistance;
-                    EvolutionaryItem.Generations[0].Text = EvolutionaryItem.Generations[0].ToText();
+                    EvolutionaryItem.CurrentGeneration[0].DistanceInKilometers = totalDistance;
+                    EvolutionaryItem.CurrentGeneration[0].Text = EvolutionaryItem.CurrentGeneration[0].ToText();
                     EvolutionaryItem.CycleComplete = true;
                 }
 
@@ -1401,7 +1428,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 };
                 EvolutionaryItem.Nodes.AddRange(locations.Select((x, i) => new EvolutionaryNode(i, x)));
                 var first = EvolutionaryItem.Nodes[0];
-                EvolutionaryItem.Generations.Add(new() { Id = Guid.NewGuid(), Nodes = new() { first with { } } });
+                EvolutionaryItem.CurrentGeneration.Add(new()
+                {
+                    Id = Guid.NewGuid(),
+                    Text = "...",
+                    Nodes = new() { first with { } }
+                });
                 EvolutionaryItem.Visited[first.Location.Id] = first with { };
             }
             catch (Exception ex)
