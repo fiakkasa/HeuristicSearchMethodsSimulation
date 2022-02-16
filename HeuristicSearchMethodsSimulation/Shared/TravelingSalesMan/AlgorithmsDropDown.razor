@@ -1,6 +1,6 @@
-﻿@inject ITravelingSalesManService tsms
+﻿@using System.Text
+@inject ITravelingSalesManBaseService tsms
 @inject NavigationManager nav
-@using System.Text
 
 <select class="traveling-salesman-algo-dropdown form-select form-select-sm d-inline-block w-auto @(tsms.Algorithm == TravelingSalesManAlgorithms.None ? "text-black-50" : "text-black") @CssClass"
         value="@tsms.Algorithm"

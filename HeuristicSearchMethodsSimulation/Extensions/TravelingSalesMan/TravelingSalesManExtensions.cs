@@ -113,6 +113,9 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
             }
         }
 
+        public static Task<List<LocationPair>> ToPartialCyclePairs(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
+            collection.ToPartialCyclePairs().ToListAsync(cancellationToken);
+
         public static IEnumerable<LocationPair> ToCyclePairs(this List<LocationGeo> collection)
         {
             if (collection.Count >= Consts.MinNumberOfLocations)
@@ -123,6 +126,9 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 yield return new(collection[^1], collection[0]);
             }
         }
+
+        public static Task<List<LocationPair>> ToCyclePairs(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
+            collection.ToCyclePairs().ToListAsync(cancellationToken);
 
         public static double CalculateDistancePointToPointInKilometers(this LocationGeo location, LocationGeo otherLocation) =>
             (location, otherLocation) is { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } }
@@ -163,10 +169,24 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static IEnumerable<ITrace> ToMapLines(this IEnumerable<LocationPair> collection) =>
             collection.Select(x => x.ToMapLine());
 
-        public static IEnumerable<ITrace> ToMapLines(this List<LocationGeo> collection) =>
+        public static Task<List<ITrace>> ToMapLines(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
             collection
                 .ToCyclePairs()
-                .ToMapLines();
+                .ToMapLines(cancellationToken);
+
+        public static async Task<List<ITrace>> ToMapLines(this IEnumerable<LocationPair> collection, CancellationToken cancellationToken) =>
+            await collection
+                .Select(x => x.ToMapLine())
+                .ToListAsync<ITrace>(cancellationToken)
+                .ConfigureAwait(true);
+
+        public static async Task<List<ITrace>> ToMapLines(this List<LocationGeo> collection, IEnumerable<ITrace> append, CancellationToken cancellationToken) =>
+            await collection
+                .ToCyclePairs()
+                .Select(x => x.ToMapLine())
+                .Concat(append)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
 
         public static async Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(this int numberOfLocations, CancellationToken cancellationToken) =>
             await Enumerable.Range(0, numberOfLocations)

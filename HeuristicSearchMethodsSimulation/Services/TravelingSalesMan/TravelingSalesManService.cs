@@ -23,7 +23,15 @@ using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Locat
 
 namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 {
-    public class TravelingSalesManService : IDisposable, ITravelingSalesManService
+    public class TravelingSalesManService :
+        IDisposable,
+        ITravelingSalesManNoneService,
+        ITravelingSalesManPreselectedService,
+        ITravelingSalesManExhaustiveService,
+        ITravelingSalesManPartialRandomService,
+        ITravelingSalesManPartialImprovingService,
+        ITravelingSalesManGuidedDirectService,
+        ITravelingSalesManEvolutionaryService
     {
         private bool _disposedValue;
         private readonly IOptions<MongoOptions> _mongoOptions;
@@ -123,7 +131,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     .DistinctBy(x => x.Algo + x.Text)
                     .OrderBy(x => x.DistanceInKilometers)
                     .Take(Consts.MaxNumberOfHistoryLocations)
-                    .ToListAsync()
+                    .ToListAsync(_cts.Token)
                     .ConfigureAwait(true);
         }
 
@@ -232,8 +240,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = await item.Collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
                     var matrix = await ExhaustiveItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
                     ExhaustiveItem.Matrix.Clear();
@@ -342,13 +350,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                              text,
                              totalDistance,
                              await collection
-                                .ToCyclePairs()
-                                .ToMapLines()
-                                .Concat(PartialRandomItem.MapMarkerData)
-                                .ToListAsync(cancellationToken)
+                                .ToMapLines(PartialRandomItem.MapMarkerData, cancellationToken)
                                 .ConfigureAwait(true)
                          )
-                     ).ConfigureAwait(true);
+                     )
+                     .ConfigureAwait(true);
 
                     PartialRandomItem.Matrix.Clear();
                     PartialRandomItem.MapChartData.Clear();
@@ -374,8 +380,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await collection.ToPartialCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = await collection.ToPartialCyclePairs(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
                     var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
                     var text = collection.ToText(customLastElemText: "...");
                     var matrix = await PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
@@ -436,8 +442,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await item.Collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = await item.Collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
                     var matrix = await PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
                     PartialRandomItem.Matrix.Clear();
@@ -909,7 +915,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     )
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(true);
-                var mapLineData = await cyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
                 var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
                 var matrix = await EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
 
@@ -1125,7 +1131,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     _ => matrix
                 };
                 var totalDistance = await locations.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-                var mapLineData = await locations.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var mapLineData = await locations.ToMapLines(cancellationToken).ConfigureAwait(true);
 
                 PreselectedItem = new()
                 {

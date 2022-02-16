@@ -73,7 +73,15 @@ namespace HeuristicSearchMethodsSimulation
 
             #region Services
             services.AddScoped<IAccessControlService, AccessControlService>();
-            services.AddScoped<ITravelingSalesManService, TravelingSalesManService>();
+            services
+                .AddScoped<ITravelingSalesManBaseService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManNoneService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManPreselectedService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManExhaustiveService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManPartialRandomService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManPartialImprovingService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManGuidedDirectService, TravelingSalesManService>()
+                .AddScoped<ITravelingSalesManEvolutionaryService, TravelingSalesManService>();
             #endregion
         }
 

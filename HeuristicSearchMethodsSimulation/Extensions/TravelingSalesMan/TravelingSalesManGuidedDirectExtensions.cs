@@ -26,10 +26,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 var item = collection[i] with { };
                 iterationCollection.Add(item);
 
-                var iterationCyclePairs = await iterationCollection.ToPartialCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var iterationCyclePairs = await iterationCollection.ToPartialCyclePairs(cancellationToken).ConfigureAwait(true);
                 var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCyclePairs, cancellationToken).ConfigureAwait(true);
                 var iterationDistance = await iterationCyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-                var iterationMapLineData = await iterationCyclePairs.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+                var iterationMapLineData = await iterationCyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
 
                 yield return new GuidedDirectIteration(
                     i,
@@ -44,10 +44,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 );
             }
 
-            var computedCycle = await collection.ToCyclePairs().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var computedCycle = await collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
             var computedMatrix = await matrix.HighlightMatrixCyclePairs(computedCycle, cancellationToken).ConfigureAwait(true);
             var computedDistance = await computedCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-            var computedMapLinesData = await computedCycle.ToMapLines().ToListAsync(cancellationToken).ConfigureAwait(true);
+            var computedMapLinesData = await computedCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
 
             yield return new GuidedDirectIteration(
                 collection.Count,

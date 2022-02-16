@@ -1,5 +1,6 @@
 ﻿@page "/TravelingSalesMan"
 @implements IDisposable
+@inject ITravelingSalesManNoneService tsms
 
 <ContentWithLoader Loading="!tsms.IsInit" Progress="tsms.Progress">
 	<Title>

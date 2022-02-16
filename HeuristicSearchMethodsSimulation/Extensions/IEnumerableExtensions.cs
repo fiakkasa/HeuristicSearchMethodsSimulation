@@ -7,9 +7,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions
 {
     public static class IEnumerableExtensions
     {
-        public static ValueTask<List<T>> ToListAsync<T>(this IEnumerable<T> collection, CancellationToken cancellationToken = default) =>
-            collection
+        public static async Task<List<T>> ToListAsync<T>(this IEnumerable<T> collection, CancellationToken cancellationToken = default) =>
+            await collection
                 .ToAsyncEnumerable()
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(true);
     }
 }
