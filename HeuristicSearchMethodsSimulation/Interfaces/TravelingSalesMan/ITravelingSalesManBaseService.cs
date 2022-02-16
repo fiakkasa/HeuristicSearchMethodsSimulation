@@ -21,7 +21,6 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         bool RouteSymmetry { get; }
         ChartsOptions ChartsOptions { get; }
         MapOptions MapOptions { get; }
-        Dictionary<int, List<HistoryIteration>> History { get; set; }
 
         event Action? OnStateChange;
 

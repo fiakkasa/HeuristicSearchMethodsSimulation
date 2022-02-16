@@ -1,6 +1,7 @@
 ﻿@page "/TravelingSalesMan/GuidedDirect"
 @implements IDisposable
 @inject ITravelingSalesManGuidedDirectService tsms
+@inject ITravelingSalesManHistoryService tsmhs
 
 <ContentWithLoader Loading="!tsms.IsInit" Progress="tsms.Progress">
     <Title>
@@ -41,7 +42,7 @@
                             <GuidedDirectTable CssClass="mt-2"
                                                Collection="tsms.GuidedDirectItem?.Log"
                                                MapOptions="tsms.MapOptions"
-                                               Report="tsms.History"
+                                               Report="tsmhs.History"
                                                MaxLocations="tsms.MaxSliderValue" />
                         </ContentWithInsufficientLocationsMessage>
                     </div>

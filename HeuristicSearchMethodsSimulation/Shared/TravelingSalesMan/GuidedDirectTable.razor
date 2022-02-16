@@ -95,7 +95,7 @@
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public List<string>? Collection { get; set; }
     [Parameter] public MapOptions MapOptions { get; set; } = new();
-    [Parameter] public Dictionary<int, List<HistoryIteration>>? Report { get; set; }
+    [Parameter] public IReadOnlyDictionary<int, List<HistoryIteration>>? Report { get; set; }
     [Parameter] public int MaxLocations { get; set; }
     private IEnumerable<(int numberOfLocations, IEnumerable<HistoryIteration> attempts)> AttemptsPerLocation =>
         Enumerable.Range(0, MaxLocations + 1)
