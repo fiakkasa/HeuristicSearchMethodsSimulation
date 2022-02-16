@@ -2,7 +2,6 @@
 using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using MongoDB.Driver;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
@@ -14,8 +13,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         IMongoClient Client { get; }
         bool HasLocations { get; }
         bool IsInit { get; }
-        List<LocationGeo> Locations { get; }
-        List<LocationGeo> LocationsBySelection { get; }
+        IReadOnlyList<LocationGeo> Locations { get; }
+        IReadOnlyList<LocationGeo> LocationsBySelection { get; }
         MapsOptions MapsOptions { get; }
         MapOptions MapOptions { get; }
         int MaxExhaustiveLocationsToCalculate { get; }
@@ -24,14 +23,12 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         bool Progress { get; }
         bool RouteSymmetry { get; }
         int SliderStepValue { get; }
-        int SliderValue { get; }
+        int SliderValue { get; set; }
         string DatabaseName { get; }
         int FetchLimit { get; }
         int InitialSliderValue { get; }
 
-        Task Delay(int time = 250, CancellationToken cancellationToken = default);
-        Task Init(TravelingSalesManAlgorithms algo, CancellationToken cancellationToken = default);
-        Task Refresh(CancellationToken cancellationToken = default);
-        void UpdateState(int sliderValue, TravelingSalesManAlgorithms algo);
+        Task Init(TravelingSalesManAlgorithms algo);
+        Task Refresh();
     }
 }

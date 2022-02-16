@@ -1,5 +1,6 @@
 ﻿@page "/TravelingSalesMan/PartialRandom"
 @implements IDisposable
+@inject ITravelingSalesManFoundationService tsmfs
 @inject ITravelingSalesManPartialRandomService tsms
 
 <ContentWithLoader Loading="!tsms.IsInit" Progress="tsms.Progress">
@@ -7,7 +8,7 @@
 		<Header AlgorithmName="Partial Random" ShowSubtitle="tsms.IsInit" />
 	</Title>
 	<Content>
-		<Condition Evaluation="tsms.HasLocations">
+		<Condition Evaluation="tsmfs.HasLocations">
 			<NotMatch>
 				<div class="d-flex flex-wrap align-items-center mb-2">
 					<h4 class="m-0 me-2">No data available at the moment..</h4>
@@ -20,7 +21,7 @@
 						<LocationsMatrix Data="tsms.PartialRandomItem?.Matrix"
 										 NumberOfUniqueRoutes="tsms.PartialRandomItem?.NumberOfUniqueRoutes" />
 
-						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientData()">
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsmfs.LocationsBySelection.HasInsufficientData()">
 							<PartialRandomTable CssClass="mt-2"
 												Collection="tsms.PartialRandomItem?.Iterations"
 												SelectedId="tsms.PartialRandomItem?.SelectedIteration?.Id"
@@ -31,13 +32,13 @@
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
-							<RangeSelector Min="tsms.MinSliderValue"
-										   Max="tsms.MaxSliderValue"
-										   Step="tsms.SliderStepValue"
-										   Value="tsms.SliderValue"
+							<RangeSelector Min="tsmfs.MinSliderValue"
+										   Max="tsmfs.MaxSliderValue"
+										   Step="tsmfs.SliderStepValue"
+										   Value="tsmfs.SliderValue"
 										   ValueChanged="tsms.UpdateState"
 										   Disabled="tsms.Progress" />
-							<RouteSymmetry Value="tsms.RouteSymmetry" />
+							<RouteSymmetry Value="tsmfs.RouteSymmetry" />
 						</div>
 
 						<Condition Evaluation="tsms.PartialRandomItem?.SelectedIteration is {}">
@@ -46,12 +47,12 @@
 											  Disabled="tsms.Progress"
 											  TotalDistance="tsms.PartialRandomItem?.SelectedIteration?.DistanceInKilometers"
 											  CssClass="mt-3"
-											  MarkerColor="@tsms.MapOptions.MarkerColor"
-											  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
-											  LineColor="@tsms.MapOptions.LineColor"
-											  LineWidth="tsms.MapOptions.LineWidth"
-											  LandColor="@tsms.MapOptions.LandColor"
-											  CountryColor="@tsms.MapOptions.CountryColor" />
+											  MarkerColor="@tsmfs.MapOptions.MarkerColor"
+											  MarkerSymbol="tsmfs.MapOptions.MarkerSymbol"
+											  LineColor="@tsmfs.MapOptions.LineColor"
+											  LineWidth="tsmfs.MapOptions.LineWidth"
+											  LandColor="@tsmfs.MapOptions.LandColor"
+											  CountryColor="@tsmfs.MapOptions.CountryColor" />
 							</Match>
 							<NotMatch>
 								<LocationsMap Data="tsms.PartialRandomItem?.Builder?.MapChartData ?? tsms.PartialRandomItem?.MapChartData"
@@ -59,12 +60,12 @@
 											  TotalDistance="tsms.PartialRandomItem?.Builder?.DistanceInKilometers"
 											  Text="@tsms.PartialRandomItem?.Builder?.Text"
 											  CssClass="mt-3"
-											  MarkerColor="@tsms.MapOptions.MarkerColor"
-											  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
-											  LineColor="@tsms.MapOptions.LineColor"
-											  LineWidth="tsms.MapOptions.LineWidth"
-											  LandColor="@tsms.MapOptions.LandColor"
-											  CountryColor="@tsms.MapOptions.CountryColor"
+											  MarkerColor="@tsmfs.MapOptions.MarkerColor"
+											  MarkerSymbol="tsmfs.MapOptions.MarkerSymbol"
+											  LineColor="@tsmfs.MapOptions.LineColor"
+											  LineWidth="tsmfs.MapOptions.LineWidth"
+											  LandColor="@tsmfs.MapOptions.LandColor"
+											  CountryColor="@tsmfs.MapOptions.CountryColor"
 											  OnMarkerClicked="tsms.SetPartialRandomLocation" />
 							</NotMatch>
 						</Condition>
@@ -72,7 +73,7 @@
 
 						<PartialRandomBuilder CssClass="mt-3"
 											  Disabled="tsms.Progress"
-											  Collection="tsms.LocationsBySelection"
+											  Collection="tsmfs.LocationsBySelection"
 											  Selected="tsms.PartialRandomItem?.Builder?.Collection"
 											  OnSelection="tsms.SetPartialRandomLocation"
 											  OnReset="tsms.ClearPartialRandomBuilder" />

@@ -1,5 +1,6 @@
 ﻿@page "/TravelingSalesMan/Preselected"
 @implements IDisposable
+@inject ITravelingSalesManFoundationService tsmfs
 @inject ITravelingSalesManPreselectedService tsms
 
 <ContentWithLoader Loading="!tsms.IsInit" Progress="tsms.Progress">
@@ -7,7 +8,7 @@
 		<Header AlgorithmName="Preselected" ShowSubtitle="tsms.IsInit" />
 	</Title>
 	<Content>
-		<Condition Evaluation="tsms.HasLocations">
+		<Condition Evaluation="tsmfs.HasLocations">
 			<NotMatch>
 				<div class="d-flex flex-wrap align-items-center mb-2">
 					<h4 class="m-0 me-2">No data available at the moment..</h4>
@@ -20,7 +21,7 @@
 						<LocationsMatrix Data="tsms.PreselectedItem?.Matrix"
 										 NumberOfUniqueRoutes="tsms.PreselectedItem?.NumberOfUniqueRoutes" />
 
-						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientData()">
+						<ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsmfs.LocationsBySelection.HasInsufficientData()">
 							<div class="overflow-auto row mt-2">
 								<div class="col-12 col-lg-6 p-1">
 									<CycleWithDistanceButton TItem="bool"
@@ -35,25 +36,25 @@
 					</div>
 					<div class="col-12 mt-3 mt-lg-0 col-lg-6">
 						<div class="d-flex flex-wrap align-items-center justify-content-between">
-							<RangeSelector Min="tsms.MinSliderValue"
-										   Max="tsms.MaxSliderValue"
-										   Step="tsms.SliderStepValue"
-										   Value="tsms.SliderValue"
+							<RangeSelector Min="tsmfs.MinSliderValue"
+										   Max="tsmfs.MaxSliderValue"
+										   Step="tsmfs.SliderStepValue"
+										   Value="tsmfs.SliderValue"
 										   ValueChanged="tsms.UpdateState"
 										   Disabled="tsms.Progress" />
-							<RouteSymmetry Value="tsms.RouteSymmetry" />
+							<RouteSymmetry Value="tsmfs.RouteSymmetry" />
 						</div>
 
 						<LocationsMap Data="tsms.PreselectedItem?.MapChartData"
 									  Disabled="tsms.Progress"
 									  TotalDistance="tsms.PreselectedItem?.DistanceInKilometers"
 									  CssClass="mt-3"
-									  MarkerColor="@tsms.MapOptions.MarkerColor"
-									  MarkerSymbol="tsms.MapOptions.MarkerSymbol"
-									  LineColor="@tsms.MapOptions.LineColor"
-									  LineWidth="tsms.MapOptions.LineWidth"
-									  LandColor="@tsms.MapOptions.LandColor"
-									  CountryColor="@tsms.MapOptions.CountryColor" />
+									  MarkerColor="@tsmfs.MapOptions.MarkerColor"
+									  MarkerSymbol="tsmfs.MapOptions.MarkerSymbol"
+									  LineColor="@tsmfs.MapOptions.LineColor"
+									  LineWidth="tsmfs.MapOptions.LineWidth"
+									  LandColor="@tsmfs.MapOptions.LandColor"
+									  CountryColor="@tsmfs.MapOptions.CountryColor" />
 
 						<div class="mt-3 d-flex flex-wrap align-items-center justify-content-end">
 							<AlgorithmsDropDown Disabled="tsms.Progress" />

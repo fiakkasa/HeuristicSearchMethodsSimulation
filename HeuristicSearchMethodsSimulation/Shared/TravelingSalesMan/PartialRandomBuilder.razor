@@ -41,7 +41,7 @@
 @code {
 	[Parameter] public string? CssClass { get; set; }
 	[Parameter] public bool Disabled { get; set; }
-	[Parameter] public List<LocationGeo>? Collection { get; set; }
+	[Parameter] public IReadOnlyList<LocationGeo>? Collection { get; set; }
 	[Parameter] public Dictionary<Guid, LocationGeo>? Selected { get; set; }
 	[Parameter] public EventCallback<LocationGeo> OnSelection { get; set; }
 	[Parameter] public EventCallback<bool> OnReset { get; set; }

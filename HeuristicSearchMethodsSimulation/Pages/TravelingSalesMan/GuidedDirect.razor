@@ -1,5 +1,6 @@
 ﻿@page "/TravelingSalesMan/GuidedDirect"
 @implements IDisposable
+@inject ITravelingSalesManFoundationService tsmfs
 @inject ITravelingSalesManGuidedDirectService tsms
 @inject ITravelingSalesManHistoryService tsmhs
 
@@ -8,7 +9,7 @@
         <Header AlgorithmName="Guided Direct" ShowSubtitle="tsms.IsInit" />
     </Title>
     <Content>
-        <Condition Evaluation="tsms.HasLocations">
+        <Condition Evaluation="tsmfs.HasLocations">
             <NotMatch>
                 <div class="d-flex flex-wrap align-items-center mb-2">
                     <h4 class="m-0 me-2">No data available at the moment..</h4>
@@ -21,7 +22,7 @@
                         <LocationsMatrix Data="tsms.GuidedDirectItem?.Current?.Matrix ?? tsms.GuidedDirectItem?.Matrix"
                                          NumberOfUniqueRoutes="tsms.GuidedDirectItem?.NumberOfUniqueRoutes" />
 
-                        <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsms.LocationsBySelection.HasInsufficientData()">
+                        <ContentWithInsufficientLocationsMessage MessageCssClass="mt-2" ShowMessage="tsmfs.LocationsBySelection.HasInsufficientData()">
                             <Condition Evaluation="tsms.GuidedDirectItem?.AllowRuleToggle == true">
                                 <Match>
                                     <div class="traveling-salesman-rule-toggle-container d-flex flex-wrap justify-content-center mt-2">
@@ -41,20 +42,20 @@
 
                             <GuidedDirectTable CssClass="mt-2"
                                                Collection="tsms.GuidedDirectItem?.Log"
-                                               MapOptions="tsms.MapOptions"
+                                               MapOptions="tsmfs.MapOptions"
                                                Report="tsmhs.History"
-                                               MaxLocations="tsms.MaxSliderValue" />
+                                               MaxLocations="tsmfs.MaxSliderValue" />
                         </ContentWithInsufficientLocationsMessage>
                     </div>
                     <div class="col-12 mt-3 mt-lg-0 col-lg-6">
                         <div class="d-flex flex-wrap align-items-center justify-content-between">
-                            <RangeSelector Min="tsms.MinSliderValue"
-                                           Max="tsms.MaxSliderValue"
-                                           Step="tsms.SliderStepValue"
-                                           Value="tsms.SliderValue"
+                            <RangeSelector Min="tsmfs.MinSliderValue"
+                                           Max="tsmfs.MaxSliderValue"
+                                           Step="tsmfs.SliderStepValue"
+                                           Value="tsmfs.SliderValue"
                                            ValueChanged="tsms.UpdateState"
                                            Disabled="tsms.Progress" />
-                            <RouteSymmetry Value="tsms.RouteSymmetry" />
+                            <RouteSymmetry Value="tsmfs.RouteSymmetry" />
                         </div>
 
                         <LocationsMap Data="tsms.GuidedDirectItem?.Current?.MapChartData ?? tsms.GuidedDirectItem?.MapChartData"
@@ -62,18 +63,18 @@
                                       TotalDistance="tsms.GuidedDirectItem?.Current?.DistanceInKilometers"
                                       Text="@tsms.GuidedDirectItem?.Current?.Text"
                                       CssClass="mt-3"
-                                      MarkerColor="@tsms.MapOptions.MarkerColor"
-                                      MarkerSymbol="tsms.MapOptions.MarkerSymbol"
-                                      LineColor="@tsms.MapOptions.LineColor"
-                                      LineWidth="@tsms.MapOptions.LineWidth"
-                                      LandColor="@tsms.MapOptions.LandColor"
-                                      CountryColor="@tsms.MapOptions.CountryColor" 
+                                      MarkerColor="@tsmfs.MapOptions.MarkerColor"
+                                      MarkerSymbol="tsmfs.MapOptions.MarkerSymbol"
+                                      LineColor="@tsmfs.MapOptions.LineColor"
+                                      LineWidth="@tsmfs.MapOptions.LineWidth"
+                                      LandColor="@tsmfs.MapOptions.LandColor"
+                                      CountryColor="@tsmfs.MapOptions.CountryColor" 
                                       OnMarkerClicked="tsms.SetGuidedDirectSelection" />
 
                         <GuidedDirectBuilder CssClass="mt-3"
                                              Disabled="tsms.Progress"
                                              Selected="tsms.GuidedDirectItem?.Visited"
-                                             Collection="tsms.LocationsBySelection"
+                                             Collection="tsmfs.LocationsBySelection"
                                              OnSelection="tsms.SetGuidedDirectSelection"
                                              OnReset="tsms.ResetGuidedDirect" />
 

@@ -30,10 +30,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private readonly ILogger<TravelingSalesManService> _logger;
         private readonly IMongoClient? _client;
         private readonly CancellationTokenSource _cts = new();
-        private bool _isInitializing;
+        private readonly List<LocationGeo> _locationsBySelection = new();
+        private readonly List<LocationGeo> _locations = new();
         private int _initialSliderValue = 1;
         private int _fetchLimit = 100;
         private int _maxExhaustiveLocationsToCalculate = 7;
+        private int sliderValue;
 
         public IMongoClient Client => _client ?? _mongoClientFactory();
         public string DatabaseName => MongoOptions.Databases.Data;
@@ -43,14 +45,24 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
         public bool IsInit { get; private set; }
         public bool Progress { get; private set; }
-        public List<LocationGeo> Locations { get; } = new();
+        public IReadOnlyList<LocationGeo> Locations => _locations;
         public bool HasLocations => !Locations.HasInsufficientData();
-        public List<LocationGeo> LocationsBySelection { get; } = new();
+        public IReadOnlyList<LocationGeo> LocationsBySelection => _locationsBySelection;
         public TravelingSalesManAlgorithms Algorithm { get; private set; }
         public int MinSliderValue { get; private set; }
         public int MaxSliderValue { get; private set; }
         public int SliderStepValue { get; private set; }
-        public int SliderValue { get; private set; }
+        public int SliderValue
+        {
+            get => sliderValue;
+            set
+            {
+                sliderValue = value;
+                var locationsBySelection = Locations.Take(sliderValue).ToList();
+                _locationsBySelection.Clear();
+                _locationsBySelection.AddRange(locationsBySelection);
+            }
+        }
         public bool RouteSymmetry { get; } = true;
         public ChartsOptions ChartsOptions { get; private set; } = new();
         public MapsOptions MapsOptions { get; private set; } = new();
@@ -86,52 +98,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             _logger = logger;
 
             InitValuesFromOptions();
-        }
-
-        private async Task SetDataFromDatabase(CancellationToken cancellationToken)
-        {
-            var locations = await Fetch(_fetchLimit, cancellationToken).ConfigureAwait(true);
-            Locations.Clear();
-            Locations.AddRange(locations);
-        }
-
-        public async Task Refresh(CancellationToken cancellationToken = default)
-        {
-            Progress = true;
-
-            await SetDataFromDatabase(cancellationToken).ConfigureAwait(true);
-
-            Progress = false;
-        }
-
-        public async Task Init(TravelingSalesManAlgorithms algo, CancellationToken cancellationToken = default)
-        {
-            Algorithm = algo;
-
-            if (_isInitializing) return;
-
-            _isInitializing = true;
-
-            Progress = true;
-
-            if (!HasLocations)
-                await SetDataFromDatabase(cancellationToken).ConfigureAwait(true);
-
-            IsInit = true;
-            Progress = false;
-            _isInitializing = false;
-        }
-
-        public async Task Delay(int time = 250, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                await Task.Delay(time, cancellationToken).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
         }
 
         private void InitValuesFromOptions()
@@ -187,10 +153,37 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public void UpdateState(int sliderValue, TravelingSalesManAlgorithms algo)
+        private async Task SetDataFromDatabase(CancellationToken cancellationToken)
         {
-            SliderValue = sliderValue;
+            var locations = await Fetch(_fetchLimit, cancellationToken).ConfigureAwait(true);
+            _locations.Clear();
+            _locations.AddRange(locations);
+        }
+
+        public async Task Refresh()
+        {
+            if (Progress) return;
+
+            Progress = true;
+
+            await SetDataFromDatabase(_cts.Token).ConfigureAwait(true);
+
+            Progress = false;
+        }
+
+        public async Task Init(TravelingSalesManAlgorithms algo)
+        {
             Algorithm = algo;
+
+            if (Progress) return;
+
+            Progress = true;
+
+            if (!HasLocations)
+                await SetDataFromDatabase(_cts.Token).ConfigureAwait(true);
+
+            IsInit = true;
+            Progress = false;
         }
 
         protected virtual void Dispose(bool disposing)
