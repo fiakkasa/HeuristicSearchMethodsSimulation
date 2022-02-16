@@ -19,7 +19,6 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HoverInfoFlag = Plotly.Blazor.Traces.ScatterGeoLib.HoverInfoFlag;
 using Location = HeuristicSearchMethodsSimulation.Models.TravelingSalesMan.Location;
 
 namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
@@ -1024,7 +1023,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 #region Calculate
                 var locationsBySelection = Locations.Take(sliderValue).ToList();
                 var matrix = await locationsBySelection.CalculateMatrix(cancellationToken).ConfigureAwait(true);
-                var numberOfUniqueRoutesPerNumberOfLocations = await CalculateNumberOfUniqueRoutesPerNumberOfLocations(sliderValue, cancellationToken).ConfigureAwait(true);
+                var numberOfUniqueRoutesPerNumberOfLocations = await sliderValue.CalculateNumberOfUniqueRoutesPerNumberOfLocations(cancellationToken).ConfigureAwait(true);
                 var numberOfUniqueRoutes = numberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
                 var mapMarkerData = await CalculateMapMarkers(locationsBySelection, algo, cancellationToken).ConfigureAwait(true);
                 #endregion
@@ -1175,7 +1174,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 ExhaustiveItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-                var iterations = await CalculateExhaustiveIterations(locations, cancellationToken).ConfigureAwait(true);
+                var iterations = await locations.CalculateExhaustiveIterations(cancellationToken).ConfigureAwait(true);
 
                 ExhaustiveItem.ResetMatrix.AddRange(matrix);
                 ExhaustiveItem.Iterations.AddRange(iterations);
@@ -1451,10 +1450,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 return await (algo switch
                 {
-                    TravelingSalesManAlgorithms.Preselected => Preselected(locations, cancellationToken),
-                    TravelingSalesManAlgorithms.Evolutionary => Evolutionary(locations, MapsOptions, cancellationToken),
-                    _ => Default(locations, cancellationToken)
+                    TravelingSalesManAlgorithms.Preselected => locations.ToPreselectedMarkers(),
+                    TravelingSalesManAlgorithms.Evolutionary => locations.ToEvolutionaryMarkers(MapsOptions.Evolutionary),
+                    _ => locations.ToDefaultMarkers()
                 })
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -1462,119 +1462,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 _logger.LogError(ex, ex.Message);
 
                 return new() { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
-            }
-
-            static async Task<List<ITrace>> Evolutionary(List<LocationGeo> locations, MapsOptions options, CancellationToken cancellationToken) =>
-                await locations
-                    .Select((x, i) =>
-                        i > 0
-                            ? new ScatterGeo
-                            {
-                                LocationMode = LocationModeEnum.ISO3,
-                                Lon = new List<object> { x.Longitude },
-                                Lat = new List<object> { x.Latitude },
-                                Mode = ModeFlag.Markers | ModeFlag.Text,
-                                Marker = new()
-                                {
-                                    Color = options.Evolutionary.MarkerColor,
-                                    Symbol = options.Evolutionary.MarkerSymbol
-                                },
-                                Text = $"{i} - {x.ShortCode}",
-                                TextPosition = TextPositionEnum.TopCenter,
-                                Name = $"{x.Label} ({x.ShortCode})",
-                                HoverLabel = new() { NameLength = 0 },
-                                HoverTemplate = $"Ordinal: {i}<br />{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
-                                Meta = x.Id
-                            }
-                            : new ScatterGeo
-                            {
-                                LocationMode = LocationModeEnum.ISO3,
-                                Lon = new List<object> { x.Longitude },
-                                Lat = new List<object> { x.Latitude },
-                                Mode = ModeFlag.Markers | ModeFlag.Text,
-                                Marker = new()
-                                {
-                                    Color = options.Evolutionary.FirstMarkerColor,
-                                    Symbol = options.Evolutionary.FirstMarkerSymbol
-                                },
-                                Text = x.ShortCode,
-                                TextPosition = TextPositionEnum.TopCenter,
-                                Name = $"{x.Label} ({x.ShortCode})",
-                                HoverLabel = new() { NameLength = 0 },
-                                HoverTemplate = $"{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
-                                Meta = x.Id
-                            }
-                    )
-                    .ToListAsync<ITrace>(cancellationToken)
-                    .ConfigureAwait(true);
-
-            static async Task<List<ITrace>> Preselected(List<LocationGeo> locations, CancellationToken cancellationToken) =>
-                await locations
-                    .Select((x, i) =>
-                        new ScatterGeo
-                        {
-                            LocationMode = LocationModeEnum.ISO3,
-                            Lon = new List<object> { x.Longitude },
-                            Lat = new List<object> { x.Latitude },
-                            Mode = ModeFlag.Markers | ModeFlag.Text,
-                            Text = x.ShortCode,
-                            TextPosition = TextPositionEnum.TopCenter,
-                            Name = $"{x.Label} ({x.ShortCode})",
-                            HoverLabel = new() { NameLength = 0 },
-                            HoverTemplate = $"Ordinal: {i + 1}<br />{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
-                            Meta = x.Id
-                        }
-                    )
-                    .ToListAsync<ITrace>(cancellationToken)
-                    .ConfigureAwait(true);
-
-            static async Task<List<ITrace>> Default(List<LocationGeo> locations, CancellationToken cancellationToken) =>
-                await locations
-                    .Select(x =>
-                        new ScatterGeo
-                        {
-                            LocationMode = LocationModeEnum.ISO3,
-                            Lon = new List<object> { x.Longitude },
-                            Lat = new List<object> { x.Latitude },
-                            Mode = ModeFlag.Markers | ModeFlag.Text,
-                            Text = x.ShortCode,
-                            TextPosition = TextPositionEnum.TopCenter,
-                            Name = $"{x.Label} ({x.ShortCode})",
-                            HoverLabel = new() { NameLength = 0 },
-                            HoverTemplate = $"{x.Label} ({x.ShortCode})<br />{nameof(HoverInfoFlag.Lat)}: {x.Latitude}<br />{nameof(HoverInfoFlag.Lon)}: {x.Longitude}",
-                            Meta = x.Id
-                        }
-                    )
-                    .ToListAsync<ITrace>(cancellationToken)
-                    .ConfigureAwait(true);
-        }
-
-        private static async Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(int numberOfLocations, CancellationToken cancellationToken) =>
-            await Enumerable.Range(0, numberOfLocations)
-                .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x) / 2) // (n − 1)! / 2
-                .Take(numberOfLocations)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
-
-        private async Task<List<ExhaustiveIteration>> CalculateExhaustiveIterations(List<LocationGeo> locations, CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (locations.HasInsufficientData()) return new();
-
-                return await locations
-                    .CalculatePermutations(locations[0].Id)
-                    .Select(collection => new ExhaustiveIteration(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
-                    .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
-                    .Select(x => x.First())
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-
-                return new();
             }
         }
 
