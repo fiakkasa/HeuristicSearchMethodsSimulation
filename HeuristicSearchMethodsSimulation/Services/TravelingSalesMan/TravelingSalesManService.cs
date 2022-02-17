@@ -33,7 +33,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private readonly ITravelingSalesManHistoryService _travelingSalesManHistoryService;
         private readonly ILogger<TravelingSalesManService> _logger;
         private readonly CancellationTokenSource _cts = new();
-        private bool _isInitializing;
         private bool _isInit;
         private bool _progress;
 
@@ -51,8 +50,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public bool IsInit { get => _isInit || _travelingSalesManFoundationService.IsInit; private set => _isInit = value; }
-        public bool Progress { get => _progress || _travelingSalesManFoundationService.Progress; private set => _progress = value; }
+        public bool IsInit => _isInit || _travelingSalesManFoundationService.IsInit;
+        public bool Progress => _progress || _travelingSalesManFoundationService.Progress;
 
         private IMongoCollection<LocationsCycle> LocationsCyclesCollection =>
             _travelingSalesManFoundationService.Client.GetCollection<LocationsCycle>(_travelingSalesManFoundationService.DatabaseName);
@@ -75,11 +74,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             _travelingSalesManFoundationService = travelingSalesManFoundationService;
             _travelingSalesManHistoryService = travelingSalesManHistoryService;
             _logger = logger;
+            _travelingSalesManFoundationService.OnInitComplete += PostInitCompleteHandler();
+            _travelingSalesManFoundationService.OnProgress += OnProgressHandler();
         }
+
+        private Action OnProgressHandler() => () => OnStateChangeDelegate?.Invoke();
 
         public async Task UpdateState(int sliderValue)
         {
-            Progress = true;
+            _progress = true;
             OnStateChangeDelegate?.Invoke();
 
             await Task.WhenAll(new[]
@@ -89,7 +92,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 })
                 .ContinueWith(_ =>
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -103,9 +106,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 var locationsCycles =
                     await LocationsCyclesCollection
-                            .Find(Builders<LocationsCycle>.Filter.Empty)
-                            .ToListAsync(cancellationToken)
-                            .ConfigureAwait(true);
+                        .Find(Builders<LocationsCycle>.Filter.Empty)
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(true);
                 GuidedDirectLocationCycles.Clear();
                 GuidedDirectLocationCycles.AddRange(
                     await locationsCycles
@@ -123,50 +126,43 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
         public async Task Refresh()
         {
-            Progress = true;
+            _progress = true;
             OnStateChangeDelegate?.Invoke();
 
             await _travelingSalesManFoundationService.Refresh().ConfigureAwait(true);
 
             await Task.WhenAll(new[]
             {
-                UpdateState(
-                    _travelingSalesManFoundationService.HasLocations
-                        ? _travelingSalesManFoundationService.SliderValue
-                        : _travelingSalesManFoundationService.InitialSliderValue,
-                    _cts.Token
-                ),
+                UpdateState(_travelingSalesManFoundationService.SliderValue, _cts.Token),
                 Delay()
             })
             .ConfigureAwait(true);
 
-            Progress = false;
+            _progress = false;
+            OnStateChangeDelegate?.Invoke();
+        }
+
+        private Action PostInitCompleteHandler() => async () => await PostInitComplete();
+
+        private async Task PostInitComplete()
+        {
+            await UpdateState(_travelingSalesManFoundationService.SliderValue, _cts.Token).ConfigureAwait(true);
+
+            _isInit = true;
+            _progress = false;
             OnStateChangeDelegate?.Invoke();
         }
 
         public async Task Init(TravelingSalesManAlgorithms algo)
         {
+            _isInit = false;
+            _progress = true;
+            OnStateChangeDelegate?.Invoke();
+
             await _travelingSalesManFoundationService.Init(algo).ConfigureAwait(true);
 
-            if (_isInitializing) return;
-
-            _isInitializing = true;
-
-            Progress = true;
-            OnStateChangeDelegate?.Invoke();
-
-            await UpdateState(
-                _travelingSalesManFoundationService.HasLocations
-                    ? _travelingSalesManFoundationService.SliderValue
-                    : _travelingSalesManFoundationService.InitialSliderValue,
-                _cts.Token
-            )
-            .ConfigureAwait(true);
-
-            IsInit = true;
-            Progress = false;
-            _isInitializing = false;
-            OnStateChangeDelegate?.Invoke();
+            if (_travelingSalesManFoundationService.IsInit)
+                await PostInitComplete().ConfigureAwait(true);
         }
 
         public Task SetExhaustiveItem(ExhaustiveIteration item) => SetExhaustiveItem(item, false, _cts.Token);
@@ -179,7 +175,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = true;
+                    _progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -219,7 +215,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -237,7 +233,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 if (PartialRandomItem is not { }) return;
 
-                Progress = true;
+                _progress = true;
                 OnStateChangeDelegate?.Invoke();
 
                 PartialRandomItem.Matrix.Clear();
@@ -251,7 +247,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 if (_travelingSalesManFoundationService.LocationsBySelection.Count > 0)
                     await SetPartialRandomLocation(_travelingSalesManFoundationService.LocationsBySelection[0], true, cancellationToken).ConfigureAwait(true);
 
-                Progress = false;
+                _progress = false;
                 OnStateChangeDelegate?.Invoke();
             }
             catch (Exception ex)
@@ -276,7 +272,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = true;
+                    _progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -365,7 +361,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -385,7 +381,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = true;
+                    _progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -414,7 +410,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -428,7 +424,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             if (PartialImprovingItem is not { }) return;
 
-            Progress = true;
+            _progress = true;
 
             OnStateChangeDelegate?.Invoke();
 
@@ -446,7 +442,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 })
                 .ContinueWith(_ =>
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -508,7 +504,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             if (GuidedDirectItem is not { }) return;
 
-            Progress = true;
+            _progress = true;
 
             OnStateChangeDelegate?.Invoke();
 
@@ -526,7 +522,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 })
                 .ContinueWith(_ =>
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 })
                 .ConfigureAwait(true);
@@ -597,14 +593,14 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                     if (gdi.Peripheral is { Iterations.Count: > 0 } p)
                     {
-                        Progress = true;
+                        _progress = true;
                         OnStateChangeDelegate?.Invoke();
 
                         await Delay(2500).ConfigureAwait(true);
 
                         gdi.Rule = 2;
                         gdi.AllowRuleToggle = true;
-                        Progress = false;
+                        _progress = false;
                         p.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
                     }
                 }
@@ -665,7 +661,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             if (EvolutionaryItem is not { }) return;
 
-            Progress = true;
+            _progress = true;
             OnStateChangeDelegate?.Invoke();
 
             UpdateEvolutionaryState(
@@ -678,7 +674,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             await Delay().ConfigureAwait(true);
 
-            Progress = false;
+            _progress = false;
             OnStateChangeDelegate?.Invoke();
         }
 
@@ -693,7 +689,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 if (!silent)
                 {
                     EvolutionaryItem.Spinning = true;
-                    Progress = true;
+                    _progress = true;
                     OnStateChangeDelegate?.Invoke();
 
                     await Delay(1000).ConfigureAwait(true);
@@ -710,7 +706,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = false;
+                    _progress = false;
                     EvolutionaryItem.Spinning = false;
                     OnStateChangeDelegate?.Invoke();
                 }
@@ -741,7 +737,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 if (EvolutionaryItem is not { } || EvolutionaryItem.Step >= step) return;
 
-                Progress = true;
+                _progress = true;
                 OnStateChangeDelegate?.Invoke();
 
                 await Delay().ConfigureAwait(true);
@@ -834,7 +830,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         break;
                 }
 
-                Progress = false;
+                _progress = false;
                 OnStateChangeDelegate?.Invoke();
             }
             catch (Exception ex)
@@ -858,7 +854,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = true;
+                    _progress = true;
                     OnStateChangeDelegate?.Invoke();
                 }
 
@@ -908,7 +904,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (!silent)
                 {
-                    Progress = false;
+                    _progress = false;
                     OnStateChangeDelegate?.Invoke();
                 }
             }
@@ -1383,6 +1379,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             _cts.Cancel();
 
+            _travelingSalesManFoundationService.OnInitComplete -= PostInitCompleteHandler();
+            _travelingSalesManFoundationService.OnProgress -= OnProgressHandler();
             _disposedValue = true;
         }
 

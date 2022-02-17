@@ -1,6 +1,7 @@
 ﻿using HeuristicSearchMethodsSimulation.Enums;
 using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -25,8 +26,9 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         int SliderStepValue { get; }
         int SliderValue { get; set; }
         string DatabaseName { get; }
-        int FetchLimit { get; }
-        int InitialSliderValue { get; }
+
+        event Action? OnInitComplete;
+        event Action? OnProgress;
 
         Task Init(TravelingSalesManAlgorithms algo);
         Task Refresh();

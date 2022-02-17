@@ -32,10 +32,37 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private readonly CancellationTokenSource _cts = new();
         private readonly List<LocationGeo> _locationsBySelection = new();
         private readonly List<LocationGeo> _locations = new();
-        private int _initialSliderValue = 1;
         private int _fetchLimit = 100;
         private int _maxExhaustiveLocationsToCalculate = 7;
-        private int sliderValue;
+        private int _sliderValue;
+        private bool _isInit;
+        private bool progress;
+
+        private event Action? OnInitCompleteDelegate;
+        private event Action? OnProgressDelegate;
+
+        public event Action? OnInitComplete
+        {
+            add
+            {
+                OnInitCompleteDelegate += value;
+            }
+            remove
+            {
+                OnInitCompleteDelegate -= value;
+            }
+        }
+        public event Action? OnProgress
+        {
+            add
+            {
+                OnProgressDelegate += value;
+            }
+            remove
+            {
+                OnProgressDelegate -= value;
+            }
+        }
 
         public IMongoClient Client => _client ?? _mongoClientFactory();
         public string DatabaseName => MongoOptions.Databases.Data;
@@ -43,8 +70,24 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private TravelingSalesManOptions TravelingSalesManOptions => _travelingSalesManOptions.Value;
         private IMongoCollection<Location> LocationsCollection => Client.GetCollection<Location>(MongoOptions.Databases.Data);
 
-        public bool IsInit { get; private set; }
-        public bool Progress { get; private set; }
+        public bool IsInit
+        {
+            get => _isInit;
+            private set
+            {
+                _isInit = value;
+                if (_isInit) OnInitCompleteDelegate?.Invoke();
+            }
+        }
+        public bool Progress
+        {
+            get => progress;
+            private set
+            {
+                progress = value;
+                OnProgressDelegate?.Invoke();
+            }
+        }
         public IReadOnlyList<LocationGeo> Locations => _locations;
         public bool HasLocations => !Locations.HasInsufficientData();
         public IReadOnlyList<LocationGeo> LocationsBySelection => _locationsBySelection;
@@ -54,11 +97,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public int SliderStepValue { get; private set; }
         public int SliderValue
         {
-            get => sliderValue;
+            get => _sliderValue;
             set
             {
-                sliderValue = value;
-                var locationsBySelection = Locations.Take(sliderValue).ToList();
+                _sliderValue = value;
+                var locationsBySelection = Locations.Take(_sliderValue).ToList();
                 _locationsBySelection.Clear();
                 _locationsBySelection.AddRange(locationsBySelection);
             }
@@ -78,8 +121,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             _ => MapsOptions.Default
         };
         public int MaxExhaustiveLocationsToCalculate => _maxExhaustiveLocationsToCalculate;
-        public int FetchLimit => _fetchLimit;
-        public int InitialSliderValue => _initialSliderValue;
 
         public TravelingSalesManFoundationService(
            IOptions<MongoOptions> mongoOptions,
@@ -107,8 +148,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 MinSliderValue = TravelingSalesManOptions.MinSliderValue;
                 MaxSliderValue = TravelingSalesManOptions.MaxSliderValue;
                 SliderStepValue = TravelingSalesManOptions.SliderStepValue;
-                SliderValue = TravelingSalesManOptions.InitialSliderValue;
-                _initialSliderValue = TravelingSalesManOptions.InitialSliderValue;
+                _sliderValue = TravelingSalesManOptions.InitialSliderValue;
                 _fetchLimit = TravelingSalesManOptions.FetchLimit;
                 ChartsOptions = TravelingSalesManOptions.Charts;
                 MapsOptions = TravelingSalesManOptions.Maps;
@@ -175,15 +215,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             Algorithm = algo;
 
-            if (Progress) return;
+            if (IsInit || Progress) return;
 
             Progress = true;
-
-            if (!HasLocations)
-                await SetDataFromDatabase(_cts.Token).ConfigureAwait(true);
+            await SetDataFromDatabase(_cts.Token).ConfigureAwait(true);
+            Progress = false;
 
             IsInit = true;
-            Progress = false;
         }
 
         protected virtual void Dispose(bool disposing)
