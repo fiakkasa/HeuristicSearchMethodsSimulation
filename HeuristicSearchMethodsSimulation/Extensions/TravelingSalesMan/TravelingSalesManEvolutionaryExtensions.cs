@@ -104,17 +104,37 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 
         public static IEnumerable<EvolutionaryNodes> ComputeEvolutionaryRanks(this IEnumerable<EvolutionaryNodes> collection)
         {
-            if (!collection.Any())
-                return Enumerable.Empty<EvolutionaryNodes>();
+            if (!collection.Any()) yield break;
 
-            var min = collection.Where(x => x.DistanceInKilometers > 0).MinBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
-            var max = collection.Where(x => x.DistanceInKilometers > 0).MaxBy(x => x.DistanceInKilometers)?.DistanceInKilometers;
+            var min =
+                collection
+                    .Where(x => x.DistanceInKilometers > 0)
+                    .MinBy(x => x.DistanceInKilometers)?
+                    .DistanceInKilometers is { } mn and > 0
+                    ? mn
+                    : 0D;
+            var max =
+                collection
+                    .Where(x => x.DistanceInKilometers > 0)
+                    .MaxBy(x => x.DistanceInKilometers)?
+                    .DistanceInKilometers is { } mx && min < mx
+                    ? mx
+                    : min + 1;
 
-            if ((min, max) is { min: not { } or <= 0, max: not { } or <= 0 }) return new List<EvolutionaryNodes>();
+            var minMax = max - min;
 
-            var maxMin = max - min;
-
-            return collection.Select(x => x with { Rank = (x.DistanceInKilometers - min) / maxMin });
+            foreach (var item in collection)
+            {
+                yield return item with
+                {
+                    Rank = ((item.DistanceInKilometers - min) / minMax) switch
+                    {
+                        { } value and >= 0D and <= 1D => value,
+                        < 0D => 0D,
+                        _ => 1
+                    }
+                };
+            }
         }
     }
 }

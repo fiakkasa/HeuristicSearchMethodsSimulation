@@ -153,7 +153,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             _isInitializing = true;
 
             Progress = true;
-
             OnStateChangeDelegate?.Invoke();
 
             await UpdateState(
@@ -683,17 +682,22 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             OnStateChangeDelegate?.Invoke();
         }
 
-        public async Task SetEvolutionarySpin()
+        public Task SetEvolutionarySpin() => SetEvolutionarySpin(false);
+
+        private async Task SetEvolutionarySpin(bool silent)
         {
             try
             {
                 if (EvolutionaryItem is not { Step: 4, WheelItems.Count: > 0 }) return;
 
-                EvolutionaryItem.Spinning = true;
-                Progress = true;
-                OnStateChangeDelegate?.Invoke();
+                if (!silent)
+                {
+                    EvolutionaryItem.Spinning = true;
+                    Progress = true;
+                    OnStateChangeDelegate?.Invoke();
 
-                await Delay(1000).ConfigureAwait(true);
+                    await Delay(1000).ConfigureAwait(true);
+                }
 
                 var items =
                     EvolutionaryItem.WheelItems
@@ -704,24 +708,26 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 EvolutionaryItem.CurrentGeneration.RemoveAll(x => items.Any(y => x.Id == y.Id));
                 EvolutionaryItem.WheelItems.RemoveAll(x => items.Any(y => x.Id == y.Id));
 
-                Progress = false;
-                EvolutionaryItem.Spinning = false;
-                OnStateChangeDelegate?.Invoke();
+                if (!silent)
+                {
+                    Progress = false;
+                    EvolutionaryItem.Spinning = false;
+                    OnStateChangeDelegate?.Invoke();
+                }
 
                 if (EvolutionaryItem.WheelItems.Count > 0) return;
 
-                await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
-
                 EvolutionaryItem.Offsprings.Clear();
-
-                if (EvolutionaryItem.MatingPool.Count == 0) return;
-
                 EvolutionaryItem.Offsprings.AddRange(
                     EvolutionaryItem.MatingPool
+                        .ExceptBy(EvolutionaryItem.NextGeneration.Select(x => x.Text), x => x.Text)
                         .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring - 1)
                         .DistinctBy(x => x.Text)
                         .ComputeEvolutionaryRanks()
+                        .OrderBy(x => x.Rank)
                 );
+
+                await SetEvolutionaryStep(EvolutionaryItem.Step + 1).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -746,9 +752,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     case 1:
                         var first = EvolutionaryItem.CurrentGeneration[0] with { };
-                        var generations = new List<EvolutionaryNodes>();
+                        var randomizedLocations = new List<EvolutionaryNodes>();
 
-                        for (int i = 0; i < 20; i++)
+                        for (int i = 0; i < 30; i++)
                         {
                             var nodes =
                                 await first.Nodes
@@ -766,7 +772,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                                     .CalculateDistanceOfCycle(_cts.Token)
                                     .ConfigureAwait(true);
 
-                            generations.Add(
+                            randomizedLocations.Add(
                                 new()
                                 {
                                     Id = Guid.NewGuid(),
@@ -778,13 +784,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         }
 
                         EvolutionaryItem.CurrentGeneration.Clear();
-                        EvolutionaryItem.CurrentGeneration.AddRange(
-                            generations
-                                .Prepend(first)
+                        var generation =
+                            randomizedLocations
                                 .DistinctBy(x => x.Text)
+                                .OrderBy(x => Random.Shared.Next())
                                 .Take(9)
+                                .Prepend(first)
                                 .ComputeEvolutionaryRanks()
-                        );
+                                .OrderBy(x => x.Rank)
+                                .ToList();
+                        generation.Last().Rank = 1;
+                        generation[0].Rank = 0;
+                        EvolutionaryItem.CurrentGeneration.AddRange(generation);
 
                         EvolutionaryItem.Offsprings.AddRange(
                              EvolutionaryItem.CurrentGeneration
@@ -796,18 +807,17 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
                     case 4:
-                        var currentGenCutOff = EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).ToList();
-                        EvolutionaryItem.WheelItems.AddRange(
-                            currentGenCutOff.Take(((currentGenCutOff.Count / 2) * 2) is { } count && count > 8 ? 8 : count)
-                        );
-                        if (EvolutionaryItem.WheelItems.Count == 0) EvolutionaryItem.Step = 10;
+                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(6));
+
+                        if (EvolutionaryItem.WheelItems.Count == 0)
+                            EvolutionaryItem.Step = 10;
+                        else if (EvolutionaryItem.WheelItems.Count < 2)
+                            await SetEvolutionarySpin(true).ConfigureAwait(true);
                         break;
                     case 7:
                         var nextGeneration =
                             EvolutionaryItem.NextGeneration
-                                .Concat(EvolutionaryItem.Offsprings)
-                                .DistinctBy(x => x.Text)
-                                .OrderBy(x => x.Rank)
+                                .Concat(EvolutionaryItem.Offsprings.OrderBy(x => x.Rank))
                                 .ToList();
                         EvolutionaryItem.NextGeneration.Clear();
                         EvolutionaryItem.NextGeneration.AddRange(nextGeneration);
