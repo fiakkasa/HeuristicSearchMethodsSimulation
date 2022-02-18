@@ -9,28 +9,14 @@
 			</div>
 		</Match>
 	</Condition>
-	<Condition Evaluation="Collection?.Count > 0">
-		<Match>
-			<Condition Evaluation="Collection?.Count == 1 && CycleIsComplete == true">
-				<Match>
-					<div class="step col-12 p-1">
-						<div class="p-1 px-2 text-black">
-								@Collection?[0]
-						</div>
-					</div>
-				</Match>
-				<NotMatch>
-					<Iterations T="(int step, string message)" Items="Collection?.Select((x, i) => (i, x))">
-						<div class="step col-12 p-1">
-							<div class="p-1 px-2 @(Collection?.Count == context.step + 1 ? "text-black" : "text-muted")">
-								Step @(context.step): @context.message
-							</div>
-						</div>
-					</Iterations>
-				</NotMatch>
-			</Condition>
-		</Match>
-	</Condition>
+	@if(Collection?.LastOrDefault() is { } log)
+	{
+		<div class="step col-12 p-1">
+			<div class="p-1 px-2 text-black">
+				Step @(Collection.Count - 1): @log
+			</div>
+		</div>
+	}
 	<Condition Evaluation="ShowButtons">
 		<Match>
 			<div class="d-flex justify-content-end justify-content-lg-center">

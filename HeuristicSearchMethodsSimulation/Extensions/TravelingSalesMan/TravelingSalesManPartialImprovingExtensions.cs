@@ -1,5 +1,8 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Microsoft.CodeAnalysis;
+using Plotly.Blazor;
+using Plotly.Blazor.Traces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,7 +16,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         public static async IAsyncEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
             this List<LocationGeo> startingCollection,
             List<LocationRow> matrix,
-            PartialImprovingMapOptions mapOptions,
+            MapOptions mapOptions,
             [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
@@ -59,20 +62,23 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 
                         if (iterationDistance < minDistance)
                         {
-                            var previousMatchCycle = await evaluatedCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                            var previousCollection = evaluatedCollection.Copy();
+                            var previousCycle = await previousCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                            var previousDistance = minDistance;
+                            var previousMapLinesData = await previousCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
+                            var previousMatrix = await matrix.HighlightMatrixCyclePairs(previousCycle, cancellationToken).ConfigureAwait(true);
+                            var previousText = evaluatedCollection.ToText();
+
                             var iterationCycle = await iterationCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-                            var iterationMapLinesData = await iterationCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
-                            var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true);
-                            var iterationText = iterationCollection.ToText();
 
                             var pairsToKeep =
                                 await iterationCycle
                                     .Select(x => x.A.ToKey(x.B))
-                                    .ExceptBy(previousMatchCycle.Select(x => x.A.ToKey(x.B)), x => x)
+                                    .ExceptBy(previousCycle.Select(x => x.A.ToKey(x.B)), x => x)
                                     .ToListAsync(cancellationToken).ConfigureAwait(true);
 
                             var cyclesDiff =
-                                await previousMatchCycle
+                                await previousCycle
                                     .Zip(iterationCycle)
                                     .Join(
                                         pairsToKeep,
@@ -82,23 +88,49 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                     )
                                     .ToListAsync(cancellationToken).ConfigureAwait(true);
 
+                            var stepOfIterationCounter = 0;
+
                             foreach (var (First, Second) in cyclesDiff)
                             {
-                                var swapPairALine = First.ToMapLine();
-                                swapPairALine.Line = new() { Color = mapOptions.SwapPairALineColor, Width = mapOptions.SwapPairALineWidth };
+                                stepOfIterationCounter++;
 
                                 var swapPairBLine = Second.ToMapLine();
-                                swapPairBLine.Line = new() { Color = mapOptions.SwapPairBLineColor, Width = mapOptions.SwapPairBLineWidth };
+                                swapPairBLine.Line = new() { Color = mapOptions.LineColor, Width = mapOptions.LineWidth };
 
-                                yield return new PartialImprovingIteration(
-                                    iterationCollection,
-                                    iterationCycle,
-                                    iterationMatrix,
-                                    $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
-                                    iterationText,
-                                    iterationDistance,
-                                    iterationMapLinesData.Append(swapPairALine).Append(swapPairBLine).ToList()
-                                );
+                                var iterationMapLinesDataOfStep =
+                                    previousMapLinesData
+                                        .OfType<ScatterGeo>()
+                                        .Where(x =>
+                                        {
+                                            var (Item1, Item2) = ((Guid, Guid))x.Meta;
+
+                                            return Item1 != First.A.Id && Item2 != First.B.Id;
+                                        })
+                                        .Append(swapPairBLine)
+                                        .ToList<ITrace>();
+
+                                previousMapLinesData.Clear();
+                                previousMapLinesData.AddRange(iterationMapLinesDataOfStep);
+
+                                yield return stepOfIterationCounter >= cyclesDiff.Count
+                                    ? new PartialImprovingIteration(
+                                        iterationCollection,
+                                        iterationCycle,
+                                        await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true),
+                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
+                                        iterationCollection.ToText(),
+                                        iterationDistance,
+                                        await iterationCycle.ToMapLines(cancellationToken).ConfigureAwait(true)
+                                    )
+                                   : new PartialImprovingIteration(
+                                        previousCollection,
+                                        previousCycle,
+                                        previousMatrix,
+                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
+                                        previousText,
+                                        previousDistance,
+                                        previousMapLinesData.Copy()
+                                    );
                             }
 
                             minDistance = iterationDistance;

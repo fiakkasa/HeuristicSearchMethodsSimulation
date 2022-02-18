@@ -1,6 +1,6 @@
 ﻿<div class="traveling-salesman-header-container mb-2 @CssClass">
 	<div class="header-text lead pb-1">
-		Traveling Salesman @Text
+		Traveling Salesman @Title
 	</div>
 	<Condition Evaluation="ShowSubtitle">
 		<Match>
@@ -15,8 +15,8 @@
 
 @code {
 	[Parameter] public string? CssClass { get; set; }
-	[Parameter] public string? AlgorithmName { get; set; }
+	[Parameter] public string? Text { get; set; }
 	[Parameter] public bool ShowSubtitle { get; set; }
 
-	private string Text => AlgorithmName?.Trim() is { Length: > 0 } name ? $"- Complexity Increase {AlgorithmName}" : string.Empty;
+	private string Title => Text?.Trim() is { Length: > 0 } name ? $"- {Text}" : string.Empty;
 }
