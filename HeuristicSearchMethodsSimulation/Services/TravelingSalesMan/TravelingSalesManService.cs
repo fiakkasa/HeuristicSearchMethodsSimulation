@@ -79,6 +79,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         private Action OnProgressHandler() => () => OnStateChangeDelegate?.Invoke();
+        private Action PostInitCompleteHandler() => () => OnStateChangeDelegate?.Invoke();
 
         public async Task UpdateState(int sliderValue)
         {
@@ -142,27 +143,23 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             OnStateChangeDelegate?.Invoke();
         }
 
-        private Action PostInitCompleteHandler() => async () => await PostInitComplete();
-
-        private async Task PostInitComplete()
-        {
-            await UpdateState(_travelingSalesManFoundationService.SliderValue, _cts.Token).ConfigureAwait(true);
-
-            _isInit = true;
-            _progress = false;
-            OnStateChangeDelegate?.Invoke();
-        }
-
         public async Task Init(TravelingSalesManAlgorithms algo)
         {
-            _isInit = false;
+            if (_isInit || _progress) return;
+
             _progress = true;
             OnStateChangeDelegate?.Invoke();
 
             await _travelingSalesManFoundationService.Init(algo).ConfigureAwait(true);
 
-            if (_travelingSalesManFoundationService.IsInit)
-                await PostInitComplete().ConfigureAwait(true);
+            while (!_travelingSalesManFoundationService.IsInit)
+                await Delay().ConfigureAwait(true);
+
+            await UpdateState(_travelingSalesManFoundationService.SliderValue, _cts.Token).ConfigureAwait(true);
+
+            _isInit = true;
+            _progress = false;
+            OnStateChangeDelegate?.Invoke();
         }
 
         public Task SetExhaustiveItem(ExhaustiveIteration item) => SetExhaustiveItem(item, false, _cts.Token);
@@ -537,18 +534,26 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
         public async Task SetGuidedDirectSelection(Guid locationId)
         {
-            if (_travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location)
+            if (
+                GuidedDirectItem is { }
+                && !GuidedDirectItem.Visited.ContainsKey(locationId)
+                && _travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location
+            )
+            {
                 await SetGuidedDirectSelection(location).ConfigureAwait(true);
+            }
         }
 
         public async Task SetGuidedDirectSelection(LocationGeo location)
         {
             try
             {
-                if (GuidedDirectItem is not { } gdi) return;
+                if (!(GuidedDirectItem is { } gdi && !GuidedDirectItem.Visited.ContainsKey(location.Id))) return;
 
-                if (gdi.Rule == 1) await HeadToClosestCityRule(gdi).ConfigureAwait(true);
-                else if (gdi.Rule == 2) await PeripheralRule(gdi).ConfigureAwait(true);
+                if (gdi.Rule == 1)
+                    await HeadToClosestCityRule(gdi).ConfigureAwait(true);
+                else if (gdi.Rule == 2)
+                    await PeripheralRule(gdi).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -558,14 +563,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             async Task HeadToClosestCityRule(GuidedDirectItem gdi)
             {
                 if (
-                    gdi.HeadToClosestCity is not { Iterations.Count: > 0, Current: { } } htcc
+                    gdi.HeadToClosestCity is not { Iterations.Count: > 0, Current: { }, Next: { } } htcc
                     || htcc.Index >= htcc.Iterations.Count
-                    || !htcc.Iterations.Any(x => x.Node.Id == location.Id))
+                    || !htcc.Iterations.Any(x => x.Node.Id == location.Id)
+                )
                 {
                     return;
                 }
 
-                if (location.Id != htcc.Next?.Node.Id)
+                if (location.Id != htcc.Next.Node.Id)
                 {
                     if (!htcc.Log.Any(x => x.StartsWith(location.ShortCode)))
                     {
@@ -576,8 +582,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     return;
                 }
 
+                htcc.Visited[htcc.Next.Node.Id] = htcc.Next with { };
                 htcc.Index++;
-                htcc.Visited[htcc.Current.Node.Id] = htcc.Current with { };
 
                 if (htcc.Index == htcc.Solution.Count - 2)
                 {
@@ -591,7 +597,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     htcc.Log.Add("Congrats! No further improvements can be made while heading to the closest city.");
                     htcc.Completed = true;
 
-                    if (gdi.Peripheral is { Iterations.Count: > 0 } p)
+                    if (gdi.Peripheral is { Solutions.Count: > 0 } p)
                     {
                         _progress = true;
                         OnStateChangeDelegate?.Invoke();
@@ -601,7 +607,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         gdi.Rule = 2;
                         gdi.AllowRuleToggle = true;
                         _progress = false;
-                        p.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
                     }
                 }
 
@@ -611,20 +616,24 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             async Task PeripheralRule(GuidedDirectItem gdi)
             {
                 if (
-                    gdi.Peripheral is not { Iterations.Count: > 0, Current: { } } p
-                    || p.Index >= p.Iterations.Count
-                    || !p.Iterations.Any(x => x.Node.Id == location.Id))
+                    gdi.Peripheral is not { Solutions.Count: > 0 } p
+                    || (p.Index > 0 && p.Index >= p.Iterations.Count)
+                )
                 {
                     return;
                 }
 
-                if (p.Index == 0)
+                if (p.Index == 0 && p.Solutions.FirstOrDefault(x => x.Skip(1).FirstOrDefault()?.Id == location.Id) is { } solution)
                 {
-                    if (p.IterationsLeft.Skip(1).FirstOrDefault()?.Node.Id == location.Id)
-                        p.Left = true;
-                    else if (p.IterationsRight.Skip(1).FirstOrDefault()?.Node.Id == location.Id)
-                        p.Left = false;
+                    p.Solution.AddRange(solution);
+                    p.Iterations.AddRange(
+                        await p.Solution.ComputeGuidedDirectIterationsFromGuidedDirectCollection(p.Matrix, p.MapMarkerData, _cts.Token)
+                            .ToListAsync()
+                            .ConfigureAwait(true)
+                    );
                 }
+
+                if (p is not { Iterations.Count: > 0, Current: { } }) return;
 
                 if (location.Id != p.Next?.Node.Id)
                 {
@@ -1219,6 +1228,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.HeadToClosestCity.MapChartData.AddRange(mapMarkerData);
                 GuidedDirectItem.HeadToClosestCity.MapMarkerData.AddRange(mapMarkerData);
+
                 GuidedDirectItem.Peripheral.Matrix.AddRange(matrix);
                 GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
@@ -1228,7 +1238,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 await SetLocationsCycleDataFromDatabase(cancellationToken).ConfigureAwait(true);
 
-                GuidedDirectItem.Log.Add("RULE 1: Always head for the closest city.");
+                GuidedDirectItem.HeadToClosestCity.Log.Add("RULE 1: Always head for the closest city.");
+                GuidedDirectItem.Peripheral.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
 
                 var headToClosestCityCollection =
                     await matrix
@@ -1246,47 +1257,39 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 GuidedDirectItem.HeadToClosestCity.Iterations.AddRange(headToClosestCityIterations);
 
                 var firstItem = locations[0] with { };
-                var peripheralCycleForNumberOfCities =
-#pragma warning disable RCS1077 // Optimize LINQ method call.
-                    GuidedDirectLocationCycles
-                        .FirstOrDefault(x =>
+                var peripheralCyclesForNumberOfCities =
+                   await GuidedDirectLocationCycles
+                        .Where(x =>
                             x.Collection.FirstOrDefault() == firstItem.Id
-                            && x.NumberOfLocations == locations.Count
-                        )?.Collection
-                    ?? new List<Guid>();
-#pragma warning restore RCS1077 // Optimize LINQ method call.
-
-                if (peripheralCycleForNumberOfCities.Count == 0) return;
-
-                var peripheralCollection =
-                    await peripheralCycleForNumberOfCities
-                        .Join(
-                            _travelingSalesManFoundationService.LocationsBySelection,
-                            s => s,
-                            l => l.Id,
-                            (_, l) => l
+                            && x.NumberOfLocations == _travelingSalesManFoundationService.SliderValue
                         )
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
-                var peripheralIterationsLeft =
-                   await peripheralCollection
-                       .Append(firstItem)
-                       .Reverse()
-                       .SkipLast(1)
-                       .ToList()
-                       .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                       .ToListAsync(cancellationToken)
-                       .ConfigureAwait(true);
-                var peripheralIterationsRight =
-                    await peripheralCollection
-                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+
+                if (peripheralCyclesForNumberOfCities is not { Count: > 0 }) return;
+
+                var peripheralCollections =
+                    await peripheralCyclesForNumberOfCities
+                        .Select(sol =>
+                            sol.Collection.Join(
+                                _travelingSalesManFoundationService.LocationsBySelection,
+                                s => s,
+                                l => l.Id,
+                                (_, l) => l
+                            )
+                            .ToList()
+                        )
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
 
-                GuidedDirectItem.Peripheral.Solution = peripheralCollection;
-                GuidedDirectItem.Peripheral.Visited.Add(peripheralIterationsRight[0].Node.Id, peripheralIterationsRight[0]);
-                GuidedDirectItem.Peripheral.IterationsLeft.AddRange(peripheralIterationsLeft);
-                GuidedDirectItem.Peripheral.IterationsRight.AddRange(peripheralIterationsRight);
+                var visited =
+                    await peripheralCollections[0]
+                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
+                        .FirstAsync(cancellationToken)
+                        .ConfigureAwait(true);
+
+                GuidedDirectItem.Peripheral.Solutions = peripheralCollections;
+                GuidedDirectItem.Peripheral.Visited.Add(visited.Node.Id, visited with { });
             }
             catch (Exception ex)
             {
