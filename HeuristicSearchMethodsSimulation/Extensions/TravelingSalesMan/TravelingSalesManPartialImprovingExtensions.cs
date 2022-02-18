@@ -5,25 +5,21 @@ using Plotly.Blazor.Traces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManPartialImprovingExtensions
     {
-        public static async IAsyncEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
+        public static IEnumerable<PartialImprovingIteration> ComputePartialImprovingIterations(
             this List<LocationGeo> startingCollection,
             List<LocationRow> matrix,
-            MapOptions mapOptions,
-            [EnumeratorCancellation] CancellationToken cancellationToken
+            MapOptions mapOptions
         )
         {
-            var startingCycle = await startingCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-            var startingDistance = await startingCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-            var startingMapLinesData = await startingCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
-            var startingMatrix = await matrix.HighlightMatrixCyclePairs(startingCycle, cancellationToken).ConfigureAwait(true);
+            var startingCycle = startingCollection.ToCyclePairs();
+            var startingDistance = startingCycle.CalculateDistanceOfCycle();
+            var startingMapLinesData = startingCycle.ToMapLines();
+            var startingMatrix = matrix.HighlightMatrixCyclePairs(startingCycle);
 
             yield return new PartialImprovingIteration(
                 startingCollection,
@@ -58,27 +54,27 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                             [j] = a
                         };
 
-                        var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                        var iterationDistance = iterationCollection.CalculateDistanceOfCycle();
 
                         if (iterationDistance < minDistance)
                         {
                             var previousCollection = evaluatedCollection.Copy();
-                            var previousCycle = await previousCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                            var previousCycle = previousCollection.ToCyclePairs();
                             var previousDistance = minDistance;
-                            var previousMapLinesData = await previousCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
-                            var previousMatrix = await matrix.HighlightMatrixCyclePairs(previousCycle, cancellationToken).ConfigureAwait(true);
+                            var previousMapLinesData = previousCycle.ToMapLines();
+                            var previousMatrix = matrix.HighlightMatrixCyclePairs(previousCycle);
                             var previousText = evaluatedCollection.ToText();
 
-                            var iterationCycle = await iterationCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+                            var iterationCycle = iterationCollection.ToCyclePairs();
 
                             var pairsToKeep =
-                                await iterationCycle
+                                iterationCycle
                                     .Select(x => x.A.ToKey(x.B))
                                     .ExceptBy(previousCycle.Select(x => x.A.ToKey(x.B)), x => x)
-                                    .ToListAsync(cancellationToken).ConfigureAwait(true);
+                                    .ToList();
 
                             var cyclesDiff =
-                                await previousCycle
+                                previousCycle
                                     .Zip(iterationCycle)
                                     .Join(
                                         pairsToKeep,
@@ -86,7 +82,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                         ptk => ptk,
                                         (ecc, _) => ecc
                                     )
-                                    .ToListAsync(cancellationToken).ConfigureAwait(true);
+                                    .ToList();
 
                             var stepOfIterationCounter = 0;
 
@@ -116,11 +112,11 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                     ? new PartialImprovingIteration(
                                         iterationCollection,
                                         iterationCycle,
-                                        await matrix.HighlightMatrixCyclePairs(iterationCycle, cancellationToken).ConfigureAwait(true),
+                                        matrix.HighlightMatrixCyclePairs(iterationCycle),
                                         $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
                                         iterationCollection.ToText(),
                                         iterationDistance,
-                                        await iterationCycle.ToMapLines(cancellationToken).ConfigureAwait(true)
+                                        iterationCycle.ToMapLines()
                                     )
                                    : new PartialImprovingIteration(
                                         previousCollection,
@@ -150,33 +146,27 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 && counter <= maxIterations
             );
 
-            var lastIterationCycle = await evaluatedCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
+            var lastIterationCycle = evaluatedCollection.ToCyclePairs();
 
             yield return new PartialImprovingIteration(
                 evaluatedCollection,
                 lastIterationCycle,
-                await matrix.HighlightMatrixCyclePairs(lastIterationCycle, cancellationToken).ConfigureAwait(true),
+                matrix.HighlightMatrixCyclePairs(lastIterationCycle),
                 "No further improvement can be made via pairwise exchange.",
                 evaluatedCollection.ToText(),
-                await lastIterationCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true),
-                await lastIterationCycle.ToMapLines(cancellationToken).ConfigureAwait(true)
+                lastIterationCycle.CalculateDistanceOfCycle(),
+                lastIterationCycle.ToMapLines()
             );
         }
 
-        public static async Task<(string Route, double DistanceInKilometers)> ComputePartialImprovingSolution(
-            this List<LocationGeo> startingCollection,
-            CancellationToken cancellationToken
-        )
+        public static (string Route, double DistanceInKilometers) ComputePartialImprovingSolution(this List<LocationGeo> startingCollection)
         {
-            return await Compute(startingCollection, cancellationToken).LastOrDefaultAsync(cancellationToken).ConfigureAwait(true);
+            return Compute(startingCollection).LastOrDefault();
 
-            static async IAsyncEnumerable<(string Route, double DistanceInKilometers)> Compute(
-                List<LocationGeo> startingCollection,
-                [EnumeratorCancellation] CancellationToken cancellationToken
-            )
+            static IEnumerable<(string Route, double DistanceInKilometers)> Compute(List<LocationGeo> startingCollection)
             {
-                var startingCycle = await startingCollection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-                var startingDistance = await startingCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                var startingCycle = startingCollection.ToCyclePairs();
+                var startingDistance = startingCycle.CalculateDistanceOfCycle();
 
                 yield return (Route: startingCollection.ToText(), DistanceInKilometers: startingDistance);
 
@@ -203,7 +193,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                 [j] = a
                             };
 
-                            var iterationDistance = await iterationCollection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                            var iterationDistance = iterationCollection.CalculateDistanceOfCycle();
 
                             if (iterationDistance < minDistance)
                             {

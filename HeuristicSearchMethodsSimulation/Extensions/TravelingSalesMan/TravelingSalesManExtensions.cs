@@ -5,15 +5,15 @@ using Plotly.Blazor.Traces;
 using Plotly.Blazor.Traces.ScatterGeoLib;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManExtensions
     {
-        public static async Task<List<LocationRow>> CalculateMatrix(this List<LocationGeo> locations, CancellationToken cancellationToken = default) =>
-            await locations
+        public static List<LocationRow> CalculateMatrix(this IEnumerable<LocationGeo> locations)
+        {
+            var xLabels = locations.Select(x => $"{x.Label} ({x.ShortCode})").ToList();
+            return locations
                 .Select(location =>
                 {
                     var rowCollection =
@@ -36,14 +36,14 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         Collection: rowCollection,
                         Ylabel: $"{location.Label} ({location.ShortCode})",
                         YId: location.Id,
-                        Xlabels: locations.ConvertAll(x => $"{x.Label} ({x.ShortCode})")
+                        Xlabels: xLabels
                     );
                 })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .ToList();
+        }
 
-        public static async Task<List<LocationRow>> HighlightMatrixCyclePairs(this List<LocationRow> matrix, List<LocationPair> cyclePairs, CancellationToken cancellationToken = default) =>
-            await matrix
+        public static List<LocationRow> HighlightMatrixCyclePairs(this List<LocationRow> matrix, List<LocationPair> cyclePairs) =>
+            matrix
                 .Select((row, rowIndex) => row with
                 {
                     Collection =
@@ -54,17 +54,9 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                             })
                             .ToList()
                 })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .ToList();
 
-        public static bool HasInsufficientData<T>(this List<T>? collection) =>
-            (collection?.Count ?? 0) < Consts.MinNumberOfLocations;
-
-        public static bool HasInsufficientData<T>(this IEnumerable<T>? collection) =>
-           (collection?.Take(Consts.MinNumberOfLocations).Count() ?? 0) < Consts.MinNumberOfLocations;
-
-        public static async Task<bool> HasInsufficientData<T>(this IAsyncEnumerable<T>? collection, CancellationToken cancellationToken) =>
-            (collection is { } ? await collection.CountAsync(cancellationToken).ConfigureAwait(true) : 0) < Consts.MinNumberOfLocations;
+        public static bool HasInsufficientData<T>(this List<T> collection) => collection.Count < Consts.MinNumberOfLocations;
 
         private static string GetDistanceFormat(bool simple = false) => simple switch
         {
@@ -99,56 +91,45 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                     .Select(x => x)
             );
 
-        public static string ToText(this EvolutionaryNodes obj) => obj.Nodes.ToText();
-
-        public static string ToText(this List<EvolutionaryNode> collection) =>
-            string.Join("", collection.Skip(1).Select(y => y.Ordinal));
-
-        public static IEnumerable<LocationPair> ToPartialCyclePairs(this List<LocationGeo> collection)
+        public static List<LocationPair> ToPartialCyclePairs(this List<LocationGeo> collection)
         {
-            if (collection.Count >= 2)
+            return ToPartialCyclePairs(collection).ToList();
+
+            static IEnumerable<LocationPair> ToPartialCyclePairs(List<LocationGeo> collection)
             {
-                for (int i = 1; i < collection.Count; i++)
-                    yield return new(collection[i - 1], collection[i]);
+                if (collection.Count >= 2)
+                {
+                    for (int i = 1; i < collection.Count; i++)
+                        yield return new(collection[i - 1], collection[i]);
+                }
             }
         }
 
-        public static Task<List<LocationPair>> ToPartialCyclePairs(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
-            collection.ToPartialCyclePairs().ToListAsync(cancellationToken);
-
-        public static IEnumerable<LocationPair> ToCyclePairs(this List<LocationGeo> collection)
+        public static List<LocationPair> ToCyclePairs(this List<LocationGeo> collection)
         {
-            if (collection.Count >= Consts.MinNumberOfLocations)
-            {
-                for (int i = 1; i < collection.Count; i++)
-                    yield return new(collection[i - 1], collection[i]);
+            return ToCyclePairs(collection).ToList();
 
-                yield return new(collection[^1], collection[0]);
+            static IEnumerable<LocationPair> ToCyclePairs(List<LocationGeo> collection)
+            {
+                if (collection.Count >= Consts.MinNumberOfLocations)
+                {
+                    for (int i = 1; i < collection.Count; i++)
+                        yield return new(collection[i - 1], collection[i]);
+
+                    yield return new(collection[^1], collection[0]);
+                }
             }
         }
-
-        public static Task<List<LocationPair>> ToCyclePairs(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
-            collection.ToCyclePairs().ToListAsync(cancellationToken);
 
         public static double CalculateDistancePointToPointInKilometers(this LocationGeo location, LocationGeo otherLocation) =>
             (location, otherLocation) is { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } }
                 ? lcGeo.GetDistanceTo(olcGeo) / 1000
                 : 0D;
 
-        public static async Task<double> CalculateDistanceOfCycle(this List<LocationPair> collection, CancellationToken cancellationToken) =>
-            await collection
+        public static double CalculateDistanceOfCycle(this List<LocationPair> collection) =>
+            collection
                 .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
-                .ToAsyncEnumerable()
-                .SumAsync(cancellationToken)
-                .ConfigureAwait(true);
-
-        public static async Task<double> CalculateDistanceOfCycle(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
-            await collection
-                .ToCyclePairs()
-                .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
-                .ToAsyncEnumerable()
-                .SumAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .Sum();
 
         public static double CalculateDistanceOfCycle(this List<LocationGeo> collection) =>
             collection
@@ -166,36 +147,28 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 Meta = (x.A.Id, x.B.Id)
             };
 
-        public static IEnumerable<ITrace> ToMapLines(this IEnumerable<LocationPair> collection) =>
-            collection.Select(x => x.ToMapLine());
+        public static List<ITrace> ToMapLines(this IEnumerable<LocationPair> collection) =>
+            collection.Select(x => x.ToMapLine()).ToList<ITrace>();
 
-        public static Task<List<ITrace>> ToMapLines(this List<LocationGeo> collection, CancellationToken cancellationToken) =>
+        public static List<ITrace> ToMapLines(this List<LocationGeo> collection) =>
             collection
                 .ToCyclePairs()
-                .ToMapLines(cancellationToken);
+                .ToMapLines();
 
-        public static async Task<List<ITrace>> ToMapLines(this IEnumerable<LocationPair> collection, CancellationToken cancellationToken) =>
-            await collection
-                .Select(x => x.ToMapLine())
-                .ToListAsync<ITrace>(cancellationToken)
-                .ConfigureAwait(true);
-
-        public static async Task<List<ITrace>> ToMapLines(this List<LocationGeo> collection, IEnumerable<ITrace> append, CancellationToken cancellationToken) =>
-            await collection
+        public static List<ITrace> ToMapLines(this List<LocationGeo> collection, IEnumerable<ITrace> append) =>
+            collection
                 .ToCyclePairs()
                 .Select(x => x.ToMapLine())
                 .Concat(append)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .ToList();
 
-        public static async Task<List<long>> CalculateNumberOfUniqueRoutesPerNumberOfLocations(this int numberOfLocations, CancellationToken cancellationToken) =>
-            await Enumerable.Range(0, numberOfLocations)
+        public static List<long> CalculateNumberOfUniqueRoutesPerNumberOfLocations(this int numberOfLocations) =>
+            Enumerable.Range(0, numberOfLocations)
                 .Select(i => Enumerable.Range(1, i).Aggregate(1L, (f, x) => f * x) / 2) // (n − 1)! / 2
                 .Take(numberOfLocations)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .ToList();
 
-        public static IAsyncEnumerable<ITrace> ToDefaultMarkers(this IEnumerable<LocationGeo> locations) =>
+        public static List<ITrace> ToDefaultMarkers(this IEnumerable<LocationGeo> locations) =>
             locations
                 .Select(x =>
                     new ScatterGeo
@@ -212,6 +185,6 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         Meta = x.Id
                     }
                 )
-                .ToAsyncEnumerable<ITrace>();
+                .ToList<ITrace>();
     }
 }

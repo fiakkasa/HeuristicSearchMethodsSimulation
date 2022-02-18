@@ -9,7 +9,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManPreselectedExtensions
     {
-        public static IAsyncEnumerable<ITrace> ToPreselectedMarkers(this IEnumerable<LocationGeo> locations) =>
+        public static List<ITrace> ToPreselectedMarkers(this IEnumerable<LocationGeo> locations) =>
             locations
                 .Select((x, i) =>
                     new ScatterGeo
@@ -26,6 +26,6 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         Meta = x.Id
                     }
                 )
-                .ToAsyncEnumerable<ITrace>();
+                .ToList<ITrace>();
     }
 }

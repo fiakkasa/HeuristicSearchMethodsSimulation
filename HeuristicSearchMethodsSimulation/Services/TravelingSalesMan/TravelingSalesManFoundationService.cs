@@ -30,39 +30,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private readonly ILogger<TravelingSalesManService> _logger;
         private readonly IMongoClient? _client;
         private readonly CancellationTokenSource _cts = new();
-        private readonly List<LocationGeo> _locationsBySelection = new();
-        private readonly List<LocationGeo> _locations = new();
         private int _fetchLimit = 100;
         private int _maxExhaustiveLocationsToCalculate = 7;
         private int _sliderValue;
-        private bool _isInit;
-        private bool progress;
-
-        private event Action? OnInitCompleteDelegate;
-        private event Action? OnProgressDelegate;
-
-        public event Action? OnInitComplete
-        {
-            add
-            {
-                OnInitCompleteDelegate += value;
-            }
-            remove
-            {
-                OnInitCompleteDelegate -= value;
-            }
-        }
-        public event Action? OnProgress
-        {
-            add
-            {
-                OnProgressDelegate += value;
-            }
-            remove
-            {
-                OnProgressDelegate -= value;
-            }
-        }
 
         public IMongoClient Client => _client ?? _mongoClientFactory();
         public string DatabaseName => MongoOptions.Databases.Data;
@@ -70,28 +40,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private TravelingSalesManOptions TravelingSalesManOptions => _travelingSalesManOptions.Value;
         private IMongoCollection<Location> LocationsCollection => Client.GetCollection<Location>(MongoOptions.Databases.Data);
 
-        public bool IsInit
-        {
-            get => _isInit;
-            private set
-            {
-                _isInit = value;
-                if (_isInit) OnInitCompleteDelegate?.Invoke();
-            }
-        }
-        public bool Progress
-        {
-            get => progress;
-            private set
-            {
-                progress = value;
-                OnProgressDelegate?.Invoke();
-            }
-        }
-        public IReadOnlyList<LocationGeo> Locations => _locations;
+        public bool IsInit { get; private set; }
+        public bool Progress { get; private set; }
+        public List<LocationGeo> Locations { get; } = new();
         public bool HasLocations => !Locations.HasInsufficientData();
-        public IReadOnlyList<LocationGeo> LocationsBySelection => _locationsBySelection;
-        public TravelingSalesManAlgorithms Algorithm { get; private set; }
+        public List<LocationGeo> LocationsBySelection { get; } = new();
+        public TravelingSalesManAlgorithms Algorithm { get; set; }
         public int MinSliderValue { get; private set; }
         public int MaxSliderValue { get; private set; }
         public int SliderStepValue { get; private set; }
@@ -101,9 +55,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             set
             {
                 _sliderValue = value;
-                var locationsBySelection = Locations.Take(_sliderValue).ToList();
-                _locationsBySelection.Clear();
-                _locationsBySelection.AddRange(locationsBySelection);
+                LocationsBySelection.Clear();
+                LocationsBySelection.AddRange(Locations.Take(_sliderValue));
             }
         }
         public bool RouteSymmetry { get; } = true;
@@ -196,8 +149,10 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private async Task SetDataFromDatabase(CancellationToken cancellationToken)
         {
             var locations = await Fetch(_fetchLimit, cancellationToken).ConfigureAwait(true);
-            _locations.Clear();
-            _locations.AddRange(locations);
+            Locations.Clear();
+            Locations.AddRange(locations);
+            LocationsBySelection.Clear();
+            LocationsBySelection.AddRange(Locations.Take(_sliderValue));
         }
 
         public async Task Refresh()

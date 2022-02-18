@@ -3,18 +3,15 @@ using Plotly.Blazor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManGuidedDirectExtensions
     {
-        public static async IAsyncEnumerable<GuidedDirectIteration> ComputeGuidedDirectIterationsFromGuidedDirectCollection(
+        public static IEnumerable<GuidedDirectIteration> ComputeGuidedDirectIterationsFromGuidedDirectCollection(
             this List<LocationGeo> collection,
             List<LocationRow> matrix,
-            List<ITrace> markers,
-            [EnumeratorCancellation] CancellationToken cancellationToken
+            List<ITrace> markers
         )
         {
             if (collection.HasInsufficientData()) yield break;
@@ -26,10 +23,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 var item = collection[i] with { };
                 iterationCollection.Add(item);
 
-                var iterationCyclePairs = await iterationCollection.ToPartialCyclePairs(cancellationToken).ConfigureAwait(true);
-                var iterationMatrix = await matrix.HighlightMatrixCyclePairs(iterationCyclePairs, cancellationToken).ConfigureAwait(true);
-                var iterationDistance = await iterationCyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-                var iterationMapLineData = await iterationCyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
+                var iterationCyclePairs = iterationCollection.ToPartialCyclePairs();
+                var iterationMatrix = matrix.HighlightMatrixCyclePairs(iterationCyclePairs);
+                var iterationDistance = iterationCyclePairs.CalculateDistanceOfCycle();
+                var iterationMapLineData = iterationCyclePairs.ToMapLines();
 
                 yield return new GuidedDirectIteration(
                     i,
@@ -44,10 +41,10 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 );
             }
 
-            var computedCycle = await collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-            var computedMatrix = await matrix.HighlightMatrixCyclePairs(computedCycle, cancellationToken).ConfigureAwait(true);
-            var computedDistance = await computedCycle.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-            var computedMapLinesData = await computedCycle.ToMapLines(cancellationToken).ConfigureAwait(true);
+            var computedCycle = collection.ToCyclePairs();
+            var computedMatrix = matrix.HighlightMatrixCyclePairs(computedCycle);
+            var computedDistance = computedCycle.CalculateDistanceOfCycle();
+            var computedMapLinesData = computedCycle.ToMapLines();
 
             yield return new GuidedDirectIteration(
                 collection.Count,

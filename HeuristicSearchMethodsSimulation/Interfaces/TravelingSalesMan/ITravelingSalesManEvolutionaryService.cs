@@ -8,11 +8,10 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
     {
         EvolutionaryItem? EvolutionaryItem { get; set; }
 
-        Task SetEvolutionaryLocation(Guid locationId);
-        Task SetEvolutionaryLocation(EvolutionaryNode item);
+        void SetEvolutionaryLocation(Guid locationId);
+        void SetEvolutionaryLocation(EvolutionaryNode item);
         Task SetEvolutionaryStep(int step);
-
-        Task ResetEvolutionary();
+        void ResetEvolutionary();
         Task SetEvolutionarySpin();
     }
 }

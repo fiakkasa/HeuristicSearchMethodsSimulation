@@ -1,6 +1,5 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using System;
-using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
@@ -8,10 +7,9 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
     {
         PartialRandomItem? PartialRandomItem { get; set; }
 
-        Task ClearPartialRandomBuilder();
-        Task SetPartialRandomLocation(Guid locationId);
-        Task SetPartialRandomLocation(LocationGeo item);
-
-        Task SetPartialRandomItem(PartialRandomIteration item);
+        void ClearPartialRandomBuilder();
+        void SetPartialRandomLocation(Guid locationId);
+        void SetPartialRandomLocation(LocationGeo item);
+        void SetPartialRandomItem(PartialRandomIteration item);
     }
 }

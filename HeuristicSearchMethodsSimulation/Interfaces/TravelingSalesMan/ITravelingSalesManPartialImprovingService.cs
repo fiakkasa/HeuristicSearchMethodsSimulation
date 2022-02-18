@@ -1,5 +1,4 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
-using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
@@ -7,7 +6,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
     {
         PartialImprovingItem? PartialImprovingItem { get; set; }
 
-        Task ResetPartialImproving();
-        Task PartialImprovingNextIteration();
+        void ResetPartialImproving();
+        void PartialImprovingNextIteration();
     }
 }

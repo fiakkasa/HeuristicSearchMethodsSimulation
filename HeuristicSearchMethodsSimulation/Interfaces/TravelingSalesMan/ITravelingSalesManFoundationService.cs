@@ -1,7 +1,6 @@
 ﻿using HeuristicSearchMethodsSimulation.Enums;
 using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using MongoDB.Driver;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,13 +8,13 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
     public interface ITravelingSalesManFoundationService
     {
-        TravelingSalesManAlgorithms Algorithm { get; }
+        TravelingSalesManAlgorithms Algorithm { get; set; }
         ChartsOptions ChartsOptions { get; }
         IMongoClient Client { get; }
         bool HasLocations { get; }
         bool IsInit { get; }
-        IReadOnlyList<LocationGeo> Locations { get; }
-        IReadOnlyList<LocationGeo> LocationsBySelection { get; }
+        List<LocationGeo> Locations { get; }
+        List<LocationGeo> LocationsBySelection { get; }
         MapsOptions MapsOptions { get; }
         MapOptions MapOptions { get; }
         int MaxExhaustiveLocationsToCalculate { get; }
@@ -26,9 +25,6 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         int SliderStepValue { get; }
         int SliderValue { get; set; }
         string DatabaseName { get; }
-
-        event Action? OnInitComplete;
-        event Action? OnProgress;
 
         Task Init(TravelingSalesManAlgorithms algo);
         Task Refresh();

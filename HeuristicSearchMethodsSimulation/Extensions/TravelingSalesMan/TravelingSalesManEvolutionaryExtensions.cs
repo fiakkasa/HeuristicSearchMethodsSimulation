@@ -11,7 +11,19 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
 {
     public static class TravelingSalesManEvolutionaryExtensions
     {
-        public static IAsyncEnumerable<ITrace> ToEvolutionaryMarkers(this IEnumerable<LocationGeo> locations, EvolutionaryMapOptions options) =>
+        public static double CalculateDistanceOfCycle(this List<EvolutionaryNode> collection) =>
+            collection
+                .ConvertAll(x => x.Location)
+                .ToCyclePairs()
+                .Select(x => x.A.CalculateDistancePointToPointInKilometers(x.B))
+                .Sum();
+
+        public static string ToText(this EvolutionaryNodes obj) => obj.Nodes.ToText();
+
+        public static string ToText(this List<EvolutionaryNode> collection) =>
+            string.Join("", collection.Skip(1).Select(y => y.Ordinal));
+
+        public static List<ITrace> ToEvolutionaryMarkers(this IEnumerable<LocationGeo> locations, EvolutionaryMapOptions options) =>
             locations
                 .Select((x, i) =>
                     i > 0
@@ -52,7 +64,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                             Meta = x.Id
                         }
                 )
-                .ToAsyncEnumerable<ITrace>();
+                .ToList<ITrace>();
 
         public static IEnumerable<EvolutionaryNodes> ComputeEvolutionaryOffsprings(this IEnumerable<EvolutionaryNodes> collection, int numberOfBits)
         {

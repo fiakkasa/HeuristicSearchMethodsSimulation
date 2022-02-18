@@ -74,12 +74,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             _travelingSalesManFoundationService = travelingSalesManFoundationService;
             _travelingSalesManHistoryService = travelingSalesManHistoryService;
             _logger = logger;
-            _travelingSalesManFoundationService.OnInitComplete += PostInitCompleteHandler();
-            _travelingSalesManFoundationService.OnProgress += OnProgressHandler();
         }
-
-        private Action OnProgressHandler() => () => OnStateChangeDelegate?.Invoke();
-        private Action PostInitCompleteHandler() => () => OnStateChangeDelegate?.Invoke();
 
         public async Task UpdateState(int sliderValue)
         {
@@ -112,11 +107,10 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         .ConfigureAwait(true);
                 GuidedDirectLocationCycles.Clear();
                 GuidedDirectLocationCycles.AddRange(
-                    await locationsCycles
+                    locationsCycles
                         .OfType<GuidedDirectPeripheralLocationsCycle>()
                         .OrderBy(x => x.NumberOfLocations)
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true)
+                        .ToList()
                 );
             }
             catch (Exception ex)
@@ -145,6 +139,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
         public async Task Init(TravelingSalesManAlgorithms algo)
         {
+            _travelingSalesManFoundationService.Algorithm = algo;
+
             if (_isInit || _progress) return;
 
             _progress = true;
@@ -162,9 +158,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             OnStateChangeDelegate?.Invoke();
         }
 
-        public Task SetExhaustiveItem(ExhaustiveIteration item) => SetExhaustiveItem(item, false, _cts.Token);
+        public void SetExhaustiveItem(ExhaustiveIteration item) => SetExhaustiveItem(item, false);
 
-        private async Task SetExhaustiveItem(ExhaustiveIteration item, bool silent, CancellationToken cancellationToken)
+        private void SetExhaustiveItem(ExhaustiveIteration item, bool silent)
         {
             try
             {
@@ -187,9 +183,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await item.Collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
-                    var matrix = await ExhaustiveItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = item.Collection.ToCyclePairs();
+                    var mapLineData = cyclePairs.ToMapLines();
+                    var matrix = ExhaustiveItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                     ExhaustiveItem.Matrix.Clear();
                     ExhaustiveItem.MapChartData.Clear();
@@ -198,16 +194,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     ExhaustiveItem.MapChartData.AddRange(mapLineData.Concat(ExhaustiveItem.MapMarkerData));
                     ExhaustiveItem.SelectedIteration = item;
 
-                    await _travelingSalesManHistoryService.SetHistory(
+                    _travelingSalesManHistoryService.SetHistory(
                         new(
                             TravelingSalesManAlgorithms.Exhaustive,
                             item.Text,
                             item.DistanceInKilometers,
                             new(ExhaustiveItem.MapChartData)
                         ),
-                        _travelingSalesManFoundationService.SliderValue,
-                        cancellationToken
-                    ).ConfigureAwait(true);
+                        _travelingSalesManFoundationService.SliderValue
+                    );
                 }
 
                 if (!silent)
@@ -222,9 +217,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public Task ClearPartialRandomBuilder() => ClearPartialRandomBuilder(_cts.Token);
-
-        private async Task ClearPartialRandomBuilder(CancellationToken cancellationToken)
+        public void ClearPartialRandomBuilder()
         {
             try
             {
@@ -242,7 +235,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 PartialRandomItem.Builder = default;
 
                 if (_travelingSalesManFoundationService.LocationsBySelection.Count > 0)
-                    await SetPartialRandomLocation(_travelingSalesManFoundationService.LocationsBySelection[0], true, cancellationToken).ConfigureAwait(true);
+                    SetPartialRandomLocation(_travelingSalesManFoundationService.LocationsBySelection[0], true);
 
                 _progress = false;
                 OnStateChangeDelegate?.Invoke();
@@ -253,19 +246,24 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public async Task SetPartialRandomLocation(Guid locationId)
+        public void SetPartialRandomLocation(Guid locationId)
         {
-            if (_travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location)
-                await SetPartialRandomLocation(location, true, _cts.Token);
+            if (
+                PartialRandomItem?.Builder?.Collection.ContainsKey(locationId) != true
+                && _travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location
+            )
+            {
+                SetPartialRandomLocation(location, true);
+            }
         }
 
-        public Task SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, false, _cts.Token);
+        public void SetPartialRandomLocation(LocationGeo item) => SetPartialRandomLocation(item, false);
 
-        private async Task SetPartialRandomLocation(LocationGeo item, bool silent, CancellationToken cancellationToken)
+        private void SetPartialRandomLocation(LocationGeo item, bool silent)
         {
             try
             {
-                if (PartialRandomItem is not { }) return;
+                if (!(PartialRandomItem is { } && PartialRandomItem.Builder?.Collection.ContainsKey(item.Id) != true)) return;
 
                 if (!silent)
                 {
@@ -277,11 +275,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 PartialRandomItem.Builder.Collection[item.Id] = item with { };
 
-                var collection = await PartialRandomItem.Builder.Collection.Values.ToListAsync(cancellationToken).ConfigureAwait(true);
+                var collection = PartialRandomItem.Builder.Collection.Values.ToList();
 
                 if (PartialRandomItem.Builder.Collection.Count == _travelingSalesManFoundationService.LocationsBySelection.Count)
                 {
-                    var totalDistance = await collection.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                    var totalDistance = collection.CalculateDistanceOfCycle();
                     var text = collection.ToText();
 
                     var obj = new PartialRandomIteration(
@@ -293,19 +291,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                     PartialRandomItem.Iterations.Add(obj);
 
-                    await _travelingSalesManHistoryService.SetHistory(
+                    _travelingSalesManHistoryService.SetHistory(
                          new(
                              TravelingSalesManAlgorithms.Partial_Random,
                              text,
                              totalDistance,
-                             await collection
-                                .ToMapLines(PartialRandomItem.MapMarkerData, cancellationToken)
-                                .ConfigureAwait(true)
+                             collection.ToMapLines(PartialRandomItem.MapMarkerData)
                          ),
-                         _travelingSalesManFoundationService.SliderValue,
-                         cancellationToken
-                     )
-                     .ConfigureAwait(true);
+                         _travelingSalesManFoundationService.SliderValue
+                     );
 
                     PartialRandomItem.Matrix.Clear();
                     PartialRandomItem.MapChartData.Clear();
@@ -331,11 +325,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await collection.ToPartialCyclePairs(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
-                    var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = collection.ToPartialCyclePairs();
+                    var mapLineData = cyclePairs.ToMapLines();
+                    var totalDistance = cyclePairs.CalculateDistanceOfCycle();
                     var text = collection.ToText(customLastElemText: "...");
-                    var matrix = await PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var matrix = PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                     PartialRandomItem.Matrix.Clear();
                     PartialRandomItem.MapChartData.Clear();
@@ -352,7 +346,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     if (PartialRandomItem.Builder.Collection.Count == _travelingSalesManFoundationService.LocationsBySelection.Count - 1)
                     {
                         var autoItem = _travelingSalesManFoundationService.LocationsBySelection.ExceptBy(collection.Select(x => x.Id), x => x.Id).First();
-                        await SetPartialRandomLocation(autoItem, true, cancellationToken).ConfigureAwait(true);
+                        SetPartialRandomLocation(autoItem, true);
                     }
                 }
 
@@ -368,9 +362,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public Task SetPartialRandomItem(PartialRandomIteration item) => SetPartialRandomIteration(item, false, _cts.Token);
+        public void SetPartialRandomItem(PartialRandomIteration item) => SetPartialRandomIteration(item, false);
 
-        private async Task SetPartialRandomIteration(PartialRandomIteration item, bool silent, CancellationToken cancellationToken)
+        private void SetPartialRandomIteration(PartialRandomIteration item, bool silent)
         {
             try
             {
@@ -393,9 +387,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
                 else
                 {
-                    var cyclePairs = await item.Collection.ToCyclePairs(cancellationToken).ConfigureAwait(true);
-                    var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
-                    var matrix = await PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
+                    var cyclePairs = item.Collection.ToCyclePairs();
+                    var mapLineData = cyclePairs.ToMapLines();
+                    var matrix = PartialRandomItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                     PartialRandomItem.Matrix.Clear();
                     PartialRandomItem.MapChartData.Clear();
@@ -417,7 +411,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public async Task ResetPartialImproving()
+        public void ResetPartialImproving()
         {
             if (PartialImprovingItem is not { }) return;
 
@@ -425,27 +419,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             OnStateChangeDelegate?.Invoke();
 
-            await Task.WhenAll(new[]
-                {
-                    UpdatePartialImprovingState(
-                        _travelingSalesManFoundationService.LocationsBySelection,
-                        PartialImprovingItem.NumberOfUniqueRoutes,
-                        PartialImprovingItem.ResetMatrix,
-                        PartialImprovingItem.MapMarkerData,
-                        TravelingSalesManAlgorithms.Partial_Improving,
-                        _cts.Token
-                    ),
-                    Delay()
-                })
-                .ContinueWith(_ =>
-                {
-                    _progress = false;
-                    OnStateChangeDelegate?.Invoke();
-                })
-                .ConfigureAwait(true);
+            UpdatePartialImprovingState(
+                _travelingSalesManFoundationService.LocationsBySelection,
+                PartialImprovingItem.NumberOfUniqueRoutes,
+                PartialImprovingItem.ResetMatrix,
+                PartialImprovingItem.MapMarkerData,
+                TravelingSalesManAlgorithms.Partial_Improving
+            );
+            _progress = false;
+            OnStateChangeDelegate?.Invoke();
         }
 
-        public async Task PartialImprovingNextIteration()
+        public void PartialImprovingNextIteration()
         {
             try
             {
@@ -476,17 +461,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     PartialImprovingItem.CyclesMatch = true;
 
-                    await _travelingSalesManHistoryService.SetHistory(
+                    _travelingSalesManHistoryService.SetHistory(
                         new(
                             TravelingSalesManAlgorithms.Partial_Improving,
                             iteration.Text,
                             iteration.DistanceInKilometers,
                             PartialImprovingItem.MapChartData
                         ),
-                        _travelingSalesManFoundationService.SliderValue,
-                        _cts.Token
-                    )
-                    .ConfigureAwait(true);
+                        _travelingSalesManFoundationService.SliderValue
+                    );
                 }
 
                 OnStateChangeDelegate?.Invoke();
@@ -535,8 +518,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public async Task SetGuidedDirectSelection(Guid locationId)
         {
             if (
-                GuidedDirectItem is { }
-                && !GuidedDirectItem.Visited.ContainsKey(locationId)
+                GuidedDirectItem?.Visited.ContainsKey(locationId) != true
                 && _travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location
             )
             {
@@ -627,9 +609,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     p.Solution.AddRange(solution);
                     p.Iterations.AddRange(
-                        await p.Solution.ComputeGuidedDirectIterationsFromGuidedDirectCollection(p.Matrix, p.MapMarkerData, _cts.Token)
-                            .ToListAsync()
-                            .ConfigureAwait(true)
+                        p.Solution.ComputeGuidedDirectIterationsFromGuidedDirectCollection(p.Matrix, p.MapMarkerData)
                     );
                 }
 
@@ -666,7 +646,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public async Task ResetEvolutionary()
+        public void ResetEvolutionary()
         {
             if (EvolutionaryItem is not { }) return;
 
@@ -680,8 +660,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 EvolutionaryItem.MapMarkerData,
                 TravelingSalesManAlgorithms.Evolutionary
             );
-
-            await Delay().ConfigureAwait(true);
 
             _progress = false;
             OnStateChangeDelegate?.Invoke();
@@ -762,20 +740,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         for (int i = 0; i < 30; i++)
                         {
                             var nodes =
-                                await first.Nodes
+                                first.Nodes
                                     .Skip(1)
                                     .OrderBy(x => Random.Shared.Next())
                                     .Prepend(first.Nodes[0])
-                                    .ToListAsync(_cts.Token)
-                                    .ConfigureAwait(true);
+                                    .ToList();
                             var nodesText = nodes.ToText();
 
                             if (first.Text == nodesText) continue;
 
-                            var distanceInKilometers =
-                                await nodes.ConvertAll(x => x.Location)
-                                    .CalculateDistanceOfCycle(_cts.Token)
-                                    .ConfigureAwait(true);
+                            var distanceInKilometers = nodes.CalculateDistanceOfCycle();
 
                             randomizedLocations.Add(
                                 new()
@@ -848,18 +822,24 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        public Task SetEvolutionaryLocation(EvolutionaryNode item) => SetEvolutionaryLocation(item, false, _cts.Token);
-        public async Task SetEvolutionaryLocation(Guid locationId)
+        public void SetEvolutionaryLocation(EvolutionaryNode item) => SetEvolutionaryLocation(item, false);
+
+        public void SetEvolutionaryLocation(Guid locationId)
         {
-            if (EvolutionaryItem?.Nodes.Skip(1).FirstOrDefault(x => x.Location.Id == locationId) is { } node)
-                await SetEvolutionaryLocation(node, false, _cts.Token).ConfigureAwait(true);
+            if (
+                EvolutionaryItem?.Visited.ContainsKey(locationId) != true
+                && EvolutionaryItem?.Nodes.Skip(1).FirstOrDefault(x => x.Location.Id == locationId) is { } node
+            )
+            {
+                SetEvolutionaryLocation(node, false);
+            }
         }
 
-        private async Task SetEvolutionaryLocation(EvolutionaryNode item, bool silent, CancellationToken cancellationToken)
+        private void SetEvolutionaryLocation(EvolutionaryNode item, bool silent)
         {
             try
             {
-                if (EvolutionaryItem is not { CycleComplete: false } || EvolutionaryItem.Visited.ContainsKey(item.Location.Id)) return;
+                if (!(EvolutionaryItem is { CycleComplete: false } && !EvolutionaryItem.Visited.ContainsKey(item.Location.Id))) return;
 
                 if (!silent)
                 {
@@ -880,21 +860,14 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 }
 
                 var collection =
-                    await EvolutionaryItem.Visited.Values
+                    EvolutionaryItem.Visited.Values
                         .Select(x => x.Location)
-                        .ToListAsync(cancellationToken).ConfigureAwait(true);
+                        .ToList();
                 var cycleComplete = EvolutionaryItem.Visited.Count == _travelingSalesManFoundationService.LocationsBySelection.Count;
-                var cyclePairs =
-                    await (
-                        cycleComplete
-                            ? collection.ToCyclePairs()
-                            : collection.ToPartialCyclePairs()
-                    )
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(true);
-                var mapLineData = await cyclePairs.ToMapLines(cancellationToken).ConfigureAwait(true);
-                var totalDistance = await cyclePairs.CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-                var matrix = await EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs, cancellationToken).ConfigureAwait(true);
+                var cyclePairs = (cycleComplete ? collection.ToCyclePairs() : collection.ToPartialCyclePairs()).ToList();
+                var mapLineData = cyclePairs.ToMapLines();
+                var totalDistance = cyclePairs.CalculateDistanceOfCycle();
+                var matrix = EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                 EvolutionaryItem.Matrix.Clear();
                 EvolutionaryItem.DistanceInKilometers = default;
@@ -942,18 +915,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             try
             {
                 #region Calculate
-                var matrix = await _travelingSalesManFoundationService.LocationsBySelection.ToList().CalculateMatrix(cancellationToken).ConfigureAwait(true);
-                var numberOfUniqueRoutesPerNumberOfLocations = await sliderValue.CalculateNumberOfUniqueRoutesPerNumberOfLocations(cancellationToken).ConfigureAwait(true);
+                var matrix = _travelingSalesManFoundationService.LocationsBySelection.CalculateMatrix();
+                var numberOfUniqueRoutesPerNumberOfLocations = sliderValue.CalculateNumberOfUniqueRoutesPerNumberOfLocations();
                 var numberOfUniqueRoutes = numberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
-                var mapMarkerData = await CalculateMapMarkers(_travelingSalesManFoundationService.LocationsBySelection, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
+                var mapMarkerData = CalculateMapMarkers(_travelingSalesManFoundationService.LocationsBySelection, _travelingSalesManFoundationService.Algorithm);
                 #endregion
 
                 #region Set
                 UpdateNoneState(_travelingSalesManFoundationService.LocationsBySelection, matrix, numberOfUniqueRoutes, numberOfUniqueRoutesPerNumberOfLocations, mapMarkerData, _travelingSalesManFoundationService.Algorithm);
-                await UpdatePreselectedState(_travelingSalesManFoundationService.LocationsBySelection, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
+                UpdatePreselectedState(_travelingSalesManFoundationService.LocationsBySelection, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm);
                 await UpdateExhaustiveState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
-                await UpdatePartialRandomState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
-                await UpdatePartialImprovingState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
+                UpdatePartialRandomState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm);
+                UpdatePartialImprovingState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm);
                 await UpdateGuidedDirectState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm, cancellationToken).ConfigureAwait(true);
                 UpdateEvolutionaryState(_travelingSalesManFoundationService.LocationsBySelection, numberOfUniqueRoutes, matrix, mapMarkerData, _travelingSalesManFoundationService.Algorithm);
                 #endregion
@@ -965,7 +938,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         private void UpdateNoneState(
-            IReadOnlyList<LocationGeo> locations,
+            List<LocationGeo> locations,
             List<LocationRow> matrix,
             long? numberOfUniqueRoutes,
             List<long> numberOfUniqueRoutesPerNumberOfLocations,
@@ -993,12 +966,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        private async Task UpdatePreselectedState(
-            IReadOnlyList<LocationGeo> locations,
+        private void UpdatePreselectedState(
+            List<LocationGeo> locations,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
-            TravelingSalesManAlgorithms algo,
-            CancellationToken cancellationToken
+            TravelingSalesManAlgorithms algo
         )
         {
             PreselectedItem = default;
@@ -1019,7 +991,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 var matrixWithHighlights = matrix switch
                 {
                     { Count: >= Consts.MinNumberOfLocations } =>
-                        await matrix
+                        matrix
                             .Select((row, rowIndex) =>
                                 row with
                                 {
@@ -1034,12 +1006,11 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                                             .ToList()
                                 }
                             )
-                            .ToListAsync(cancellationToken)
-                            .ConfigureAwait(true),
+                            .ToList(),
                     _ => matrix
                 };
-                var totalDistance = await locations.ToList().CalculateDistanceOfCycle(cancellationToken).ConfigureAwait(true);
-                var mapLineData = await locations.ToList().ToMapLines(cancellationToken).ConfigureAwait(true);
+                var totalDistance = locations.CalculateDistanceOfCycle();
+                var mapLineData = locations.ToMapLines();
 
                 PreselectedItem = new()
                 {
@@ -1057,7 +1028,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         private async Task UpdateExhaustiveState(
-            IReadOnlyList<LocationGeo> locations,
+            List<LocationGeo> locations,
             long? numberOfUniqueRoutes,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
@@ -1077,7 +1048,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 {
                     ExhaustiveItem = new()
                     {
-                        NumberOfUniqueRoutes = 0,
+                        NumberOfUniqueRoutes = numberOfUniqueRoutes,
                         MaxExhaustiveLocationsToCalculateReached = maxExhaustiveLocationsToCalculateReached
                     };
                     ExhaustiveItem.Matrix.AddRange(matrix);
@@ -1096,7 +1067,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (iterations.Count == 1)
                 {
-                    await SetExhaustiveItem(iterations[0], true, cancellationToken).ConfigureAwait(true);
+                    SetExhaustiveItem(iterations[0], true);
                     return;
                 }
 
@@ -1109,13 +1080,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        private async Task UpdatePartialRandomState(
-            IReadOnlyList<LocationGeo> locations,
+        private void UpdatePartialRandomState(
+            List<LocationGeo> locations,
             long? numberOfUniqueRoutes,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
-            TravelingSalesManAlgorithms algo,
-            CancellationToken cancellationToken
+            TravelingSalesManAlgorithms algo
         )
         {
             PartialRandomItem = default;
@@ -1126,18 +1096,14 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             {
                 PartialRandomItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
-                if (locations.HasInsufficientData())
-                {
-                    PartialRandomItem.Matrix.AddRange(matrix);
-                    PartialRandomItem.MapChartData.AddRange(mapMarkerData);
-
-                    return;
-                }
-
+                PartialRandomItem.Matrix.AddRange(matrix);
+                PartialRandomItem.MapChartData.AddRange(mapMarkerData);
                 PartialRandomItem.ResetMatrix.AddRange(matrix);
                 PartialRandomItem.MapMarkerData.AddRange(mapMarkerData);
 
-                await SetPartialRandomLocation(locations[0], true, cancellationToken).ConfigureAwait(true);
+                if (locations.HasInsufficientData()) return;
+
+                SetPartialRandomLocation(locations[0], true);
             }
             catch (Exception ex)
             {
@@ -1145,13 +1111,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        private async Task UpdatePartialImprovingState(
-            IReadOnlyList<LocationGeo> locations,
+        private void UpdatePartialImprovingState(
+            List<LocationGeo> locations,
             long? numberOfUniqueRoutes,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
-            TravelingSalesManAlgorithms algo,
-            CancellationToken cancellationToken
+            TravelingSalesManAlgorithms algo
         )
         {
             PartialImprovingItem = default;
@@ -1174,14 +1139,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 PartialImprovingItem.MapMarkerData.AddRange(mapMarkerData);
 
                 var iterations =
-                    await locations
+                    locations
                         .Skip(1)
                         .OrderBy(_ => Random.Shared.Next())
                         .Prepend(locations[0])
                         .ToList()
-                        .ComputePartialImprovingIterations(matrix, _travelingSalesManFoundationService.MapsOptions.PartialImproving, cancellationToken)
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                        .ComputePartialImprovingIterations(matrix, _travelingSalesManFoundationService.MapsOptions.PartialImproving)
+                        .ToList();
 
                 var computed = iterations[0] with { };
 
@@ -1208,7 +1172,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         private async Task UpdateGuidedDirectState(
-            IReadOnlyList<LocationGeo> locations,
+            List<LocationGeo> locations,
             long? numberOfUniqueRoutes,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
@@ -1242,15 +1206,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 GuidedDirectItem.Peripheral.Log.Add("RULE 2: Head for the closest city, while sticking to an exterior route.");
 
                 var headToClosestCityCollection =
-                    await matrix
+                    matrix
                         .ComputeHeadToClosestCityGuidedDirectCollection()
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                        .ToList();
                 var headToClosestCityIterations =
-                    await headToClosestCityCollection
-                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                    headToClosestCityCollection
+                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData)
+                        .ToList();
 
                 GuidedDirectItem.HeadToClosestCity.Solution = headToClosestCityCollection;
                 GuidedDirectItem.HeadToClosestCity.Visited.Add(headToClosestCityIterations[0].Node.Id, headToClosestCityIterations[0]);
@@ -1258,19 +1220,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 var firstItem = locations[0] with { };
                 var peripheralCyclesForNumberOfCities =
-                   await GuidedDirectLocationCycles
+                    GuidedDirectLocationCycles
                         .Where(x =>
                             x.Collection.FirstOrDefault() == firstItem.Id
                             && x.NumberOfLocations == _travelingSalesManFoundationService.SliderValue
                         )
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                        .ToList();
 
                 if (peripheralCyclesForNumberOfCities is not { Count: > 0 }) return;
 
                 var peripheralCollections =
-                    await peripheralCyclesForNumberOfCities
-                        .Select(sol =>
+                    peripheralCyclesForNumberOfCities
+                        .ConvertAll(sol =>
                             sol.Collection.Join(
                                 _travelingSalesManFoundationService.LocationsBySelection,
                                 s => s,
@@ -1278,15 +1239,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                                 (_, l) => l
                             )
                             .ToList()
-                        )
-                        .ToListAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                        );
 
-                var visited =
-                    await peripheralCollections[0]
-                        .ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData, cancellationToken)
-                        .FirstAsync(cancellationToken)
-                        .ConfigureAwait(true);
+                var visited = peripheralCollections[0].ComputeGuidedDirectIterationsFromGuidedDirectCollection(matrix, mapMarkerData).First();
 
                 GuidedDirectItem.Peripheral.Solutions = peripheralCollections;
                 GuidedDirectItem.Peripheral.Visited.Add(visited.Node.Id, visited with { });
@@ -1298,7 +1253,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         }
 
         private void UpdateEvolutionaryState(
-            IReadOnlyList<LocationGeo> locations,
+            List<LocationGeo> locations,
             long? numberOfUniqueRoutes,
             List<LocationRow> matrix,
             List<ITrace> mapMarkerData,
@@ -1342,29 +1297,15 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             }
         }
 
-        private async Task<List<ITrace>> CalculateMapMarkers(IReadOnlyList<LocationGeo> locations, TravelingSalesManAlgorithms algo, CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (locations.Count == 0)
-                    return new() { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
-
-                return await (algo switch
+        private List<ITrace> CalculateMapMarkers(IEnumerable<LocationGeo> locations, TravelingSalesManAlgorithms algo) =>
+            !locations.Any()
+                ? new() { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } }
+                : algo switch
                 {
                     TravelingSalesManAlgorithms.Preselected => locations.ToPreselectedMarkers(),
                     TravelingSalesManAlgorithms.Evolutionary => locations.ToEvolutionaryMarkers(_travelingSalesManFoundationService.MapsOptions.Evolutionary),
                     _ => locations.ToDefaultMarkers()
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-
-                return new() { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
-            }
-        }
+                };
 
         protected virtual void Dispose(bool disposing)
         {
@@ -1372,8 +1313,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             _cts.Cancel();
 
-            _travelingSalesManFoundationService.OnInitComplete -= PostInitCompleteHandler();
-            _travelingSalesManFoundationService.OnProgress -= OnProgressHandler();
             _disposedValue = true;
         }
 

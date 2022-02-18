@@ -14,64 +14,67 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         {
             if (locations.HasInsufficientData()) return new();
 
-            return await locations
-                .CalculateExhaustivePermutations(locations[0].Id)
-                .Select(collection => new ExhaustiveIteration(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
-                .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
-                .Select(x => x.FirstOrDefault())
-                .OfType<ExhaustiveIteration>()
-                .ToListAsync(cancellationToken)
+            return await Task.Run(
+                () =>
+                    CalculateExhaustivePermutations(locations, locations[0].Id)
+                        .Select(collection => new ExhaustiveIteration(collection, collection.ToText(), collection.CalculateDistanceOfCycle(), Guid.NewGuid()))
+                        .GroupBy(x => x.DistanceInKilometers.ToFormattedDistance())
+                        .Select(x => x.FirstOrDefault())
+                        .OfType<ExhaustiveIteration>()
+                        .ToList(),
+                    cancellationToken
+                )
                 .ConfigureAwait(true);
-        }
 
-        public static IEnumerable<List<LocationGeo>> CalculateExhaustivePermutations(this List<LocationGeo> collection, Guid id)
-        {
-            return Permute(collection).Where(x => x.Count > 0 && x[0].Id == id);
-
-            static IEnumerable<List<LocationGeo>> Permute(List<LocationGeo> set)
+            static IEnumerable<List<LocationGeo>> CalculateExhaustivePermutations(List<LocationGeo> collection, Guid id)
             {
-                var count = set.Count;
-                var a = new List<int>();
-                var p = new List<int>();
+                return Permute(collection).Where(x => x.Count > 0 && x[0].Id == id);
 
-                var list = new List<LocationGeo>(set);
-
-                int i, j, tmp;
-
-                for (i = 0; i < count; i++)
+                static IEnumerable<List<LocationGeo>> Permute(List<LocationGeo> set)
                 {
-                    a.Insert(i, i + 1);
-                    p.Insert(i, 0);
-                }
+                    var count = set.Count;
+                    var a = new List<int>();
+                    var p = new List<int>();
 
-                yield return list;
+                    var list = new List<LocationGeo>(set);
 
-                i = 1;
+                    int i, j, tmp;
 
-                while (i < count)
-                {
-                    if (p[i] < i)
+                    for (i = 0; i < count; i++)
                     {
-                        j = i % 2 * p[i];
-
-                        tmp = a[j];
-                        a[j] = a[i];
-                        a[i] = tmp;
-
-                        var yieldRet = new List<LocationGeo>();
-
-                        for (int x = 0; x < count; x++)
-                            yieldRet.Insert(x, list[a[x] - 1]);
-
-                        yield return yieldRet;
-
-                        p[i]++;
-                        i = 1;
+                        a.Insert(i, i + 1);
+                        p.Insert(i, 0);
                     }
-                    else
+
+                    yield return list;
+
+                    i = 1;
+
+                    while (i < count)
                     {
-                        p[i] = 0;
-                        i++;
+                        if (p[i] < i)
+                        {
+                            j = i % 2 * p[i];
+
+                            tmp = a[j];
+                            a[j] = a[i];
+                            a[i] = tmp;
+
+                            var yieldRet = new List<LocationGeo>();
+
+                            for (int x = 0; x < count; x++)
+                                yieldRet.Insert(x, list[a[x] - 1]);
+
+                            yield return yieldRet;
+
+                            p[i]++;
+                            i = 1;
+                        }
+                        else
+                        {
+                            p[i] = 0;
+                            i++;
+                        }
                     }
                 }
             }

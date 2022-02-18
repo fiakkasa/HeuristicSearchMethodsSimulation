@@ -1,5 +1,4 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
-using System.Threading.Tasks;
 
 namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
@@ -7,6 +6,6 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
     {
         public ExhaustiveItem? ExhaustiveItem { get; set; }
 
-        Task SetExhaustiveItem(ExhaustiveIteration item);
+        void SetExhaustiveItem(ExhaustiveIteration item);
     }
 }
