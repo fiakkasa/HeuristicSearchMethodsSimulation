@@ -140,9 +140,6 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public async Task Init(TravelingSalesManAlgorithms algo)
         {
             _travelingSalesManFoundationService.Algorithm = algo;
-
-            if (_isInit || _progress) return;
-
             _progress = true;
             OnStateChangeDelegate?.Invoke();
 
@@ -1223,7 +1220,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     GuidedDirectLocationCycles
                         .Where(x =>
                             x.Collection.FirstOrDefault() == firstItem.Id
-                            && x.NumberOfLocations == _travelingSalesManFoundationService.SliderValue
+                            && x.NumberOfLocations == _travelingSalesManFoundationService.LocationsBySelection.Count
                         )
                         .ToList();
 
