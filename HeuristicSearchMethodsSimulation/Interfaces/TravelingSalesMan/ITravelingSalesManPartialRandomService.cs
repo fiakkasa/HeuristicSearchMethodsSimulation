@@ -5,6 +5,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
     public interface ITravelingSalesManPartialRandomService : ITravelingSalesManBaseService
     {
+        bool EnableBuilders { get; }
+
         PartialRandomItem? PartialRandomItem { get; set; }
 
         void ClearPartialRandomBuilder();

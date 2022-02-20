@@ -68,17 +68,6 @@
                                         </table>
                                     </div>
                                 </Iterations>
-                                <table class="table table-borderless text-center m-0">
-                                    <tbody>
-                                        <Iterations T="(int numberOfLocations, IEnumerable<HistoryIteration> attempts)" Items="AttemptsPerLocation.Where(x => !x.attempts.Any())">
-                                            <tr>
-                                                <td colspan="3">
-                                                    <h6 class="m-0 text-muted">No attempts were made for Number of Cities: @context.numberOfLocations</h6>
-                                                </td>
-                                            </tr>
-                                        </Iterations>
-                                    </tbody>
-                                </table>
                             </div>
                         </Match>
                     </Condition>

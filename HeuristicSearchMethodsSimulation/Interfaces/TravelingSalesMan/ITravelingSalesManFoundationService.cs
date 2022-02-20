@@ -18,6 +18,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
         MapsOptions MapsOptions { get; }
         MapOptions MapOptions { get; }
         int MaxExhaustiveLocationsToCalculate { get; }
+        bool EnableBuilders { get; }
         int MaxSliderValue { get; }
         int MinSliderValue { get; }
         bool Progress { get; }

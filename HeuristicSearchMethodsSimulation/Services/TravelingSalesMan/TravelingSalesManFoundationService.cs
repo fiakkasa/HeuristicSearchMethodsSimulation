@@ -46,6 +46,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public bool HasLocations => !Locations.HasInsufficientData();
         public List<LocationGeo> LocationsBySelection { get; } = new();
         public TravelingSalesManAlgorithms Algorithm { get; set; }
+        public bool EnableBuilders { get; private set; }
         public int MinSliderValue { get; private set; }
         public int MaxSliderValue { get; private set; }
         public int SliderStepValue { get; private set; }
@@ -98,6 +99,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             try
             {
+                EnableBuilders = TravelingSalesManOptions.EnableBuilders;
                 MinSliderValue = TravelingSalesManOptions.MinSliderValue;
                 MaxSliderValue = TravelingSalesManOptions.MaxSliderValue;
                 SliderStepValue = TravelingSalesManOptions.SliderStepValue;

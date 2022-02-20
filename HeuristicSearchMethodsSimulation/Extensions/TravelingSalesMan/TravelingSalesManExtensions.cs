@@ -56,7 +56,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                 })
                 .ToList();
 
-        public static bool HasInsufficientData<T>(this List<T> collection) => collection.Count < Consts.MinNumberOfLocations;
+        public static bool HasInsufficientData<T>(this List<T>? collection) => collection is not { Count: >= Consts.MinNumberOfLocations };
 
         private static string GetDistanceFormat(bool simple = false) => simple switch
         {
@@ -122,8 +122,8 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
         }
 
         public static double CalculateDistancePointToPointInKilometers(this LocationGeo location, LocationGeo otherLocation) =>
-            (location, otherLocation) is { location: { Geo: { } lcGeo } lc, otherLocation: { Geo: { } olcGeo } }
-                ? lcGeo.GetDistanceTo(olcGeo) / 1000
+            (location, otherLocation) is { location.Geo: { } lcGeo, otherLocation.Geo: { } olcGeo }
+                ? lcGeo.GetDistanceTo(olcGeo) / 1000D
                 : 0D;
 
         public static double CalculateDistanceOfCycle(this List<LocationPair> collection) =>

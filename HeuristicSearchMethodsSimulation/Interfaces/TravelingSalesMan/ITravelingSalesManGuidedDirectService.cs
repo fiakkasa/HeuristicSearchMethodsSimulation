@@ -6,6 +6,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
     public interface ITravelingSalesManGuidedDirectService : ITravelingSalesManBaseService
     {
+        bool EnableBuilders { get; }
+
         GuidedDirectItem? GuidedDirectItem { get; set; }
 
         Task SetGuidedDirectSelection(Guid locationId);

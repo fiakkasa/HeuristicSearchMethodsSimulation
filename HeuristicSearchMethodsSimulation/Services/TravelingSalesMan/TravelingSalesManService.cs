@@ -56,6 +56,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private IMongoCollection<LocationsCycle> LocationsCyclesCollection =>
             _travelingSalesManFoundationService.Client.GetCollection<LocationsCycle>(_travelingSalesManFoundationService.DatabaseName);
 
+        public bool EnableBuilders => _travelingSalesManFoundationService.EnableBuilders;
         public NoneItem? NoneItem { get; set; }
         public PreselectedItem? PreselectedItem { get; set; }
         public ExhaustiveItem? ExhaustiveItem { get; set; }
@@ -105,6 +106,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         .Find(Builders<LocationsCycle>.Filter.Empty)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(true);
+
                 GuidedDirectLocationCycles.Clear();
                 GuidedDirectLocationCycles.AddRange(
                     locationsCycles
@@ -912,10 +914,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             try
             {
                 #region Calculate
-                var matrix = _travelingSalesManFoundationService.LocationsBySelection.CalculateMatrix();
-                var numberOfUniqueRoutesPerNumberOfLocations = sliderValue.CalculateNumberOfUniqueRoutesPerNumberOfLocations();
-                var numberOfUniqueRoutes = numberOfUniqueRoutesPerNumberOfLocations.LastOrDefault();
-                var mapMarkerData = CalculateMapMarkers(_travelingSalesManFoundationService.LocationsBySelection, _travelingSalesManFoundationService.Algorithm);
+                var (matrix, numberOfUniqueRoutesPerNumberOfLocations, numberOfUniqueRoutes, mapMarkerData) = await BaseData().ConfigureAwait(true);
                 #endregion
 
                 #region Set
@@ -931,6 +930,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+            }
+
+            async Task<(List<LocationRow> matrix, List<long> numberOfUniqueRoutesPerNumberOfLocations, long numberOfUniqueRoutes, List<ITrace> mapMarkerData)> BaseData()
+            {
+                var matrix = await Task.Run(() => _travelingSalesManFoundationService.LocationsBySelection.CalculateMatrix(), cancellationToken).ConfigureAwait(true);
+                var numberOfUniqueRoutesPerNumberOfLocations = await Task.Run(() => sliderValue.CalculateNumberOfUniqueRoutesPerNumberOfLocations(), cancellationToken).ConfigureAwait(true);
+                var numberOfUniqueRoutes = await Task.Run(() => numberOfUniqueRoutesPerNumberOfLocations.LastOrDefault(), cancellationToken).ConfigureAwait(true);
+                var mapMarkerData = await Task.Run(() => CalculateMapMarkers(_travelingSalesManFoundationService.LocationsBySelection, _travelingSalesManFoundationService.Algorithm), cancellationToken).ConfigureAwait(true);
+
+                return (matrix, numberOfUniqueRoutesPerNumberOfLocations, numberOfUniqueRoutes, mapMarkerData);
             }
         }
 

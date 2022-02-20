@@ -10,5 +10,6 @@
         public ChartsOptions Charts { get; set; } = new();
         public MapsOptions Maps { get; set; } = new();
         public int MaxExhaustiveLocationsToCalculate { get; set; } = 7;
+        public bool EnableBuilders { get; set; }
     }
 }

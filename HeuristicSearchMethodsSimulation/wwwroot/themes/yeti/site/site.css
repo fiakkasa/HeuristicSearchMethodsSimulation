@@ -15,10 +15,6 @@
     letter-spacing: var(--letter-spacing-size, -0.5px);
 }
 
-.builder-buttons-container > button {
-    display: none!important;
-}
-
 #blazor-error-ui {
     background: var(--bs-cyan, #5bc0de);
     color: var(--bs-white, #fff);

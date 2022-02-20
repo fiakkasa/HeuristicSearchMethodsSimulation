@@ -18,7 +18,7 @@
     }
 
     .entries-container {
-        height: 11.25in;
+        height: 11in;
     }
 
     .page.GuidedDirect > nav.navbar,
@@ -43,7 +43,7 @@
     }
 
     .page.GuidedDirect .traveling-salesman-map-container.print {
-        height: 250px !important;
+        height: 248px !important;
         overflow: hidden !important;
         display: flex !important;
         justify-content: center !important;

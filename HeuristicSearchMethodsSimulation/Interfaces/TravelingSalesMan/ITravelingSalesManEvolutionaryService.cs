@@ -6,6 +6,8 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 {
     public interface ITravelingSalesManEvolutionaryService : ITravelingSalesManBaseService
     {
+        bool EnableBuilders { get; }
+
         EvolutionaryItem? EvolutionaryItem { get; set; }
 
         void SetEvolutionaryLocation(Guid locationId);
