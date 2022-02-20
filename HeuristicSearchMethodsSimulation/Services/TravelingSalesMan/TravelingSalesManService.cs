@@ -670,7 +670,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             try
             {
-                if (EvolutionaryItem is not { Step: 4, WheelItems.Count: > 0 }) return false;
+                if (EvolutionaryItem is not { Step: 5, WheelItems.Count: > 0 }) return false;
 
                 if (!silent)
                 {
@@ -725,7 +725,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             try
             {
-                if (EvolutionaryItem is not { Step: < 10 } || EvolutionaryItem.Step >= step) return;
+                if (EvolutionaryItem is not { Step: < 11 } || EvolutionaryItem.Step >= step) return;
 
                 _progress = true;
                 OnStateChangeDelegate?.Invoke();
@@ -734,13 +734,13 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 if (EvolutionaryItem.CurrentGenerationIteration > 0)
                 {
-                    if (EvolutionaryItem.Step == 8)
+                    if (EvolutionaryItem.Step == 9)
                     {
-                        await Steps(9, true).ConfigureAwait(true);
+                        await Steps(10, true).ConfigureAwait(true);
                     }
                     else
                     {
-                        for (int i = 3; i <= 8; i++)
+                        for (int i = 4; i <= 9; i++)
                         {
                             if (await Steps(i, true).ConfigureAwait(true) == 10) break;
 
@@ -763,7 +763,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             async Task<int> Steps(int step, bool autoWheel = false)
             {
-                if (EvolutionaryItem is not { Step: < 10 } || EvolutionaryItem.Step >= step) return EvolutionaryItem.Step;
+                if (EvolutionaryItem is not { Step: < 11 } || EvolutionaryItem.Step >= step) return EvolutionaryItem.Step;
 
                 EvolutionaryItem.Step = step;
 
@@ -815,19 +815,19 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                         EvolutionaryItem.Offsprings.AddRange(
                              EvolutionaryItem.CurrentGeneration
-                                .Take(2)
+                                .Take(3)
                                 .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring)
                         );
                         break;
-                    case 3:
+                    case 4:
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
-                    case 4:
+                    case 5:
                         EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(6));
 
                         if (EvolutionaryItem.WheelItems.Count == 0)
                         {
-                            EvolutionaryItem.Step = 10;
+                            EvolutionaryItem.Step = 11;
                         }
                         else if (EvolutionaryItem.WheelItems.Count < 2 && !autoWheel)
                         {
@@ -846,7 +846,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             EvolutionaryItem.Step++;
                         }
                         break;
-                    case 7:
+                    case 8:
                         var nextGeneration =
                             EvolutionaryItem.NextGeneration
                                 .Concat(EvolutionaryItem.Offsprings.OrderBy(x => x.Rank))
@@ -856,7 +856,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.CurrentGeneration.Clear();
                         EvolutionaryItem.CurrentGeneration.AddRange(EvolutionaryItem.CurrentGenerationPristine);
                         break;
-                    case 9:
+                    case 10:
                         EvolutionaryItem.CurrentGenerationIteration++;
                         EvolutionaryItem.CurrentGeneration.Clear();
                         EvolutionaryItem.CurrentGenerationPristine.Clear();
@@ -866,7 +866,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.WheelItems.Clear();
                         EvolutionaryItem.Offsprings.Clear();
                         EvolutionaryItem.NextGeneration.Clear();
-                        EvolutionaryItem.Step = 2;
+                        EvolutionaryItem.Step = 3;
                         break;
                 }
 
