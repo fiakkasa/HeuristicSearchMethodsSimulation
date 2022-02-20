@@ -19,6 +19,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public int CurrentGenerationIteration { get; set; }
         public int Step { get; set; }
         public List<EvolutionaryNodes> CurrentGeneration { get; } = new();
+        public List<EvolutionaryNodes> CurrentGenerationPristine { get; } = new();
         public List<EvolutionaryNodes> NextGeneration { get; } = new();
         public List<EvolutionaryNodes> MatingPool { get; } = new();
         public List<EvolutionaryNodes> WheelItems { get; } = new();
