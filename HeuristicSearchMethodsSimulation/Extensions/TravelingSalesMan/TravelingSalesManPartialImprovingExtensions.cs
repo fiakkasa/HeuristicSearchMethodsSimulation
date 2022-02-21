@@ -1,8 +1,6 @@
 ﻿using HeuristicSearchMethodsSimulation.Models.TravelingSalesMan;
 using Microsoft.CodeAnalysis;
 using Plotly.Blazor;
-using Plotly.Blazor.Traces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,11 +58,6 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                         {
                             var previousCollection = evaluatedCollection.Copy();
                             var previousCycle = previousCollection.ToCyclePairs();
-                            var previousDistance = minDistance;
-                            var previousMapLinesData = previousCycle.ToMapLines();
-                            var previousMatrix = matrix.HighlightMatrixCyclePairs(previousCycle);
-                            var previousText = evaluatedCollection.ToText();
-
                             var iterationCycle = iterationCollection.ToCyclePairs();
 
                             var pairsToKeep =
@@ -82,51 +75,23 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                         ptk => ptk,
                                         (ecc, _) => ecc
                                     )
+                                    .Chunk(2)
+                                    .Where(x => x.Length == 2)
+                                    .Select(x => (x[0].First, x[0].Second, x[1].First, x[1].Second))
                                     .ToList();
 
-                            var stepOfIterationCounter = 0;
-
-                            foreach (var (First, Second) in cyclesDiff)
+                            foreach (var (First0, Second0, First1, Second1) in cyclesDiff)
                             {
-                                stepOfIterationCounter++;
-
-                                var swapPairBLine = Second.ToMapLine();
-                                swapPairBLine.Line = new() { Color = mapOptions.LineColor, Width = mapOptions.LineWidth };
-
-                                var iterationMapLinesDataOfStep =
-                                    previousMapLinesData
-                                        .OfType<ScatterGeo>()
-                                        .Where(x =>
-                                        {
-                                            var (Item1, Item2) = ((Guid, Guid))x.Meta;
-
-                                            return Item1 != First.A.Id && Item2 != First.B.Id;
-                                        })
-                                        .Append(swapPairBLine)
-                                        .ToList<ITrace>();
-
-                                previousMapLinesData.Clear();
-                                previousMapLinesData.AddRange(iterationMapLinesDataOfStep);
-
-                                yield return stepOfIterationCounter >= cyclesDiff.Count
-                                    ? new PartialImprovingIteration(
-                                        iterationCollection,
-                                        iterationCycle,
-                                        matrix.HighlightMatrixCyclePairs(iterationCycle),
-                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
-                                        iterationCollection.ToText(),
-                                        iterationDistance,
-                                        iterationCycle.ToMapLines()
-                                    )
-                                   : new PartialImprovingIteration(
-                                        previousCollection,
-                                        previousCycle,
-                                        previousMatrix,
-                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
-                                        previousText,
-                                        previousDistance,
-                                        previousMapLinesData.Copy()
-                                    );
+                                yield return new PartialImprovingIteration(
+                                    previousCollection,
+                                    previousCycle,
+                                    matrix.HighlightMatrixCyclePairs(previousCycle),
+                                    $"Swap edge ({First0.A.ShortCode}-{First0.B.ShortCode}) with edge ({Second1.A.ShortCode}-{Second1.B.ShortCode}) and " +
+                                    $"edge ({First1.A.ShortCode}-{First1.B.ShortCode}) with edge ({Second0.A.ShortCode}-{Second0.B.ShortCode}).",
+                                    previousCollection.ToText(),
+                                    minDistance,
+                                    previousCycle.ToMapLines()
+                                );
                             }
 
                             minDistance = iterationDistance;

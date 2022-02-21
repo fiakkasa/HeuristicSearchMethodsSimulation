@@ -1246,16 +1246,17 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 GuidedDirectItem = new() { NumberOfUniqueRoutes = numberOfUniqueRoutes };
 
                 GuidedDirectItem.HeadToClosestCity.Matrix.AddRange(matrix);
-                GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.HeadToClosestCity.MapChartData.AddRange(mapMarkerData);
+
+                if (locations.HasInsufficientData()) return;
+
+                GuidedDirectItem.HeadToClosestCity.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.HeadToClosestCity.MapMarkerData.AddRange(mapMarkerData);
 
                 GuidedDirectItem.Peripheral.Matrix.AddRange(matrix);
-                GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.Peripheral.MapChartData.AddRange(mapMarkerData);
+                GuidedDirectItem.Peripheral.ResetMatrix.AddRange(matrix);
                 GuidedDirectItem.Peripheral.MapMarkerData.AddRange(mapMarkerData);
-
-                if (locations.HasInsufficientData()) return;
 
                 await SetLocationsCycleDataFromDatabase(cancellationToken).ConfigureAwait(true);
 
