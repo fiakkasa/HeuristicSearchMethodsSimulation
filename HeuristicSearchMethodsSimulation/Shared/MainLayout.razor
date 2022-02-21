@@ -28,7 +28,14 @@
     </nav>
     <div class="flex-fill overflow-auto position-relative">
         <ErrorBoundary>
-            @Body
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent>
+                <div class="text-dense text-warning">
+                    Whoops, something went wrong...
+                </div>
+            </ErrorContent>
         </ErrorBoundary>
     </div>
 </div>
