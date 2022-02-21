@@ -6,6 +6,14 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = null;
+    var title = "HeuristicSearchMethodsSimulation";
+    var theme = "default";
+    try
+    {
+        title = appOptionsAccessor.Value.Title;
+        theme = appOptionsAccessor.Value.Theme;
+    }
+    catch { }
 }
 
 <!DOCTYPE html>
@@ -13,11 +21,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@appOptionsAccessor.Value.Title</title>
+    <title>@title</title>
     <base href="~/" />
-    <link href="~/themes/@appOptionsAccessor.Value.Theme/site/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/themes/@theme/site/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/print.css" rel="stylesheet" />
-    <link href="~/themes/@appOptionsAccessor.Value.Theme/site/site.css" rel="stylesheet" />
+    <link href="~/themes/@theme/site/site.css" rel="stylesheet" />
     <link href="HeuristicSearchMethodsSimulation.styles.css" rel="stylesheet" />
 </head>
 <body>

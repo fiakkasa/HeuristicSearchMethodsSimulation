@@ -5,25 +5,30 @@
 @inject NavigationManager nav
 
 <div class="page vh-100 d-flex flex-column @string.Join(' ', nav.ToBaseRelativePath(nav.Uri).Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))">
-	<nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
-		<div class="container-fluid justify-content-center">
-			<NavLink class="navbar-brand text-truncate" href="" Match="NavLinkMatch.All">
-				@appOptionsAccessor.Value.Title
-			</NavLink>
-			<div class="flex-fill d-none d-md-block"></div>
-			<AuthorizeView Roles="@Consts.AdminRole">
-				<Authorized>
-					 <a class="nav-link btn btn-link m-0 text-dark" href="/ControlPanel">Control Panel</a>
-				</Authorized>
-			</AuthorizeView>
-			<div class="d-flex flex-grow-0 flex-wrap">
-				<LoginDisplay />
-			</div>
-		</div>
-	</nav>
-	<div class="flex-fill overflow-auto position-relative">
-		<ErrorBoundary>
-			@Body
-		</ErrorBoundary>
-	</div>
+    <nav class="navbar navbar-light bg-light flex-shrink-0 overflow-hidden">
+        <div class="container-fluid justify-content-center">
+            <NavLink class="navbar-brand text-truncate" href="" Match="NavLinkMatch.All">
+                <ErrorBoundary>
+                    <ChildContent>
+                        @appOptionsAccessor.Value.Title
+                    </ChildContent>
+                    <ErrorContent>Home</ErrorContent>
+                </ErrorBoundary>
+            </NavLink>
+            <div class="flex-fill d-none d-md-block"></div>
+            <AuthorizeView Roles="@Consts.AdminRole">
+                <Authorized>
+                    <a class="nav-link btn btn-link m-0 text-dark" href="/ControlPanel">Control Panel</a>
+                </Authorized>
+            </AuthorizeView>
+            <div class="d-flex flex-grow-0 flex-wrap">
+                <LoginDisplay />
+            </div>
+        </div>
+    </nav>
+    <div class="flex-fill overflow-auto position-relative">
+        <ErrorBoundary>
+            @Body
+        </ErrorBoundary>
+    </div>
 </div>

@@ -1,26 +1,35 @@
 ﻿<ProgressBar Show="!Loading && Progress" CssClass="position-fixed start-0 vw-100" />
 
 <div class="p-3">
-	<div class="container-fluid">
-		<Condition Evaluation="Title is { }">
-			<Match>
-				@Title
-			</Match>
-		</Condition>
-		<Condition Evaluation="Loading">
-			<NotMatch>
-				@Content				
-			</NotMatch>
-			<Match>
-				<PageLoader />
-			</Match>
-		</Condition>
-	</div>
+    <div class="container-fluid">
+        <Condition Evaluation="Title is { }">
+            <Match>
+                @Title
+            </Match>
+        </Condition>
+        <Condition Evaluation="Loading">
+            <NotMatch>
+                <ErrorBoundary>
+                    <ChildContent>
+                        @Content
+                    </ChildContent>
+                    <ErrorContent>
+                        <div class="text-error">
+                            Oh no...
+                        </div>
+                    </ErrorContent>
+                </ErrorBoundary>
+            </NotMatch>
+            <Match>
+                <PageLoader />
+            </Match>
+        </Condition>
+    </div>
 </div>
 
 @code {
-	[Parameter] public bool Progress { get; set; }
-	[Parameter] public bool Loading { get; set; }
-	[Parameter] public RenderFragment? Content { get; set; }
-	[Parameter] public RenderFragment? Title { get; set; }
+    [Parameter] public bool Progress { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public RenderFragment? Content { get; set; }
+    [Parameter] public RenderFragment? Title { get; set; }
 }

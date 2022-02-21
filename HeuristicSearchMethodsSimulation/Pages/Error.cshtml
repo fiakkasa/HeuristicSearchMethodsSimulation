@@ -5,6 +5,12 @@
 @inject IOptions<AppOptions> appOptionsAccessor
 @{
     Layout = null;
+    var theme = "default";
+    try
+    {
+        theme = appOptionsAccessor.Value.Theme;
+    }
+    catch { }
 }
 <!DOCTYPE html>
 <html>
@@ -13,8 +19,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Error</title>
-    <link href="themes/@appOptionsAccessor.Value.Theme/site/bootstrap.min.css" rel="stylesheet" />
-    <link href="themes/@appOptionsAccessor.Value.Theme/site/site.css" rel="stylesheet" />
+    <link href="themes/@theme/site/bootstrap.min.css" rel="stylesheet" />
+    <link href="themes/@theme/site/site.css" rel="stylesheet" />
 </head>
 
 <body>

@@ -7,14 +7,25 @@
 @inject ICompositeViewEngine Engine
 @inject IOptions<AppOptions> appOptionsAccessor
 
+@{
+    var title = "HeuristicSearchMethodsSimulation";
+    var theme = "default";
+    try
+    {
+        title = appOptionsAccessor.Value.Title;
+        theme = appOptionsAccessor.Value.Theme;
+    }
+    catch { }
+}
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - @appOptionsAccessor.Value.Title</title>
-    <link rel="stylesheet" href="~/themes/@appOptionsAccessor.Value.Theme/identity/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/themes/@appOptionsAccessor.Value.Theme/identity/site.css" />
+    <title>@ViewData["Title"] - @title</title>
+    <link rel="stylesheet" href="~/themes/@theme/identity/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/themes/@theme/identity/site.css" />
 </head>
 <body>
     <div class="page vh-100 d-flex flex-column">
