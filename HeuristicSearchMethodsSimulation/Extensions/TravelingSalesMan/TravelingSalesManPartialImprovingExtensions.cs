@@ -84,49 +84,68 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                     )
                                     .ToList();
 
-                            var stepOfIterationCounter = 0;
-
-                            foreach (var (First, Second) in cyclesDiff)
+                            if (cyclesDiff.Count == 2)
                             {
-                                stepOfIterationCounter++;
+                                var (First0, Second0) = cyclesDiff[0];
+                                var (First1, Second1) = cyclesDiff[1];
 
-                                var swapPairBLine = Second.ToMapLine();
-                                swapPairBLine.Line = new() { Color = mapOptions.LineColor, Width = mapOptions.LineWidth };
+                                yield return new PartialImprovingIteration(
+                                    previousCollection,
+                                    previousCycle,
+                                    previousMatrix,
+                                    $"Swap edge ({First0.A.ShortCode}-{First0.B.ShortCode}) with edge ({Second1.A.ShortCode}-{Second1.B.ShortCode}) and " +
+                                    $"edge ({First1.A.ShortCode}-{First1.B.ShortCode}) with edge ({Second0.A.ShortCode}-{Second0.B.ShortCode})",
+                                    previousText,
+                                    previousDistance,
+                                    previousCycle.ToMapLines()
+                                );
+                            }
+                            else
+                            {
+                                var stepOfIterationCounter = 0;
 
-                                var iterationMapLinesDataOfStep =
-                                    previousMapLinesData
-                                        .OfType<ScatterGeo>()
-                                        .Where(x =>
-                                        {
-                                            var (Item1, Item2) = ((Guid, Guid))x.Meta;
+                                foreach (var (First, Second) in cyclesDiff)
+                                {
+                                    stepOfIterationCounter++;
 
-                                            return Item1 != First.A.Id && Item2 != First.B.Id;
-                                        })
-                                        .Append(swapPairBLine)
-                                        .ToList<ITrace>();
+                                    var swapPairBLine = Second.ToMapLine();
+                                    swapPairBLine.Line = new() { Color = mapOptions.LineColor, Width = mapOptions.LineWidth };
 
-                                previousMapLinesData.Clear();
-                                previousMapLinesData.AddRange(iterationMapLinesDataOfStep);
+                                    var iterationMapLinesDataOfStep =
+                                        previousMapLinesData
+                                            .OfType<ScatterGeo>()
+                                            .Where(x =>
+                                            {
+                                                var (Item1, Item2) = ((Guid, Guid))x.Meta;
 
-                                yield return stepOfIterationCounter >= cyclesDiff.Count
-                                    ? new PartialImprovingIteration(
-                                        iterationCollection,
-                                        iterationCycle,
-                                        matrix.HighlightMatrixCyclePairs(iterationCycle),
-                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
-                                        iterationCollection.ToText(),
-                                        iterationDistance,
-                                        iterationCycle.ToMapLines()
-                                    )
-                                   : new PartialImprovingIteration(
-                                        previousCollection,
-                                        previousCycle,
-                                        previousMatrix,
-                                        $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
-                                        previousText,
-                                        previousDistance,
-                                        previousMapLinesData.Copy()
-                                    );
+                                                return Item1 != First.A.Id && Item2 != First.B.Id;
+                                            })
+                                            .Append(swapPairBLine)
+                                            .ToList<ITrace>();
+
+                                    previousMapLinesData.Clear();
+                                    previousMapLinesData.AddRange(iterationMapLinesDataOfStep);
+
+                                    yield return stepOfIterationCounter >= cyclesDiff.Count
+                                        ? new PartialImprovingIteration(
+                                            iterationCollection,
+                                            iterationCycle,
+                                            matrix.HighlightMatrixCyclePairs(iterationCycle),
+                                            $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
+                                            iterationCollection.ToText(),
+                                            iterationDistance,
+                                            iterationCycle.ToMapLines()
+                                        )
+                                       : new PartialImprovingIteration(
+                                            previousCollection,
+                                            previousCycle,
+                                            previousMatrix,
+                                            $"Swap edge ({First.A.ShortCode}-{First.B.ShortCode}) with edge ({Second.A.ShortCode}-{Second.B.ShortCode})",
+                                            previousText,
+                                            previousDistance,
+                                            previousMapLinesData.Copy()
+                                        );
+                                }
                             }
 
                             minDistance = iterationDistance;

@@ -449,10 +449,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 PartialImprovingItem.Matrix.AddRange(iteration.Matrix);
                 PartialImprovingItem.DistanceInKilometers = iteration.DistanceInKilometers;
+                PartialImprovingItem.Text = iteration.Text;
                 PartialImprovingItem.MapChartData.AddRange(iteration.MapLinesData.Concat(PartialImprovingItem.MapMarkerData));
-
-                PartialImprovingItem.MapChartData.AddRange(iteration.MapLinesData.Concat(PartialImprovingItem.MapMarkerData));
-                PartialImprovingItem.DistanceInKilometers = iteration.DistanceInKilometers;
                 PartialImprovingItem.Log.Add(iteration.Log);
                 PartialImprovingItem.Iteration++;
 
