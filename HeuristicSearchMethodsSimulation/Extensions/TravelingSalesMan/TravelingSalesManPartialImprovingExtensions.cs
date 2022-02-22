@@ -76,8 +76,7 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                         (ecc, _) => ecc
                                     )
                                     .Chunk(2)
-                                    .Where(x => x.Length == 2)
-                                    .Select(x => (x[0].First, x[0].Second, x[1].First, x[1].Second))
+                                    .Select(x => (x[0].First, x[0].Second, x.Skip(1)?.FirstOrDefault().First, x.Skip(1)?.FirstOrDefault().Second))
                                     .ToList();
 
                             foreach (var (First0, Second0, First1, Second1) in cyclesDiff)
@@ -86,8 +85,13 @@ namespace HeuristicSearchMethodsSimulation.Extensions.TravelingSalesMan
                                     previousCollection,
                                     previousCycle,
                                     matrix.HighlightMatrixCyclePairs(previousCycle),
-                                    $"Swap edge ({First0.A.ShortCode}-{First0.B.ShortCode}) with edge ({Second1.A.ShortCode}-{Second1.B.ShortCode}) and " +
-                                    $"edge ({First1.A.ShortCode}-{First1.B.ShortCode}) with edge ({Second0.A.ShortCode}-{Second0.B.ShortCode}).",
+                                    (First1, Second1) switch
+                                    {
+                                        (First1: { }, Second1: { }) =>
+                                            $"Swap edge ({First0.A.ShortCode}-{First0.B.ShortCode}) with edge ({Second1.A.ShortCode}-{Second1.B.ShortCode}) and " +
+                                            $"edge ({First1.A.ShortCode}-{First1.B.ShortCode}) with edge ({Second0.A.ShortCode}-{Second0.B.ShortCode}).",
+                                        _ => $"Swap edge ({First0.A.ShortCode}-{First0.B.ShortCode}) with edge ({Second0.A.ShortCode}-{Second0.B.ShortCode})"
+                                    },
                                     previousCollection.ToText(),
                                     minDistance,
                                     previousCycle.ToMapLines()
