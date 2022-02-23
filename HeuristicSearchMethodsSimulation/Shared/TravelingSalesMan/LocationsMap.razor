@@ -51,30 +51,32 @@
     private string _id = $"tspm_{Random.Shared.Next()}_{DateTimeOffset.Now.Ticks}";
     private bool _eventsBound;
     private readonly Config _chartConfig = new()
-        {
-            DisplayLogo = false,
-            DisplayModeBar = DisplayModeBarEnum.False,
-            AutoSizable = true,
-            Responsive = true,
-            ShowTips = false
-        };
+    {
+        DisplayLogo = false,
+        DisplayModeBar = DisplayModeBarEnum.False,
+        AutoSizable = true,
+        Responsive = true,
+        ShowTips = false
+    };
     private readonly Layout _chartLayout = new()
+    {
+        Height = 640,
+        ShowLegend = false,
+        AutoSize = true,
+        Margin = new()
         {
-            Height = 640,
-            ShowLegend = false,
-            AutoSize = true,
-            Margin = new()
+            AutoExpand = false,
+            B = 0,
+            L = 0,
+            R = 0,
+            T = 0,
+            Pad = 0
+        },
+        DragMode = DragModeEnum.False,
+        Geo = new List<Geo> 
+        {
+            new Geo 
             {
-                AutoExpand = false,
-                B = 0,
-                L = 0,
-                R = 0,
-                T = 0,
-                Pad = 0
-            },
-            DragMode = DragModeEnum.False,
-            Geo = new List<Geo> {
-            new Geo {
                 Scope = ScopeEnum.USA,
                 ShowLand = true,
                 ShowSubUnits = true,
@@ -83,7 +85,7 @@
                 SubUnitWidth = 2
             }
         },
-        };
+    };
     private List<ITrace> _chartData = new List<ITrace> { new ScatterGeo { LocationMode = LocationModeEnum.ISO3 } };
     private string? _markerColor;
     private SymbolEnum? _markerSymbol = SymbolEnum.Circle;

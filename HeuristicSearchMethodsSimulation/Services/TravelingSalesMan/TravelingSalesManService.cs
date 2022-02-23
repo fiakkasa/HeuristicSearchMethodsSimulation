@@ -248,7 +248,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public void SetPartialRandomLocation(Guid locationId)
         {
             if (
-                PartialRandomItem?.Builder?.Collection.ContainsKey(locationId) != true
+                PartialRandomItem is { Builder: { } }
+                && !PartialRandomItem.Builder.Collection.ContainsKey(locationId)
                 && _travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location
             )
             {
@@ -515,7 +516,8 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public async Task SetGuidedDirectSelection(Guid locationId)
         {
             if (
-                GuidedDirectItem?.Visited.ContainsKey(locationId) != true
+                GuidedDirectItem is { }
+                && !GuidedDirectItem.Visited.ContainsKey(locationId)
                 && _travelingSalesManFoundationService.LocationsBySelection.Skip(1).FirstOrDefault(x => x.Id == locationId) is { } location
             )
             {
@@ -877,8 +879,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public void SetEvolutionaryLocation(Guid locationId)
         {
             if (
-                EvolutionaryItem?.Visited.ContainsKey(locationId) != true
-                && EvolutionaryItem?.Nodes.Skip(1).FirstOrDefault(x => x.Location.Id == locationId) is { } node
+                EvolutionaryItem is { CycleComplete: false }
+                && !EvolutionaryItem.Visited.ContainsKey(locationId)
+                && EvolutionaryItem.Nodes.Skip(1).FirstOrDefault(x => x.Location.Id == locationId) is { } node
             )
             {
                 SetEvolutionaryLocation(node, false);
