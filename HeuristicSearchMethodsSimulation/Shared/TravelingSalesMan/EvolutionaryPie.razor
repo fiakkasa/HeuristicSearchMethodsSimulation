@@ -55,6 +55,11 @@
         {
             _chartData.Clear();
             var collection = value ?? Enumerable.Empty<EvolutionaryNodes>();
+            var max = collection.MaxBy(x => x.DistanceInKilometers)?.DistanceInKilometers switch
+            {
+                double m => m,
+                _ => 1
+            };
             _chartData.Add(
                 new Pie
                 {   
@@ -88,7 +93,7 @@
                         }).ToList<object>()
                     },
                     Labels = collection.Select(x => x.Text).ToList<object>(),
-                    Values = collection.Select(x => (object)(long)(x.DistanceInKilometers ?? 0 / 1000)).ToList()
+                    Values = collection.Select(x => (object)(double)(max / (x.DistanceInKilometers ?? max))).ToList()
                 }
             );
         }

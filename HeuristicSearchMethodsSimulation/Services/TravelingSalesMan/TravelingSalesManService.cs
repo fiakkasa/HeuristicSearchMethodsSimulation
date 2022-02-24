@@ -893,19 +893,27 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
                     case 5:
-                        EvolutionaryItem.WheelItems.AddRange(
+                        var wheelItems =
                             EvolutionaryItem.CurrentGeneration
                                 .Where(x => x.Rank > 0)
                                 .Concat(
                                     EvolutionaryItem.CurrentGeneration
                                         .Where(x => x.Rank == 0)
                                         .OrderBy(_ => Random.Shared.Next())
-                                        .Take(Random.Shared.Next(0, 2))
+                                        .Take(Random.Shared.Next(0, 4))
                                 )
                                 .DistinctBy(x => x.Text)
                                 .OrderBy(_ => Random.Shared.Next())
                                 .Take(4)
-                            );
+                                .ToList();
+                        // ensure first round has at least one elite
+                        if (EvolutionaryItem.CurrentGenerationIteration == 0 && !wheelItems.Any(x => x.Rank == 0))
+                        {
+                            wheelItems.RemoveAt(0);
+                            wheelItems.Add(EvolutionaryItem.CurrentGeneration.First(x => x.Rank == 0));
+                        }
+
+                        EvolutionaryItem.WheelItems.AddRange(wheelItems);
 
                         if (EvolutionaryItem.WheelItems.Count == 0 || (EvolutionaryItem.CurrentGenerationIteration > 0 && EvolutionaryItem.WheelItems.Count <= 1))
                         {
