@@ -7,6 +7,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
     public record EvolutionaryItem
     {
         public List<LocationRow> Matrix { get; } = new();
+        public string? Text { get; set; }
         public List<LocationRow> ResetMatrix { get; } = new();
         public List<ITrace> MapChartData { get; } = new();
         public List<ITrace> MapMarkerData { get; } = new();

@@ -686,6 +686,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 var collection = obj.Nodes.ConvertAll(x => x.Location);
                 var cyclePairs = await Task.Run(() => collection.ToCyclePairs(), _cts.Token).ConfigureAwait(true);
+                var text = await Task.Run(() => collection.ToText(), _cts.Token).ConfigureAwait(true);
                 var mapLineData = await Task.Run(() => cyclePairs.ToMapLines(), _cts.Token).ConfigureAwait(true);
                 var matrix = await Task.Run(() => EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs), _cts.Token).ConfigureAwait(true);
 
@@ -695,6 +696,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 EvolutionaryItem.Matrix.AddRange(matrix);
                 EvolutionaryItem.DistanceInKilometers = obj.DistanceInKilometers;
+                EvolutionaryItem.Text = $"[{obj.Text}] {text}";
                 EvolutionaryItem.MapChartData.AddRange(mapLineData.Concat(EvolutionaryItem.MapMarkerData));
 
                 _progress = false;
@@ -1033,6 +1035,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 var cyclePairs = (cycleComplete ? collection.ToCyclePairs() : collection.ToPartialCyclePairs()).ToList();
                 var mapLineData = cyclePairs.ToMapLines();
                 var totalDistance = cyclePairs.CalculateDistanceOfCycle();
+                var text = collection.ToText();
                 var matrix = EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                 EvolutionaryItem.Matrix.Clear();
@@ -1041,12 +1044,14 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                 EvolutionaryItem.Matrix.AddRange(matrix);
                 EvolutionaryItem.DistanceInKilometers = totalDistance;
+                EvolutionaryItem.Text = text;
                 EvolutionaryItem.MapChartData.AddRange(mapLineData.Concat(EvolutionaryItem.MapMarkerData));
 
                 if (cycleComplete)
                 {
                     EvolutionaryItem.CurrentGeneration[0].DistanceInKilometers = totalDistance;
                     EvolutionaryItem.CurrentGeneration[0].Text = EvolutionaryItem.CurrentGeneration[0].ToText();
+                    EvolutionaryItem.Text = $"[{EvolutionaryItem.CurrentGeneration[0].Text}] {text}";
                     EvolutionaryItem.CycleComplete = true;
                 }
 
