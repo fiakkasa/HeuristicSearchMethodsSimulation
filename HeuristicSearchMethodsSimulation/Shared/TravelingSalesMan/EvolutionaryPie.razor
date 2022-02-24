@@ -93,7 +93,7 @@
                         }).ToList<object>()
                     },
                     Labels = collection.Select(x => x.Text).ToList<object>(),
-                    Values = collection.Select(x => (object)(double)(max / (x.DistanceInKilometers ?? max))).ToList()
+                    Values = collection.Select(x => (object)(double)(Math.Pow(max / (x.DistanceInKilometers ?? max), 3))).ToList()
                 }
             );
         }
