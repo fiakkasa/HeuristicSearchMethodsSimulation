@@ -209,11 +209,11 @@
                     <div class="row">
                         <div class="col-auto mb-1">
                             <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
-                            <div class="border border-1 pb-2 overflow-auto">
+                            <div class="border border-1 pb-2 px-2 d-flex flex-column align-items-center overflow-auto">
                                 @if (CurrentGeneration is { Count: > 0 } currGen)
                                 {
                                     <Iterations T="EvolutionaryNodes" Items="currGen">
-                                        <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                        <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                             <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                 <div class="p-1 border border-1 border-light flex-shrink-0 @RankCssClass(context.Rank)">@childContext</div>
                                             </Iterations>
@@ -222,7 +222,7 @@
                                 }
                                 else
                                 {
-                                    <div class="d-flex mt-2 px-2 justify-content-center">
+                                    <div class="d-flex mt-2 px-2 justify-content-center flex-shrink-0">
                                         <Iterations Items="DefaultBoxes">
                                             <div class="p-1 border border-1 border-light bg-white text-white breather flex-shrink-0">&nbsp;</div>
                                         </Iterations>
@@ -237,11 +237,11 @@
                     <div class="row">
                         <div class="col-auto mb-1">
                             <div>Generation: @(CurrentGenerationIteration ?? 0)</div>
-                            <div class="border border-1 pb-2 overflow-auto">
+                            <div class="border border-1 pb-2 px-2 d-flex flex-column align-items-center overflow-auto">
                                 @if (CurrentGeneration is { Count: > 0 } currGen)
                                 {
                                     <Iterations T="EvolutionaryNodes" Items="currGen">
-                                        <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                        <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                             <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                 <div class="p-1 border border-1 border-light flex-shrink-0 @RankCssClass(context.Rank)">@childContext</div>
                                             </Iterations>
@@ -250,7 +250,7 @@
                                 }
                                 else
                                 {
-                                    <div class="d-flex mt-2 px-2 justify-content-center">
+                                    <div class="d-flex mt-2 px-2 justify-content-center flex-shrink-0">
                                         <Iterations Items="DefaultBoxes">
                                             <div class="p-1 border border-1 border-light bg-white text-white breather flex-shrink-0">&nbsp;</div>
                                         </Iterations>
@@ -262,11 +262,11 @@
                         {
                             <div class="col-auto mb-1">
                                 <div>Mating Pool</div>
-                                <div class="border border-1 pb-2 overflow-auto">
+                                <div class="border border-1 pb-2 px-2 d-flex flex-column align-items-center overflow-auto">
                                     @if (MatingPool is { Count: > 0 })
                                     {
                                         <Iterations T="EvolutionaryNodes" Items="MatingPool.OrderBy(x => x.Rank)">
-                                            <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                            <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                                 <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                     <div class="p-1 border border-1 border-light flex-shrink-0 @RankCssClass(context.Rank)">@childContext</div>
                                                 </Iterations>
@@ -275,7 +275,7 @@
                                     }
                                     else
                                     {
-                                        <div class="d-flex mt-2 px-2 justify-content-center">
+                                        <div class="d-flex mt-2 px-2 justify-content-center flex-shrink-0">
                                             <Iterations Items="DefaultBoxes" Context="childContext">
                                                 <div class="p-1 border border-1 border-light bg-white text-white breather flex-shrink-0">&nbsp;</div>
                                             </Iterations>
@@ -288,13 +288,13 @@
                         {
                             <div class="col-auto mb-1">
                                 <div>Offsprings</div>
-                                <div class="border border-1 pb-2 overflow-auto">
+                                <div class="border border-1 pb-2 px-2 d-flex flex-column align-items-center overflow-auto">
                                     @if (Offsprings is { Count: > 0 })
                                     {
                                         @if (Step == 5)
                                         {
                                             <Iterations T="EvolutionaryNodes" Items="Offsprings.OrderBy(x => x.Rank)">
-                                                <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                                <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                                     <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                         <div class="p-1 border border-1 border-light flex-shrink-0">@childContext</div>
                                                     </Iterations>
@@ -304,7 +304,7 @@
                                         else
                                         {
                                             <Iterations T="EvolutionaryNodes" Items="Offsprings.OrderBy(x => x.Rank)">
-                                                <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                                <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                                     <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                         <div class="p-1 border border-1 border-light flex-shrink-0 @RankCssClass(context.Rank)">@childContext</div>
                                                     </Iterations>
@@ -314,7 +314,7 @@
                                     }
                                     else
                                     {
-                                        <div class="d-flex mt-2 px-2 justify-content-center">
+                                        <div class="d-flex mt-2 px-2 justify-content-center flex-shrink-0">
                                             <Iterations Items="DefaultBoxes">
                                                 <div class="p-1 border border-1 border-light bg-white text-white breather flex-shrink-0">&nbsp;</div>
                                             </Iterations>
@@ -325,11 +325,11 @@
                         }
                         <div class="col-auto mb-1">
                             <div>Generation: @((CurrentGenerationIteration ?? 0) + 1)</div>
-                            <div class="border border-1 pb-2 overflow-auto">
+                            <div class="border border-1 pb-2 px-2 d-flex flex-column align-items-center overflow-auto">
                                 @if (NextGeneration is { Count: > 0 } nextGen)
                                 {
                                     <Iterations T="EvolutionaryNodes" Items="nextGen">
-                                        <button type="button" class="bg-transparent border-0 p-0 mx-2 mt-2 d-flex justify-content-center" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
+                                        <button type="button" class="bg-transparent border-0 p-0 mt-2 d-flex justify-content-center flex-shrink-0" disabled="@Disabled" @onclick="() => OnViewEvolutionaryNodes.InvokeAsync(context)">
                                             <Iterations T="int" Items="context.Nodes.Skip(1).Select(x => x.Ordinal)" Context="childContext">
                                                 <div class="p-1 border border-1 border-light flex-shrink-0 @RankCssClass(context.Rank)">@childContext</div>
                                             </Iterations>
