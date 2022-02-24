@@ -824,9 +824,34 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
                         EvolutionaryItem.Offsprings.AddRange(
                              EvolutionaryItem.CurrentGeneration
-                                .Take(3)
+                                .Take(2)
                                 .ComputeEvolutionaryOffsprings(EvolutionaryItem.NumberOfBitsOffspring)
                         );
+                        break;
+                    case 2:
+                        EvolutionaryItem.Offsprings.Clear();
+                        var chunks =
+                            EvolutionaryItem.CurrentGeneration[0]
+                                .Nodes
+                                .Skip(1)
+                                .Chunk(2)
+                                .ToList();
+                        var toFlip = Random.Shared.Next(
+                            0,
+                            EvolutionaryItem.CurrentGeneration[0].Nodes.Count % 2 == 0
+                                ? chunks.Count - 1
+                                : chunks.Count
+                        );
+                        var mutation = EvolutionaryItem.CurrentGeneration[0] with
+                        {
+                            Nodes =
+                                chunks
+                                    .Select((x, i) => i == toFlip ? x.Reverse() : x)
+                                    .SelectMany(x => x)
+                                    .Prepend(EvolutionaryItem.CurrentGeneration[0].Nodes[0])
+                                    .ToList()
+                        };
+                        EvolutionaryItem.Offsprings.Add(mutation);
                         break;
                     case 4:
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));

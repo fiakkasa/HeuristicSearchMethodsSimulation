@@ -188,10 +188,10 @@
                         </div>
                         <div class="p-1 flex-shrink-0">
                             <div class="d-flex justify-content-center">
-                                @if (Offsprings?.Skip(2).FirstOrDefault() is { } offThird)
+                                @if (Offsprings?.FirstOrDefault() is { } offFirst)
                                 {
-                                    <Iterations T="int" Items="offThird.Nodes.Skip(1).Select(x => x.Ordinal)">
-                                        <div class="p-1 bg-success text-white bg-opacity-50 border border-1 border-light flex-shrink-0">@context</div>
+                                    <Iterations T="(int First, int Second)" Items="offFirst.Nodes.Select(x => x.Ordinal).Zip((CurrentGeneration?.FirstOrDefault() ?? offFirst).Nodes.Select(x => x.Ordinal)).Skip(1)">
+                                        <div class="p-1 bg-success text-white border border-1 border-light flex-shrink-0 @(context.First != context.Second ? "bg-opacity-75" : "bg-opacity-50")">@context.First</div>
                                     </Iterations>
                                 }
                                 else
