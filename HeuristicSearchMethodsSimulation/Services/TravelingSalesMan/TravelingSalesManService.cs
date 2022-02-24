@@ -816,6 +816,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                                 .Prepend(first)
                                 .ComputeEvolutionaryRanks()
                                 .OrderBy(x => x.Rank)
+                                .ThenBy(x => x.DistanceInKilometers)
                                 .ToList();
                         generation.Last().Rank = 1;
                         generation[0].Rank = 0;
@@ -857,9 +858,9 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
                     case 5:
-                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(6));
+                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(4));
 
-                        if (EvolutionaryItem.WheelItems.Count == 0)
+                        if (EvolutionaryItem.WheelItems.Count == 0 || EvolutionaryItem.CurrentGenerationIteration > 0 && EvolutionaryItem.WheelItems.Count <= 1)
                         {
                             EvolutionaryItem.Step = 11;
                         }
@@ -883,10 +884,22 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     case 8:
                         var nextGeneration =
                             EvolutionaryItem.NextGeneration
-                                .Concat(EvolutionaryItem.Offsprings.OrderBy(x => x.Rank))
+                                .Concat(EvolutionaryItem.Offsprings)
+                                .ToList();
+                        var nextGenWithFiller =
+                            nextGeneration
+                                .Concat(
+                                    EvolutionaryItem.CurrentGenerationPristine
+                                        .OrderBy(x => x.Rank)
+                                        .ThenBy(x => x.DistanceInKilometers)
+                                )
+                                .DistinctBy(x => x.Text)
+                                .Take(10)
+                                .OrderBy(x => x.Rank)
+                                .ThenBy(x => x.DistanceInKilometers)
                                 .ToList();
                         EvolutionaryItem.NextGeneration.Clear();
-                        EvolutionaryItem.NextGeneration.AddRange(nextGeneration);
+                        EvolutionaryItem.NextGeneration.AddRange(nextGenWithFiller);
                         EvolutionaryItem.CurrentGeneration.Clear();
                         EvolutionaryItem.CurrentGeneration.AddRange(EvolutionaryItem.CurrentGenerationPristine);
                         break;
