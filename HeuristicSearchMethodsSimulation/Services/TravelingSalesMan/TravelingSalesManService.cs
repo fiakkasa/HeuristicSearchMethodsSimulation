@@ -612,7 +612,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     );
                 }
 
-                if (p is not { Iterations.Count: > 0, Current: { } }) return;
+                if (p is not { Iterations.Count: > 0, Current: { } })
+                {
+                    if (p.Solutions.Count > 0 && !p.Log.Any(x => x.StartsWith(location.ShortCode)))
+                    {
+                        p.Log.Add($"{location.ShortCode} is not the best choice, please refer to the rule and try again.");
+                        OnStateChangeDelegate?.Invoke();
+                    }
+
+                    return;
+                }
 
                 if (location.Id != p.Next?.Node.Id)
                 {
