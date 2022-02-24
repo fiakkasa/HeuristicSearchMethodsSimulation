@@ -891,7 +891,19 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.NextGeneration.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank == 0));
                         break;
                     case 5:
-                        EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(4));
+                        EvolutionaryItem.WheelItems.AddRange(
+                            EvolutionaryItem.CurrentGeneration
+                                .Where(x => x.Rank > 0)
+                                .Concat(
+                                    EvolutionaryItem.CurrentGeneration
+                                        .Where(x => x.Rank == 0)
+                                        .OrderBy(_ => Random.Shared.Next())
+                                        .Take(Random.Shared.Next(0, 2))
+                                )
+                                .DistinctBy(x => x.Text)
+                                .OrderBy(_ => Random.Shared.Next())
+                                .Take(4)
+                            );
 
                         if (EvolutionaryItem.WheelItems.Count == 0 || (EvolutionaryItem.CurrentGenerationIteration > 0 && EvolutionaryItem.WheelItems.Count <= 1))
                         {
@@ -923,6 +935,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                             nextGeneration
                                 .Concat(
                                     EvolutionaryItem.CurrentGenerationPristine
+                                        .ExceptBy(nextGeneration.Select(x => x.Text), x => x.Text)
                                         .OrderBy(x => x.Rank)
                                         .ThenBy(x => x.DistanceInKilometers)
                                 )
@@ -937,6 +950,18 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.CurrentGeneration.AddRange(EvolutionaryItem.CurrentGenerationPristine);
                         break;
                     case 10:
+                        if (
+                            EvolutionaryItem.CurrentGenerationIteration > 0
+                            && EvolutionaryItem.CurrentGeneration.Select(x => x.Text).SequenceEqual(EvolutionaryItem.NextGeneration.Select(x => x.Text))
+                        )
+                        {
+                            EvolutionaryItem.SameResultsCount++;
+                        }
+                        else
+                        {
+                            EvolutionaryItem.SameResultsCount = 0;
+                        }
+
                         EvolutionaryItem.CurrentGenerationIteration++;
                         EvolutionaryItem.CurrentGeneration.Clear();
                         EvolutionaryItem.CurrentGenerationPristine.Clear();
@@ -945,8 +970,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         EvolutionaryItem.MatingPool.Clear();
                         EvolutionaryItem.WheelItems.Clear();
                         EvolutionaryItem.Offsprings.Clear();
-                        EvolutionaryItem.NextGeneration.Clear();
-                        EvolutionaryItem.Step = 3;
+
+                        if (EvolutionaryItem.SameResultsCount == 5)
+                        {
+                            EvolutionaryItem.Step = 12;
+                        }
+                        else
+                        {
+                            EvolutionaryItem.NextGeneration.Clear();
+                            EvolutionaryItem.Step = 3;
+                        }
                         break;
                 }
 

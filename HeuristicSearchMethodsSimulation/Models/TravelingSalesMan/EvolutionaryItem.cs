@@ -17,6 +17,7 @@ namespace HeuristicSearchMethodsSimulation.Models.TravelingSalesMan
         public bool CycleComplete { get; set; }
         public int NumberOfBitsOffspring { get; set; }
         public int CurrentGenerationIteration { get; set; }
+        public int SameResultsCount { get; set; }
         public int Step { get; set; }
         public List<EvolutionaryNodes> CurrentGeneration { get; } = new();
         public List<EvolutionaryNodes> CurrentGenerationPristine { get; } = new();
