@@ -1035,7 +1035,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                 var cyclePairs = (cycleComplete ? collection.ToCyclePairs() : collection.ToPartialCyclePairs()).ToList();
                 var mapLineData = cyclePairs.ToMapLines();
                 var totalDistance = cyclePairs.CalculateDistanceOfCycle();
-                var text = collection.ToText();
+                var text = collection.ToText(customLastElemText: cycleComplete ? default : "...");
                 var matrix = EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs);
 
                 EvolutionaryItem.Matrix.Clear();
