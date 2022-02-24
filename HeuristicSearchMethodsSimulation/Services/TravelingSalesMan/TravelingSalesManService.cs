@@ -604,6 +604,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     return;
                 }
 
+#pragma warning disable RCS1077 // Optimize LINQ method call.
                 if (p.Index == 0 && p.Solutions.FirstOrDefault(x => x.Skip(1).FirstOrDefault()?.Id == location.Id) is { } solution)
                 {
                     p.Solution.AddRange(solution);
@@ -611,6 +612,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         p.Solution.ComputeGuidedDirectIterationsFromGuidedDirectCollection(p.Matrix, p.MapMarkerData)
                     );
                 }
+#pragma warning restore RCS1077 // Optimize LINQ method call.
 
                 if (p is not { Iterations.Count: > 0, Current: { } })
                 {
@@ -671,6 +673,37 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
 
             _progress = false;
             OnStateChangeDelegate?.Invoke();
+        }
+
+        public async Task ViewEvolutionaryNodes(EvolutionaryNodes obj)
+        {
+            try
+            {
+                if (EvolutionaryItem is not { }) return;
+
+                _progress = true;
+                OnStateChangeDelegate?.Invoke();
+
+                var collection = obj.Nodes.ConvertAll(x => x.Location);
+                var cyclePairs = await Task.Run(() => collection.ToCyclePairs(), _cts.Token).ConfigureAwait(true);
+                var mapLineData = await Task.Run(() => cyclePairs.ToMapLines(), _cts.Token).ConfigureAwait(true);
+                var matrix = await Task.Run(() => EvolutionaryItem.ResetMatrix.HighlightMatrixCyclePairs(cyclePairs), _cts.Token).ConfigureAwait(true);
+
+                EvolutionaryItem.Matrix.Clear();
+                EvolutionaryItem.DistanceInKilometers = default;
+                EvolutionaryItem.MapChartData.Clear();
+
+                EvolutionaryItem.Matrix.AddRange(matrix);
+                EvolutionaryItem.DistanceInKilometers = obj.DistanceInKilometers;
+                EvolutionaryItem.MapChartData.AddRange(mapLineData.Concat(EvolutionaryItem.MapMarkerData));
+
+                _progress = false;
+                OnStateChangeDelegate?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         public Task SetEvolutionarySpin() => SetEvolutionarySpin(false);
@@ -860,7 +893,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     case 5:
                         EvolutionaryItem.WheelItems.AddRange(EvolutionaryItem.CurrentGeneration.Where(x => x.Rank > 0).Take(4));
 
-                        if (EvolutionaryItem.WheelItems.Count == 0 || EvolutionaryItem.CurrentGenerationIteration > 0 && EvolutionaryItem.WheelItems.Count <= 1)
+                        if (EvolutionaryItem.WheelItems.Count == 0 || (EvolutionaryItem.CurrentGenerationIteration > 0 && EvolutionaryItem.WheelItems.Count <= 1))
                         {
                             EvolutionaryItem.Step = 11;
                         }

@@ -10,6 +10,7 @@ namespace HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan
 
         EvolutionaryItem? EvolutionaryItem { get; set; }
 
+        Task ViewEvolutionaryNodes(EvolutionaryNodes obj);
         void SetEvolutionaryLocation(Guid locationId);
         void SetEvolutionaryLocation(EvolutionaryNode item);
         Task SetEvolutionaryStep(int step);
