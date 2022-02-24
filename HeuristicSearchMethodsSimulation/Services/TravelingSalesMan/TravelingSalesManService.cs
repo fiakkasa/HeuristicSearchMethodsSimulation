@@ -910,7 +910,12 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                         if (EvolutionaryItem.CurrentGenerationIteration == 0 && !wheelItems.Any(x => x.Rank == 0))
                         {
                             wheelItems.RemoveAt(0);
-                            wheelItems.Add(EvolutionaryItem.CurrentGeneration.First(x => x.Rank == 0));
+                            wheelItems.Add(
+                                EvolutionaryItem.CurrentGeneration
+                                    .Where(x => x.Rank == 0)
+                                    .OrderBy(_ => Random.Shared.Next())
+                                    .First()
+                            );
                         }
 
                         EvolutionaryItem.WheelItems.AddRange(wheelItems);
