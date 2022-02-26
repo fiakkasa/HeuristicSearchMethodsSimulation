@@ -741,7 +741,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
                     OnStateChangeDelegate?.Invoke();
                 }
 
-                if (EvolutionaryItem.WheelItems.Count > 0) return false;
+                if (EvolutionaryItem.MatingPool.Count < EvolutionaryItem.WheelItems.Count) return false;
 
                 EvolutionaryItem.Offsprings.Clear();
                 EvolutionaryItem.Offsprings.AddRange(
