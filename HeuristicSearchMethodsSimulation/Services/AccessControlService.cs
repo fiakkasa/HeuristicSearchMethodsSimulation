@@ -1,4 +1,5 @@
-﻿using HeuristicSearchMethodsSimulation.Interfaces;
+﻿using FuzzySharp;
+using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace HeuristicSearchMethodsSimulation.Services
         private bool _isInit;
         private bool _isDisposed;
         private event Action? OnStateChangeDelegate;
+        private const int SearchRatio = 67;
 
         public event Action? OnStateChange
         {
@@ -119,19 +121,36 @@ namespace HeuristicSearchMethodsSimulation.Services
         {
             try
             {
+                var systemRoles =
+                    await Roles
+                        .ToAsyncEnumerable()
+                        .Select(x => (x.Id, Name: x.Name.Replace('_', ' ').ToLowerInvariant()))
+                        .ToListAsync(_cts.Token)
+                        .ConfigureAwait(true);
+
                 var users =
-                    await (
-                        _searchToken?.Trim().ToLowerInvariant() is { Length: > 0 } token
-                            ? _userManager.Users
-                                .Where(x => x.UserName.ToLowerInvariant().Contains(token))
-                                .OrderByDescending(x => x.CreatedOn)
-                            : _userManager.Users
-                                .OrderByDescending(x => x.CreatedOn)
-                    )
-                    .ToAsyncEnumerable()
-                    .Select(user => new UserWithDictRoles(user, user.Roles.Distinct().ToDictionary(x => x, x => x)))
-                    .ToListAsync(_cts.Token)
-                    .ConfigureAwait(true);
+                    await _userManager.Users
+                        .OrderByDescending(x => x.CreatedOn)
+                        .ToAsyncEnumerable()
+                        .Where(user => _searchToken switch
+                        {
+                            string when _searchToken.Trim().ToLowerInvariant() is { Length: > 0 } token =>
+                                Fuzz.PartialRatio(user.Email.ToLowerInvariant(), token) > SearchRatio
+                                || systemRoles.Join(
+                                    user.Roles,
+                                    systemRole => systemRole.Id,
+                                    userRoleId => userRoleId,
+                                    (systemRole, _) => systemRole.Name
+                                )
+                                .Any(rlName =>
+                                    Fuzz.PartialRatio(rlName, token) > SearchRatio
+                                    || Fuzz.PartialTokenSortRatio(rlName, token) > SearchRatio
+                                ),
+                            _ => true
+                        })
+                        .Select(user => new UserWithDictRoles(user, user.Roles.Distinct().ToDictionary(x => x, x => x)))
+                        .ToListAsync(_cts.Token)
+                        .ConfigureAwait(true);
 
                 Users.Clear();
                 Users.AddRange(users);

@@ -10,17 +10,16 @@
 		</div>
 	</Title>
 	<Content>
-
 		<div class="access-control-container">
 			<h6>Access Control</h6>
 			<div class="mb-1 d-flex">
 				<input type="text"
 					   class="form-control form-control-sm flex-fill"
 					   placeholder="Search..."
-					   disabled="@(acs.Count == 0 || acs.OperationInProgress.Any())"
+					   disabled="@acs.OperationInProgress.Any()"
 					   @bind="_searchToken"
 					   @oninput="e => acs.Search(e.Value?.ToString())" />
-				<Condition Evaluation="acs.Count > 0 && acs.SearchToken is { Length: > 0 }">
+				<Condition Evaluation="acs.SearchToken is { Length: > 0 }">
 					<Match>
 						<button type="button"
 								class="btn btn-warning btn-sm flex-shrink-0 ms-1"

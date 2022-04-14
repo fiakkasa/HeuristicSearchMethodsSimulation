@@ -54,7 +54,11 @@ namespace HeuristicSearchMethodsSimulation
 
             #region Identity
             services
-                .AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddIdentity<IdentityUser, IdentityRole>(options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = true;
+                    options.User.RequireUniqueEmail = true;
+                })
                 .AddDefaultUI()
                 .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>().Databases.Identity)
                 .AddDefaultTokenProviders();

@@ -53,7 +53,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account
                     "/Account/ResetPassword",
                     pageHandler: null,
                     values: new { area = "Identity", code },
-                    protocol: Request.Scheme
+                    protocol: "https"
                 ) ?? string.Empty;
 
                 await _emailSender.SendEmailAsync(Input.Email, "Reset Password", $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.").ConfigureAwait(true);

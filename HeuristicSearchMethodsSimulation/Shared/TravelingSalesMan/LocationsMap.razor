@@ -266,11 +266,8 @@
     {
         try
         {
-            if (!_eventsBound)
-            {
-                await Task.Delay(250);
-                _eventsBound = await JS.InvokeAsync<bool>("bindTspMapMarkerEvents", _objRef, _id);
-            }
+            if (!_eventsBound && !firstRender)
+                _eventsBound = await JS.InvokeAsync<Object?>("bindTspMapMarkerEvents", _objRef, _id) is bool eb && eb == true;
 
             if (_chartRef is { } m) await m.React();
         }

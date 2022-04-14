@@ -137,7 +137,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account
                             "/Account/ConfirmEmail",
                             pageHandler: null,
                             values: new { area = "Identity", userId, code },
-                            protocol: Request.Scheme
+                            protocol: "https"
                         ) ?? string.Empty;
 
                         await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
