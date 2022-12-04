@@ -1,5 +1,20 @@
 ﻿# Heuristic Search Methods Simulation
 
+## Prerequisites
+
+- Install .NET 6 SDK from https://dotnet.microsoft.com/en-us/download/dotnet/6.0
+- Set your user secrets
+  ```json
+  {
+    "ConnectionStrings": {
+      "MongoConnection": "connection_string"
+    },
+    "AuthMessageSenderOptions": {
+      "SendGridKey": "key"
+    }
+  }
+  ```
+
 ## Running the project
 
 ```powershell
