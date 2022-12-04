@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/HeuristicSearchMethodsSimulation/bin/Debug/net5.0/HeuristicSearchMethodsSimulation.dll",
+            "program": "${workspaceFolder}/HeuristicSearchMethodsSimulation/bin/Debug/net6.0/HeuristicSearchMethodsSimulation.dll",
             "args": [],
             "cwd": "${workspaceFolder}/HeuristicSearchMethodsSimulation",
             "stopAtEntry": false,
