@@ -24,17 +24,16 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         private bool _disposedValue;
         private readonly IOptions<MongoOptions> _mongoOptions;
         private readonly IOptions<TravelingSalesManOptions> _travelingSalesManOptions;
-        private readonly Func<IMongoClient> _mongoClientFactory;
         private readonly IMapper _mapper;
         private readonly ITravelingSalesManHistoryService _travelingSalesManHistoryService;
         private readonly ILogger<TravelingSalesManService> _logger;
-        private readonly IMongoClient? _client;
+        private readonly IMongoClient _client;
         private readonly CancellationTokenSource _cts = new();
         private int _fetchLimit = 100;
         private int _maxExhaustiveLocationsToCalculate = 7;
         private int _sliderValue;
 
-        public IMongoClient Client => _client ?? _mongoClientFactory();
+        public IMongoClient Client => _client;
         public string DatabaseName => MongoOptions.Databases.Data;
         private MongoOptions MongoOptions => _mongoOptions.Value;
         private TravelingSalesManOptions TravelingSalesManOptions => _travelingSalesManOptions.Value;
@@ -79,7 +78,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         public TravelingSalesManFoundationService(
            IOptions<MongoOptions> mongoOptions,
            IOptions<TravelingSalesManOptions> travelingSalesManOptions,
-           Func<IMongoClient> mongoClientFactory,
+           IMongoClient mongoClient,
            IMapper mapper,
            ITravelingSalesManHistoryService travelingSalesManHistoryService,
            ILogger<TravelingSalesManService> logger
@@ -87,7 +86,7 @@ namespace HeuristicSearchMethodsSimulation.Services.TravelingSalesMan
         {
             _mongoOptions = mongoOptions;
             _travelingSalesManOptions = travelingSalesManOptions;
-            _mongoClientFactory = mongoClientFactory;
+            _client = mongoClient;
             _mapper = mapper;
             _travelingSalesManHistoryService = travelingSalesManHistoryService;
             _logger = logger;

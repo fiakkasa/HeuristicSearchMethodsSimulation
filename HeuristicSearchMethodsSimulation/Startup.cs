@@ -1,3 +1,4 @@
+using HealthChecks.ApplicationStatus.DependencyInjection;
 using HeuristicSearchMethodsSimulation.Areas.Identity;
 using HeuristicSearchMethodsSimulation.Interfaces;
 using HeuristicSearchMethodsSimulation.Interfaces.TravelingSalesMan;
@@ -38,7 +39,10 @@ namespace HeuristicSearchMethodsSimulation
             var mongoOptionsSection = Configuration.GetSection(nameof(MongoOptions));
 
             #region Health
-            services.AddHealthChecks();
+            services
+                .AddHealthChecks()
+                .AddApplicationStatus()
+                .AddMongoDb(mongoConnectionUri!);
             #endregion
 
             #region AutoMapper
@@ -67,7 +71,7 @@ namespace HeuristicSearchMethodsSimulation
             #endregion
 
             #region Database
-            services.AddSingleton<Func<IMongoClient>>(() => new MongoClient(mongoConnectionUri));
+            services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionUri));
             #endregion
 
             #region Blazor
