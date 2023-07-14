@@ -102,7 +102,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
 
             if (await _userManager.CountRecoveryCodesAsync(user).ConfigureAwait(true) == 0)
             {
-                var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10).ConfigureAwait(true);
+                var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10).ConfigureAwait(true) ?? Enumerable.Empty<string>();
                 RecoveryCodes = recoveryCodes.ToArray();
                 return RedirectToPage("./ShowRecoveryCodes");
             }
@@ -119,12 +119,12 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
             if (string.IsNullOrEmpty(unformattedKey))
             {
                 await _userManager.ResetAuthenticatorKeyAsync(user).ConfigureAwait(true);
-                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user).ConfigureAwait(true);
+                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user).ConfigureAwait(true) ?? string.Empty;
             }
 
             SharedKey = FormatKey(unformattedKey);
 
-            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true);
+            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true) ?? string.Empty;
             AuthenticatorUri = GenerateQrCodeUri(email, unformattedKey);
         }
 

@@ -50,7 +50,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
 
         private async Task LoadAsync(IdentityUser user)
         {
-            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true);
+            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true) ?? string.Empty;
             Email = email;
 
             Input = new InputModel
@@ -128,7 +128,7 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
             }
 
             var userId = await _userManager.GetUserIdAsync(user).ConfigureAwait(true);
-            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true);
+            var email = await _userManager.GetEmailAsync(user).ConfigureAwait(true) ?? string.Empty;
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user).ConfigureAwait(true);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var callbackUrl = Url.Page(

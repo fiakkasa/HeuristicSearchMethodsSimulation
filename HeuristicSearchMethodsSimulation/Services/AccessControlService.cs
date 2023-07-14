@@ -124,7 +124,8 @@ namespace HeuristicSearchMethodsSimulation.Services
                 var systemRoles =
                     await Roles
                         .ToAsyncEnumerable()
-                        .Select(x => (x.Id, Name: x.Name.Replace('_', ' ').ToLowerInvariant()))
+                        .Where(x => x is { Id: { }, Name: { Length: > 0 } })
+                        .Select(x => (x.Id, Name: x.Name?.Replace('_', ' ').ToLowerInvariant()))
                         .ToListAsync(_cts.Token)
                         .ConfigureAwait(true);
 
@@ -135,7 +136,7 @@ namespace HeuristicSearchMethodsSimulation.Services
                         .Where(user => _searchToken switch
                         {
                             string when _searchToken.Trim().ToLowerInvariant() is { Length: > 0 } token =>
-                                Fuzz.PartialRatio(user.Email.ToLowerInvariant(), token) > SearchRatio
+                                (user.Email is { Length: > 0 } && Fuzz.PartialRatio(user.Email.ToLowerInvariant(), token) > SearchRatio)
                                 || systemRoles.Join(
                                     user.Roles,
                                     systemRole => systemRole.Id,

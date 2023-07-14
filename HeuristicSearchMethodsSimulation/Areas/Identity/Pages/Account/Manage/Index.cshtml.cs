@@ -38,8 +38,8 @@ namespace HeuristicSearchMethodsSimulation.Areas.Identity.Pages.Account.Manage
 
         private async Task LoadAsync(IdentityUser user)
         {
-            var userName = await _userManager.GetUserNameAsync(user).ConfigureAwait(true);
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user).ConfigureAwait(true);
+            var userName = await _userManager.GetUserNameAsync(user).ConfigureAwait(true) ?? string.Empty;
+            var phoneNumber = await _userManager.GetPhoneNumberAsync(user).ConfigureAwait(true) ?? string.Empty;
 
             Username = userName;
 

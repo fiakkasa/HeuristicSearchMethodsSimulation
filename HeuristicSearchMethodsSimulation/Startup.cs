@@ -64,7 +64,7 @@ namespace HeuristicSearchMethodsSimulation
                     options.User.RequireUniqueEmail = true;
                 })
                 .AddDefaultUI()
-                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>().Databases.Identity)
+                .AddMongoDbStores<IdentityUser, IdentityRole, Guid>(mongoConnectionUri, mongoOptionsSection.Get<MongoOptions>()!.Databases.Identity)
                 .AddDefaultTokenProviders();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             services.AddScoped<IEmailSender, EmailSenderService>();

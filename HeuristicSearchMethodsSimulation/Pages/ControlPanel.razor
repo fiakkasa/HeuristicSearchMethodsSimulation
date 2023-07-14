@@ -4,117 +4,117 @@
 @attribute [Authorize(Roles = Consts.AdminRole)]
 
 <ContentWithLoader Loading="acs.Loading" Progress="Progress">
-	<Title>
-		<div class="header-text lead pb-1">
-			Control Panel
-		</div>
-	</Title>
-	<Content>
-		<div class="access-control-container">
-			<h6>Access Control</h6>
-			<div class="mb-1 d-flex">
-				<input type="text"
-					   class="form-control form-control-sm flex-fill"
-					   placeholder="Search..."
-					   disabled="@acs.OperationInProgress.Any()"
-					   @bind="_searchToken"
-					   @oninput="e => acs.Search(e.Value?.ToString())" />
-				<Condition Evaluation="acs.SearchToken is { Length: > 0 }">
-					<Match>
-						<button type="button"
-								class="btn btn-warning btn-sm flex-shrink-0 ms-1"
-								disabled="@Progress"
-								@onclick="ClearSearch">
-							Clear
-						</button>
-					</Match>
-				</Condition>
-			</div>
-			<div class="access-control-table-container table-responsive">
-				<table class="access-control-table table table-sm table-striped m-0">
-					<thead class="bg-white sticky-top">
-						<tr class="small">
-							<th>Username</th>
-							<Iterations Items="acs.Roles">
-								<th class="text-center">@context.Name.Replace('_', ' ')</th>
-							</Iterations>
-						</tr>
-					</thead>
-					<tbody>
-						<Condition Evaluation="acs.Count> 0">
-							<Match>
-								<Virtualize TItem="UserWithDictRoles" Items="acs.Users" OverscanCount="50">
-									<tr>
-										<td class="align-middle">
-											<div class="d-flex align-items-center">
-												<div class="flex-fill text-nowrap">
-													@context.User.UserName
-												</div>
-												<Condition Evaluation="@acs.OperationInProgress.ContainsKey(context.User.Id)">
-													<Match>
-														<div class="ms-2 flex-shrink-0 spinner-border text-secondary" role="status"></div>
-													</Match>
-												</Condition>
-											</div>
-										</td>
-										<Iterations Items="acs.Roles" Context="childContext">
-											<td class="align-middle text-center">
-												<Condition Evaluation="@context.Roles.ContainsKey(childContext.Id)">
-													<Match>
-														<button type="button"
-																class="btn btn-sm"
-																disabled="@acs.OperationInProgress.ContainsKey(context.User.Id)"
-																@onclick="() => acs.AddToRole(context.User, childContext.Name)">
-															<span class="text-success">✔</span>
-														</button>
-													</Match>
-													<NotMatch>
-														<button type="button"
-																class="btn btn-sm"
-																disabled="@acs.OperationInProgress.ContainsKey(context.User.Id)"
-																@onclick="() => acs.RemoveFromRole(context.User, childContext.Name)">
-															<span class="text-danger">❌</span>
-														</button>
-													</NotMatch>
-												</Condition>
-											</td>
-										</Iterations>
-									</tr>
-								</Virtualize>
-							</Match>
-						</Condition>
-					</tbody>
-				</table>
-				<Condition Evaluation="acs.Count == 0">
-					<Match>
-						<h6 class="text-muted text-center m-0 p-2">No data..</h6>
-					</Match>
-				</Condition>
-			</div>
-		</div>
-	</Content>
+    <Title>
+        <div class="header-text lead pb-1">
+            Control Panel
+        </div>
+    </Title>
+    <Content>
+        <div class="access-control-container">
+            <h6>Access Control</h6>
+            <div class="mb-1 d-flex">
+                <input type="text"
+                       class="form-control form-control-sm flex-fill"
+                       placeholder="Search..."
+                       disabled="@acs.OperationInProgress.Any()"
+                       @bind="_searchToken"
+                       @oninput="e => acs.Search(e.Value?.ToString())" />
+                <Condition Evaluation="acs.SearchToken is { Length: > 0 }">
+                    <Match>
+                        <button type="button"
+                                class="btn btn-warning btn-sm flex-shrink-0 ms-1"
+                                disabled="@Progress"
+                                @onclick="ClearSearch">
+                            Clear
+                        </button>
+                    </Match>
+                </Condition>
+            </div>
+            <div class="access-control-table-container table-responsive">
+                <table class="access-control-table table table-sm table-striped m-0">
+                    <thead class="bg-white sticky-top">
+                        <tr class="small">
+                            <th>Username</th>
+                            <Iterations Items="acs.Roles">
+                                <th class="text-center">@context.Name?.Replace('_', ' ')</th>
+                            </Iterations>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <Condition Evaluation="acs.Count> 0">
+                            <Match>
+                                <Virtualize TItem="UserWithDictRoles" Items="acs.Users" OverscanCount="50">
+                                    <tr>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-fill text-nowrap">
+                                                    @context.User.UserName
+                                                </div>
+                                                <Condition Evaluation="@acs.OperationInProgress.ContainsKey(context.User.Id)">
+                                                    <Match>
+                                                        <div class="ms-2 flex-shrink-0 spinner-border text-secondary" role="status"></div>
+                                                    </Match>
+                                                </Condition>
+                                            </div>
+                                        </td>
+                                        <Iterations Items="acs.Roles" Context="childContext">
+                                            <td class="align-middle text-center">
+                                                <Condition Evaluation="@context.Roles.ContainsKey(childContext.Id)">
+                                                    <Match>
+                                                        <button type="button"
+                                                                class="btn btn-sm"
+                                                                disabled="@(acs.OperationInProgress.ContainsKey(context.User.Id) || childContext.Name is not { Length: > 0 })"
+                                                                @onclick="() => acs.AddToRole(context.User, childContext.Name!)">
+                                                            <span class="text-success">✔</span>
+                                                        </button>
+                                                    </Match>
+                                                    <NotMatch>
+                                                        <button type="button"
+                                                                class="btn btn-sm"
+                                                                disabled="@(acs.OperationInProgress.ContainsKey(context.User.Id) || childContext.Name is not { Length: > 0 })"
+                                                                @onclick="() => acs.RemoveFromRole(context.User, childContext.Name!)">
+                                                            <span class="text-danger">❌</span>
+                                                        </button>
+                                                    </NotMatch>
+                                                </Condition>
+                                            </td>
+                                        </Iterations>
+                                    </tr>
+                                </Virtualize>
+                            </Match>
+                        </Condition>
+                    </tbody>
+                </table>
+                <Condition Evaluation="acs.Count == 0">
+                    <Match>
+                        <h6 class="text-muted text-center m-0 p-2">No data..</h6>
+                    </Match>
+                </Condition>
+            </div>
+        </div>
+    </Content>
 </ContentWithLoader>
 
 @code {
-	public string? _searchToken;
+    public string? _searchToken;
 
-	public bool Progress => acs.Searching || acs.OperationInProgress.Any();
+    public bool Progress => acs.Searching || acs.OperationInProgress.Any();
 
-	private async Task ClearSearch()
-	{
-		_searchToken = default;
-		await acs.ClearSearch();
-	}
+    private async Task ClearSearch()
+    {
+        _searchToken = default;
+        await acs.ClearSearch();
+    }
 
-	protected override async Task OnInitializedAsync()
-	{
-		acs.OnStateChange += async () => await InvokeAsync(StateHasChanged);
-		_searchToken = acs.SearchToken;
-		await acs.Init();
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        acs.OnStateChange += async () => await InvokeAsync(StateHasChanged);
+        _searchToken = acs.SearchToken;
+        await acs.Init();
+    }
 
-	public void Dispose()
-	{
-		acs.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
-	}
+    public void Dispose()
+    {
+        acs.OnStateChange -= async () => await InvokeAsync(StateHasChanged);
+    }
 }
