@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Install .NET 6 SDK from https://dotnet.microsoft.com/en-us/download/dotnet/6.0
+- Install the .NET 7 SDK from https://dotnet.microsoft.com/en-us/download/dotnet/7.0
 - Set your user secrets
   ```json
   {
